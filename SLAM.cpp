@@ -21,21 +21,29 @@
 		offset = -18 mm
 w*/
 
+void error_message();
+
 int main( int argc, const char** argv )
 {
-	const char* path = "";
+	std::string path;
 
 	if (argc == 2) {
-		path = argv[1];
+		path.assign(argv[1]);
 		std::cout << path << std::endl;
 	}
 	else {
-		std::cout << "Live kinect stream - unimplemented" << std::endl;
+		error_message();
 		return 0;
+	}
+
+	if (path.at(path.size() - 1) != '/') {
+		path.append("/");
 	}
 
 	cv::namedWindow( "Depth Image", cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::namedWindow( "Undistorted Depth Image", cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow("Undistorted Depth Image", 600, 0);
+	
 	cv::Mat image;
 
 	float data[3][3] = {{363.58,0,250.32}, {0,363.53,212.55}, {0,0,1}}; 
@@ -46,6 +54,7 @@ int main( int argc, const char** argv )
 
 	std::string line;
 	std::string depth_list_file_name(path);
+
 	depth_list_file_name.append("depth.txt");
 
 	std::ifstream myfile (depth_list_file_name.c_str());
@@ -94,14 +103,22 @@ int main( int argc, const char** argv )
 		    cv::imshow( "Depth Image", image ); // Show our image inside it.
 		    cv::imshow( "Undistorted Depth Image", undistortImage ); // Show our image inside it.
 
-		    cv::waitKey(30); // Wait for a keystroke in the window
+		    // TODO - The whole SLAM thing
+
+		    cv::waitKey(33); // Wait for a keystroke in the window
 		}
 
 		myfile.close();
 	}
 	else {
-		std::cout << "Usage: SLAM.exe {Full path to directory}" << std::endl;
+		error_message();
 	}
 
 	return 0;
+}
+
+void error_message() {
+	std::cout << "Usage: SLAM.exe <path to raw dataset>" << std::endl;
+	std::cout << "Example: SLAM.exe /home/ben/Documents/D1_raw/" << std::endl;
+	std::cout << "The datasets can be found at: corbs.dfki.uni-kl.de" << std::endl;
 }
