@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 2.8)
+set(OpenCV_DIR "/usr/local/opencv-3.0.0/release")
+project( SLAM )
+find_package( OpenCV REQUIRED )
+add_executable( SLAM.exe SLAM.cpp )
+target_link_libraries( SLAM.exe ${OpenCV_LIBS} )
