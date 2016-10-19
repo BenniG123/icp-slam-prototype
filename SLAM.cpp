@@ -40,10 +40,10 @@ int main( int argc, const char** argv )
 		path.append("/");
 	}
 
-	cv::namedWindow( "Depth Image", cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::namedWindow( "Undistorted Depth Image", cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow("Undistorted Depth Image", 600, 0);
-	
+	cv::namedWindow( "Depth Image" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::namedWindow( "Undistorted Depth Image" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Undistorted Depth Image" , 600 , 0 );
+
 	cv::Mat image;
 
 	float data[3][3] = {{363.58,0,250.32}, {0,363.53,212.55}, {0,0,1}}; 
@@ -102,6 +102,7 @@ int main( int argc, const char** argv )
 
 		    cv::imshow( "Depth Image", image ); // Show our image inside it.
 		    cv::imshow( "Undistorted Depth Image", undistortImage ); // Show our image inside it.
+		    // cv::imshow( "Compare Images", 100 * (undistortImage - image) ); // Show our image inside it.
 
 		    // TODO - The whole SLAM thing
 
@@ -118,7 +119,7 @@ int main( int argc, const char** argv )
 }
 
 void error_message() {
-	std::cout << "Usage: SLAM.exe <path to raw dataset>" << std::endl;
-	std::cout << "Example: SLAM.exe /home/ben/Documents/D1_raw/" << std::endl;
+	std::cout << "Usage: ./SLAM.exe <path to raw dataset>" << std::endl;
+	std::cout << "Example: ./SLAM.exe /home/ben/Documents/D1_raw/" << std::endl;
 	std::cout << "The datasets can be found at: corbs.dfki.uni-kl.de" << std::endl;
 }
