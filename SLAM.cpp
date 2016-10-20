@@ -24,6 +24,8 @@ w*/
 
 void error_message();
 
+void filterDepthImage(cv::Mat &image, int maxDistance);
+
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs);
 
 int main( int argc, const char** argv )
@@ -43,9 +45,12 @@ int main( int argc, const char** argv )
 		path.append("/");
 	}
 
-	cv::namedWindow( "Depth Image" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::namedWindow( "Undistorted Depth Image" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow( "Undistorted Depth Image" , 600 , 0 );
+	cv::namedWindow( "Original" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Filtered" , 500 , 0 );
+
+	cv::namedWindow( "ROI" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "ROI" , 1000 , 0 );
 
 	cv::Mat image;
 
@@ -99,19 +104,24 @@ int main( int argc, const char** argv )
 		        continue;
 		    }
 
-		    // cv::Mat undistortImage;
+		    cv::Mat filtered = image.clone();
 
 		    // cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
-			std::vector<cv::Rect> rois = calculateROIs(image, cv::Size2i(32, 32), 1);
+		    filterDepthImage(filtered, 90);
 
-			// Draw keypoints
+		    cv::Mat roiImage = filtered.clone();
+
+			std::vector<cv::Rect> rois = calculateROIs(filtered, cv::Size2i(32, 32), 1);
+
+			// Draw rois
 			for (int i = 0; i < rois.size(); i++) {
-				cv::rectangle(image, rois[i], cv::Scalar(255,255,0), 3);
+				cv::rectangle(roiImage, rois[i], cv::Scalar(255,255,0), 3);
 			}
 
-		    cv::imshow( "Depth Image", image );
-		    // cv::imshow( "Undistorted Depth Image", undistortImage );
+			cv::imshow( "ROI", roiImage );
+		    cv::imshow( "Filtered", filtered );
+		    cv::imshow( "Original", image );
 		    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
 
 		    // TODO - The whole SLAM thing
@@ -137,7 +147,28 @@ void error_message() {
 // Notes 
 // Sensor accuracy increases quadratically with distance
 // Sensor is noisy near depth discontinuities - Mask edges
-void filterDepthImage(cv::Mat image) {
+void filterDepthImage(cv::Mat &image, int maxDistance) {
+
+	cv::Size matSize = image.size();
+	cv::Vec3b zero(0,0,0);
+
+	// First erode the image to erode noisy edges
+	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
+	                               cv::Size( 9, 9 ),
+	                               cv::Point( 4, 4 ) );
+
+	cv::dilate( image, image, element);
+	cv::erode( image, image, element);
+
+
+	for ( int x = 0; x < matSize.width; x++) {
+		for (int y = 0; y < matSize.height; y++) {
+			// std:: cout << x << ", " << y << std::endl;
+			if (image.at<cv::Vec3b>(y, x)[0] > maxDistance) {
+				image.at<cv::Vec3b>(y, x) = zero;
+			}
+		}
+	}
 
 }
 
@@ -162,7 +193,6 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 			cv::Scalar s = cv::sum(image(roi));
 
 			if (s[2] > minScalar[2]) {
-				std::cout << s << std::endl;
 				minScalar = s;
 				maxRect = cv::Rect(x, y, roiSIZE.width, roiSIZE.height);
 			}
