@@ -26,6 +26,8 @@ void error_message();
 
 void filterDepthImage(cv::Mat &image, int maxDistance);
 
+int curvature(cv::Mat roi);
+
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs);
 
 int main( int argc, const char** argv )
@@ -41,6 +43,7 @@ int main( int argc, const char** argv )
 		return 0;
 	}
 
+	// Correct the path if it doesn't end in our format
 	if (path.at(path.size() - 1) != '/') {
 		path.append("/");
 	}
@@ -153,13 +156,16 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 	cv::Vec3b zero(0,0,0);
 
 	// First erode the image to erode noisy edges
-	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
-	                               cv::Size( 9, 9 ),
-	                               cv::Point( 4, 4 ) );
+	cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
+	                               cv::Size( 5, 5 ),
+	                               cv::Point( 2, 2 ) );
 
-	cv::dilate( image, image, element);
-	cv::erode( image, image, element);
+	cv::Mat dilate_element = cv::getStructuringElement( cv::MORPH_RECT,
+                               cv::Size( 5, 5 ),
+                               cv::Point( 2, 2 ) );
 
+	cv::erode( image, image, erode_element);
+	cv::dilate( image, image, dilate_element);
 
 	for ( int x = 0; x < matSize.width; x++) {
 		for (int y = 0; y < matSize.height; y++) {
@@ -180,7 +186,7 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 	int x = 0;
 	int y = 0;
 
-	cv::Scalar minScalar;
+	int maxCurvature = 0;
 	cv::Rect maxRect;
 
 	while (x < (matSize.width + 1 - roiSIZE.width)) {
@@ -190,10 +196,10 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 		while (y < (matSize.height + 1 - roiSIZE.height)) {
 			cv::Rect roi(x, y, roiSIZE.width, roiSIZE.height);
 
-			cv::Scalar s = cv::sum(image(roi));
+			int c = curvature(image(roi));
 
-			if (s[2] > minScalar[2]) {
-				minScalar = s;
+			if (c > maxCurvature) {
+				maxCurvature = c;
 				maxRect = cv::Rect(x, y, roiSIZE.width, roiSIZE.height);
 			}
 
@@ -206,4 +212,30 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 	roi_list.push_back(maxRect);
 
 	return roi_list;
+}
+
+// TODO - Actually calculate curvature
+int curvature(cv::Mat roi) {
+
+	int minDistance = roi.at<cv::Vec3b>(0, 0)[0];
+	int maxDistance = roi.at<cv::Vec3b>(0, 0)[0];
+
+	cv::Size matSize = roi.size();
+
+	for ( int x = 0; x < matSize.width; x++) {
+		for (int y = 0; y < matSize.height; y++) {
+			// std:: cout << x << ", " << y << std::endl;
+			// if (roi.at<cv::Vec3b>(y, x)[0] == 0) {
+			// 	return -1;
+			// } else
+			if (roi.at<cv::Vec3b>(y, x)[0] > maxDistance) {
+				maxDistance = roi.at<cv::Vec3b>(y, x)[0];
+			} else if (roi.at<cv::Vec3b>(y, x)[0] < minDistance) {
+				minDistance = roi.at<cv::Vec3b>(y, x)[0];
+			}
+		}
+	}
+
+	std::cout << maxDistance - minDistance << std::endl;
+	return maxDistance - minDistance;
 }
