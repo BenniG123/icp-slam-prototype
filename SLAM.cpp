@@ -1,6 +1,7 @@
 #include "opencv2/objdetect/objdetect.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/features2d/features2d.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -22,6 +23,8 @@
 w*/
 
 void error_message();
+
+std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs);
 
 int main( int argc, const char** argv )
 {
@@ -87,7 +90,7 @@ int main( int argc, const char** argv )
 		    std::cout << depth_frame_file_name << std::endl;
 
 		    // Read next depth frame
-		    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_GRAYSCALE);   // Read the file
+		    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_COLOR);   // Read the file
 
 		    if(! image.data ) // Check for invalid input
 		    {
@@ -96,13 +99,20 @@ int main( int argc, const char** argv )
 		        continue;
 		    }
 
-		    cv::Mat undistortImage;
+		    // cv::Mat undistortImage;
 
-		    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
+		    // cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
-		    cv::imshow( "Depth Image", image ); // Show our image inside it.
-		    cv::imshow( "Undistorted Depth Image", undistortImage ); // Show our image inside it.
-		    // cv::imshow( "Compare Images", 100 * (undistortImage - image) ); // Show our image inside it.
+			std::vector<cv::Rect> rois = calculateROIs(image, cv::Size2i(32, 32), 1);
+
+			// Draw keypoints
+			for (int i = 0; i < rois.size(); i++) {
+				cv::rectangle(image, rois[i], cv::Scalar(255,255,0), 3);
+			}
+
+		    cv::imshow( "Depth Image", image );
+		    // cv::imshow( "Undistorted Depth Image", undistortImage );
+		    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
 
 		    // TODO - The whole SLAM thing
 
@@ -122,4 +132,48 @@ void error_message() {
 	std::cout << "Usage: ./SLAM.exe <path to raw dataset>" << std::endl;
 	std::cout << "Example: ./SLAM.exe /home/ben/Documents/D1_raw/" << std::endl;
 	std::cout << "The datasets can be found at: corbs.dfki.uni-kl.de" << std::endl;
+}
+
+// Notes 
+// Sensor accuracy increases quadratically with distance
+// Sensor is noisy near depth discontinuities - Mask edges
+void filterDepthImage(cv::Mat image) {
+
+}
+
+std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs) {
+
+	std::vector<cv::Rect> roi_list;
+	cv::Size matSize = image.size();
+
+	int x = 0;
+	int y = 0;
+
+	cv::Scalar minScalar;
+	cv::Rect maxRect;
+
+	while (x < (matSize.width + 1 - roiSIZE.width)) {
+
+		y = 0;
+
+		while (y < (matSize.height + 1 - roiSIZE.height)) {
+			cv::Rect roi(x, y, roiSIZE.width, roiSIZE.height);
+
+			cv::Scalar s = cv::sum(image(roi));
+
+			if (s[2] > minScalar[2]) {
+				std::cout << s << std::endl;
+				minScalar = s;
+				maxRect = cv::Rect(x, y, roiSIZE.width, roiSIZE.height);
+			}
+
+			y += roiSIZE.height;
+		}
+
+		x += roiSIZE.width;
+	}
+
+	roi_list.push_back(maxRect);
+
+	return roi_list;
 }
