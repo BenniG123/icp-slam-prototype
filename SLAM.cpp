@@ -57,8 +57,12 @@ int main( int argc, const char** argv )
 	cv::namedWindow( "ROI" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "ROI" , 1000 , 0 );
 
+	// cv::namedWindow( "Color" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	// cv::moveWindow( "Color" , 0 , 500 );
+
 	cv::Mat image;
 
+	// Camera Calibration Matrix
 	float data[3][3] = {{363.58,0,250.32}, {0,363.53,212.55}, {0,0,1}}; 
 
 	// Correct depth frame
@@ -109,7 +113,14 @@ int main( int argc, const char** argv )
 		        continue;
 		    }
 
-		    cv::Mat colorDepth;
+		    /* cv::Mat colorDepth = image.clone();
+
+			for ( int x = 0; x < colorDepth.size().width; x++) {
+				for (int y = 0; y < colorDepth.size().height; y++) {
+					int depth = colorDepth.at<cv::Vec3b>(y, x)[0] * 5;
+					colorDepth.at<cv::Vec3b>(y, x) = cv::Vec3b(depth, depth, 120);
+				}
+			} */
 
 		    // cv::Mat undistortImage = image.clone();
 
@@ -120,6 +131,8 @@ int main( int argc, const char** argv )
 		    filterDepthImage(filtered, 30);
 
 		    cv::Mat roiImage = filtered.clone();
+
+		    cv::Sobel(filtered, filtered, CV_8U, 1, 0, 5);
 
 			std::vector<cv::Rect> rois = calculateROIs(filtered, cv::Size2i(16, 16), 10);
 
@@ -132,6 +145,7 @@ int main( int argc, const char** argv )
 			cv::imshow( "ROI", roiImage );
 		    cv::imshow( "Filtered", filtered );
 		    cv::imshow( "Original", image );
+		    // cv::imshow( "Color", colorDepth );
 		    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
 
 		    // TODO - The whole SLAM thing
@@ -257,9 +271,10 @@ int curvature(cv::Mat roi) {
 	for ( int x = 0; x < matSize.width; x++) {
 		for (int y = 0; y < matSize.height; y++) {
 			// std:: cout << x << ", " << y << std::endl;
-			if (roi.at<cv::Vec3b>(y, x)[0] == 0) {
-			 	return -1;
-			} else if (roi.at<cv::Vec3b>(y, x)[0] > maxDistance) {
+			// if (roi.at<cv::Vec3b>(y, x)[0] == 0) {
+			//  	return -1;
+			// } else
+			if (roi.at<cv::Vec3b>(y, x)[0] > maxDistance) {
 				maxDistance = roi.at<cv::Vec3b>(y, x)[0];
 			} else if (roi.at<cv::Vec3b>(y, x)[0] < minDistance) {
 				minDistance = roi.at<cv::Vec3b>(y, x)[0];
