@@ -36,7 +36,7 @@ int main( int argc, const char** argv )
 {
 	std::string path;
 
-	if (argc == 2) {
+	if (argc > 1) {
 		path.assign(argv[1]);
 		std::cout << path << std::endl;
 	}
@@ -109,9 +109,13 @@ int main( int argc, const char** argv )
 		        continue;
 		    }
 
-		    cv::Mat filtered = image.clone();
+		    cv::Mat colorDepth;
+
+		    // cv::Mat undistortImage = image.clone();
 
 		    // cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
+
+		    cv::Mat filtered = image.clone();
 
 		    filterDepthImage(filtered, 30);
 
@@ -266,41 +270,4 @@ int curvature(cv::Mat roi) {
 	// std::cout << maxDistance - minDistance << std::endl;
 
 	return maxDistance - minDistance;
-}
-
-void features() {
-	/*
-	std::vector<cv::Point2f> corners;
-	double qualityLevel = 0.01;
-	double minDistance = 10;
-	int blockSize = 3;
-	int maxCorners = 6;
-	bool useHarrisDetector = false;
-	double k = 0.16;
-	cv::RNG rng(12345);
-
-	/// Copy the source image
-	cv::Mat copy;
-	cv::cvtColor(filtered.clone(), copy, CV_BGR2GRAY);
-
-	/// Apply corner detection
-	cv::goodFeaturesToTrack( copy,
-	       corners,
-	       maxCorners,
-	       qualityLevel,
-	       minDistance,
-	       cv::Mat(),
-	       blockSize,
-	       useHarrisDetector,
-	       k );
-
-
-	/// Draw corners detected
-	std::cout << "** Number of corners detected: "<< corners.size() << std::endl;
-	int r = 4;
-
-	for( int i = 0; i < corners.size(); i++ )
-	{ circle( roiImage, corners[i], r, cv::Scalar(rng.uniform(0,255), rng.uniform(0,255),
-	      rng.uniform(0,255)), -1, 8, 0 ); }
-	 */
 }
