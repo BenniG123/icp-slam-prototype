@@ -7,6 +7,8 @@
 #include <fstream>
 #include <stdio.h>
 #include <algorithm>
+#include <vector>
+#include <iterator>
 
 /*
 	depth/ir intrinsic parameters on the Kinect V2:
@@ -111,16 +113,17 @@ int main( int argc, const char** argv )
 
 		    // cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
-		    filterDepthImage(filtered, 90);
+		    filterDepthImage(filtered, 30);
 
 		    cv::Mat roiImage = filtered.clone();
 
-			std::vector<cv::Rect> rois = calculateROIs(filtered, cv::Size2i(32, 32), 1);
+			std::vector<cv::Rect> rois = calculateROIs(filtered, cv::Size2i(16, 16), 10);
 
 			// Draw rois
 			for (int i = 0; i < rois.size(); i++) {
 				cv::rectangle(roiImage, rois[i], cv::Scalar(255,255,0), 3);
 			}
+
 
 			cv::imshow( "ROI", roiImage );
 		    cv::imshow( "Filtered", filtered );
@@ -181,13 +184,17 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs) {
 
 	std::vector<cv::Rect> roi_list;
+	std::vector<int> curvature_list;
+
 	cv::Size matSize = image.size();
 
 	int x = 0;
 	int y = 0;
 
-	int maxCurvature = 0;
 	cv::Rect maxRect;
+
+	curvature_list.clear();
+	roi_list.clear();
 
 	while (x < (matSize.width + 1 - roiSIZE.width)) {
 
@@ -198,9 +205,23 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 
 			int c = curvature(image(roi));
 
-			if (c > maxCurvature) {
-				maxCurvature = c;
-				maxRect = cv::Rect(x, y, roiSIZE.width, roiSIZE.height);
+			if (curvature_list.size() >= numROIs) {
+
+				// If the smallest element is smaller than the new curvature, throw it out
+				std::vector<int>::iterator min_element = std::min_element(curvature_list.begin(), curvature_list.end());
+
+				if (*min_element < c) {
+					int index = std::distance(curvature_list.begin(), min_element);
+					roi_list.erase(roi_list.begin() + index);
+					curvature_list.erase(curvature_list.begin() + index);
+
+					curvature_list.push_back(c);
+					roi_list.push_back(cv::Rect(x, y, roiSIZE.width, roiSIZE.height));
+				}
+			}
+			else {
+				curvature_list.push_back(c);
+				roi_list.push_back(cv::Rect(x, y, roiSIZE.width, roiSIZE.height));
 			}
 
 			y += roiSIZE.height;
@@ -209,13 +230,20 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 		x += roiSIZE.width;
 	}
 
-	roi_list.push_back(maxRect);
-
 	return roi_list;
 }
 
 // TODO - Actually calculate curvature
 int curvature(cv::Mat roi) {
+
+	// Step 1 - Calculate Surface Normals
+	// f(x) = f(a) + f'(a)*(x - a) + Error which is a function of f''(a)
+	// f' is the gradient depth function around f(x)
+
+
+	// Step 2 - Estimate Curvature
+
+
 
 	int minDistance = roi.at<cv::Vec3b>(0, 0)[0];
 	int maxDistance = roi.at<cv::Vec3b>(0, 0)[0];
@@ -225,10 +253,9 @@ int curvature(cv::Mat roi) {
 	for ( int x = 0; x < matSize.width; x++) {
 		for (int y = 0; y < matSize.height; y++) {
 			// std:: cout << x << ", " << y << std::endl;
-			// if (roi.at<cv::Vec3b>(y, x)[0] == 0) {
-			// 	return -1;
-			// } else
-			if (roi.at<cv::Vec3b>(y, x)[0] > maxDistance) {
+			if (roi.at<cv::Vec3b>(y, x)[0] == 0) {
+			 	return -1;
+			} else if (roi.at<cv::Vec3b>(y, x)[0] > maxDistance) {
 				maxDistance = roi.at<cv::Vec3b>(y, x)[0];
 			} else if (roi.at<cv::Vec3b>(y, x)[0] < minDistance) {
 				minDistance = roi.at<cv::Vec3b>(y, x)[0];
@@ -236,6 +263,44 @@ int curvature(cv::Mat roi) {
 		}
 	}
 
-	std::cout << maxDistance - minDistance << std::endl;
+	// std::cout << maxDistance - minDistance << std::endl;
+
 	return maxDistance - minDistance;
+}
+
+void features() {
+	/*
+	std::vector<cv::Point2f> corners;
+	double qualityLevel = 0.01;
+	double minDistance = 10;
+	int blockSize = 3;
+	int maxCorners = 6;
+	bool useHarrisDetector = false;
+	double k = 0.16;
+	cv::RNG rng(12345);
+
+	/// Copy the source image
+	cv::Mat copy;
+	cv::cvtColor(filtered.clone(), copy, CV_BGR2GRAY);
+
+	/// Apply corner detection
+	cv::goodFeaturesToTrack( copy,
+	       corners,
+	       maxCorners,
+	       qualityLevel,
+	       minDistance,
+	       cv::Mat(),
+	       blockSize,
+	       useHarrisDetector,
+	       k );
+
+
+	/// Draw corners detected
+	std::cout << "** Number of corners detected: "<< corners.size() << std::endl;
+	int r = 4;
+
+	for( int i = 0; i < corners.size(); i++ )
+	{ circle( roiImage, corners[i], r, cv::Scalar(rng.uniform(0,255), rng.uniform(0,255),
+	      rng.uniform(0,255)), -1, 8, 0 ); }
+	 */
 }
