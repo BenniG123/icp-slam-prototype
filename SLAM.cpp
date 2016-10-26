@@ -57,8 +57,8 @@ int main( int argc, const char** argv )
 	cv::namedWindow( "ROI" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "ROI" , 1000 , 0 );
 
-	// cv::namedWindow( "Color" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	// cv::moveWindow( "Color" , 0 , 500 );
+	cv::namedWindow( "Color" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Color" , 0 , 500 );
 
 	cv::Mat image;
 
@@ -105,6 +105,8 @@ int main( int argc, const char** argv )
 
 		    // Read next depth frame
 		    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_COLOR);   // Read the file
+		    // CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
+		    // image.convertTo(image, CV_16U);
 
 		    if(! image.data ) // Check for invalid input
 		    {
@@ -113,39 +115,46 @@ int main( int argc, const char** argv )
 		        continue;
 		    }
 
-		    /* cv::Mat colorDepth = image.clone();
+		    double min;
+			double max;
 
-			for ( int x = 0; x < colorDepth.size().width; x++) {
-				for (int y = 0; y < colorDepth.size().height; y++) {
-					int depth = colorDepth.at<cv::Vec3b>(y, x)[0] * 5;
-					colorDepth.at<cv::Vec3b>(y, x) = cv::Vec3b(depth, depth, 120);
-				}
-			} */
+		    cv::Mat colorDepth;
 
-		    // cv::Mat undistortImage = image.clone();
+		    cv::minMaxIdx(image, &min, &max);
+			cv::Mat adjMap;
 
-		    // cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
+			// expand your range to 0..255. Similar to histEq();
+			image.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min); 
+
+			applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+
+		    cv::Mat undistortImage = image.clone();
+
+		    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
 		    cv::Mat filtered = image.clone();
 
 		    filterDepthImage(filtered, 30);
 
-		    cv::Mat roiImage = filtered.clone();
+		    cv::Mat roiImage = image.clone();
 
-		    cv::Sobel(filtered, filtered, CV_8U, 1, 0, 5);
+		    cv::Mat sobelFilter;
 
-			std::vector<cv::Rect> rois = calculateROIs(filtered, cv::Size2i(16, 16), 10);
+		    cv::Sobel(filtered, sobelFilter, CV_8U, 1, 0, 3);
+
+			std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 20);
 
 			// Draw rois
 			for (int i = 0; i < rois.size(); i++) {
-				cv::rectangle(roiImage, rois[i], cv::Scalar(255,255,0), 3);
+				cv::rectangle(roiImage, rois[i], cv::Scalar(255,255,i*10), 3);
 			}
 
 
 			cv::imshow( "ROI", roiImage );
 		    cv::imshow( "Filtered", filtered );
+		    cv::imshow( "Sobel", sobelFilter );
 		    cv::imshow( "Original", image );
-		    // cv::imshow( "Color", colorDepth );
+		    cv::imshow( "Color", colorDepth );
 		    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
 
 		    // TODO - The whole SLAM thing
@@ -178,12 +187,12 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 
 	// First erode the image to erode noisy edges
 	cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
-	                               cv::Size( 5, 5 ),
-	                               cv::Point( 2, 2 ) );
+	                               cv::Size( 7, 7 ),
+	                               cv::Point( 3, 3 ) );
 
 	cv::Mat dilate_element = cv::getStructuringElement( cv::MORPH_RECT,
-                               cv::Size( 5, 5 ),
-                               cv::Point( 2, 2 ) );
+                               cv::Size( 7, 7 ),
+                               cv::Point( 3, 3 ) );
 
 	cv::erode( image, image, erode_element);
 	cv::dilate( image, image, dilate_element);
@@ -260,10 +269,10 @@ int curvature(cv::Mat roi) {
 
 
 	// Step 2 - Estimate Curvature
+	return cv::sum(roi)[0];
 
 
-
-	int minDistance = roi.at<cv::Vec3b>(0, 0)[0];
+	/* int minDistance = roi.at<cv::Vec3b>(0, 0)[0];
 	int maxDistance = roi.at<cv::Vec3b>(0, 0)[0];
 
 	cv::Size matSize = roi.size();
@@ -284,5 +293,5 @@ int curvature(cv::Mat roi) {
 
 	// std::cout << maxDistance - minDistance << std::endl;
 
-	return maxDistance - minDistance;
+	return maxDistance - minDistance; */
 }
