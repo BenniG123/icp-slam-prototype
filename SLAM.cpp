@@ -30,7 +30,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance);
 
 int curvature(cv::Mat roi);
 
-std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs);
+std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin);
 
 int main( int argc, const char** argv )
 {
@@ -54,8 +54,8 @@ int main( int argc, const char** argv )
 	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Filtered" , 500 , 0 );
 
-	cv::namedWindow( "ROI" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow( "ROI" , 1000 , 0 );
+	cv::namedWindow( "Sobel" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Sobel" , 1000 , 0 );
 
 	cv::namedWindow( "Color" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Color" , 0 , 500 );
@@ -136,21 +136,17 @@ int main( int argc, const char** argv )
 
 		    filterDepthImage(filtered, 30);
 
-		    cv::Mat roiImage = image.clone();
-
 		    cv::Mat sobelFilter;
 
 		    cv::Sobel(filtered, sobelFilter, CV_8U, 1, 0, 3);
 
-			std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 20);
+			std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
 
 			// Draw rois
 			for (int i = 0; i < rois.size(); i++) {
-				cv::rectangle(roiImage, rois[i], cv::Scalar(255,255,i*10), 3);
+				cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
 			}
 
-
-			cv::imshow( "ROI", roiImage );
 		    cv::imshow( "Filtered", filtered );
 		    cv::imshow( "Sobel", sobelFilter );
 		    cv::imshow( "Original", image );
@@ -208,26 +204,27 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 
 }
 
-std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs) {
+std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin = 0) {
 
 	std::vector<cv::Rect> roi_list;
 	std::vector<int> curvature_list;
 
 	cv::Size matSize = image.size();
 
-	int x = 0;
-	int y = 0;
+	// Scan over the margin
+	int x = margin;
+	int y = margin;
 
 	cv::Rect maxRect;
 
 	curvature_list.clear();
 	roi_list.clear();
 
-	while (x < (matSize.width + 1 - roiSIZE.width)) {
+	while (x < (matSize.width + 1 - roiSIZE.width - margin)) {
 
 		y = 0;
 
-		while (y < (matSize.height + 1 - roiSIZE.height)) {
+		while (y < (matSize.height + 1 - roiSIZE.height - margin)) {
 			cv::Rect roi(x, y, roiSIZE.width, roiSIZE.height);
 
 			int c = curvature(image(roi));
