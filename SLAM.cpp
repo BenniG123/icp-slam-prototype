@@ -35,6 +35,8 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 int main( int argc, const char** argv )
 {
 	std::string path;
+	bool paused = false;
+	// TODO - Command prompt arguments
 
 	if (argc > 1) {
 		path.assign(argv[1]);
@@ -44,6 +46,15 @@ int main( int argc, const char** argv )
 		error_message();
 		return 0;
 	}
+
+	if (argc > 2) {
+			std::cout << argv[2] << std::endl;
+		if (strcmp(argv[2], "-p") == 0) {
+			// Begin paused
+			paused = true;
+		}
+	}
+
 
 	// Correct the path if it doesn't end in our format
 	if (path.at(path.size() - 1) != '/') {
@@ -151,6 +162,11 @@ int main( int argc, const char** argv )
 		    cv::imshow( "Sobel", sobelFilter );
 		    cv::imshow( "Original", image );
 		    cv::imshow( "Color", colorDepth );
+
+	    	if (paused) {
+				cv::waitKey(0);
+				paused = false;
+			}
 		    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
 
 		    // TODO - The whole SLAM thing
