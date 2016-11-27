@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <vector>
 #include <iterator>
+#include <boost/circular_buffer.hpp>
 
 /*
 	depth/ir intrinsic parameters on the Kinect V2:
@@ -39,7 +40,7 @@ int curvature(cv::Mat roi);
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin);
 
-cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& ground_truth_file);
+cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file);
 
 int main( int argc, const char** argv )
 {
@@ -95,14 +96,13 @@ int main( int argc, const char** argv )
 	cv::Mat cameraMatrix(3, 3, CV_32FC1, &data);
 	cv::Mat distortionMatrix;
 	cv::Mat translationPlot(500, 500, CV_8UC(3));
+	boost::circular_buffer<cv::Mat> translationBuffer{33};
 
 	std::string line;
 	std::string depth_list_file_name(path);
 	std::string ground_truth_file_name(path);
 
 	double timestamp;
-	double base_time = -1.0;
-	double base_gt_time = -1.0;
 
 	depth_list_file_name.append("depth.txt");
 	ground_truth_file_name.append("groundtruth.txt");
@@ -131,10 +131,6 @@ int main( int argc, const char** argv )
 				std::getline(ss, timestamp_string, ' ');
 				timestamp = std::stod(timestamp_string);
 
-				if (base_time < 0) {
-					base_time = timestamp;
-				}
-
 				std::getline(ss, file, ' ');
 
 				std::replace( file.begin(), file.end(), '\\', '/');
@@ -159,6 +155,8 @@ int main( int argc, const char** argv )
 			        cv::waitKey(1);
 			        continue;
 			    }
+
+			    translationPlot = cv::Mat::zeros(500, 500, CV_8UC(3));
 
 			    double min;
 				double max;
@@ -196,9 +194,16 @@ int main( int argc, const char** argv )
 				}
 
 			    cv::Mat translation = icp::getTransformation(image, image, 10, 10.0);
-				cv::Mat groundTruth = getNextGroundTruth(timestamp - base_time, &base_gt_time, ground_truth_file);
+				cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
+				translationBuffer.push_back(groundTruth);
 
-				cv:circle(translationPlot, cv::Point(((int) (groundTruth.at<float>(0,1) * 125) + 250), (int) (groundTruth.at<float>(0,2) * 125) + 250), 1, cv::Scalar(255, 255, 0));
+				int i = 0;
+				for (cv::Mat mat : translationBuffer) {
+					cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,1) * 125)), 1, cv::Scalar(255, i * 5, i * 5));
+					i++;
+				}
+
+				
 			    cv::imshow( "Filtered", filtered );
 			    cv::imshow( "Sobel", sobelFilter );
 			    cv::imshow( "Original", image );
@@ -231,7 +236,7 @@ int main( int argc, const char** argv )
 	return 0;
 }
 
-cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& ground_truth_file) {
+cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
 	// Sum up the transformation and rotational components of ground truth until
 	// Ground Truth timestamp would exceed depth frame timestamp
 
@@ -253,12 +258,6 @@ cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& gr
 	std::getline(ss, temp, ' ');
 	ground_truth_timestamp = std::stod(temp);
 
-    if (*basetime < 0) {
-    	*basetime = ground_truth_timestamp;
-    }
-
-    ground_truth_timestamp -= *basetime;
-
     while (ground_truth_timestamp < timestamp) {
     	// Do something with the measurements
 
@@ -267,7 +266,8 @@ cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& gr
 		ss.str(line);
 		std::getline(ss, temp, ' ');
 		ground_truth_timestamp = std::stod(temp);
-		ground_truth_timestamp -= *basetime;
+
+		// std::cout << ground_truth_timestamp << ", " << timestamp << std::endl;
     }
 
     // Translation vectors
