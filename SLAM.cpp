@@ -261,6 +261,17 @@ cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& gr
 
     ground_truth_timestamp -= *basetime;
 
+    while (ground_truth_timestamp < timestamp) {
+    	// Do something with the measurements
+
+		// Get next measurement
+		getline (ground_truth_file, line);
+		ss.str(line);
+		std::getline(ss, timestamp_string, ' ');
+		ground_truth_timestamp = std::stod(timestamp_string);
+		ground_truth_timestamp -= *basetime;
+    }
+
 	std::cout<< timestamp << ", " << ground_truth_timestamp << std::endl;
 
 	return cv::Mat();
