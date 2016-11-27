@@ -2,8 +2,12 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/features2d/features2d.hpp"
+#include "icp.hpp"
+
+// #include "boost/program_options.hpp"
 
 #include <iostream>
+#include <string>
 #include <fstream>
 #include <stdio.h>
 #include <algorithm>
@@ -35,12 +39,19 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 int main( int argc, const char** argv )
 {
 	std::string path;
+
+	// Abbreviation for program options
+	/* namespace po = boost::program_options;
+	po::options_description desc("Options"); 
+	desc.add_options()
+    	("help", "produce help message")
+    	("compression", po::value<int>(), "set compression level");
+	*/
+
 	bool paused = false;
-	// TODO - Command prompt arguments
 
 	if (argc > 1) {
 		path.assign(argv[1]);
-		std::cout << path << std::endl;
 	}
 	else {
 		error_message();
@@ -48,7 +59,6 @@ int main( int argc, const char** argv )
 	}
 
 	if (argc > 2) {
-			std::cout << argv[2] << std::endl;
 		if (strcmp(argv[2], "-p") == 0) {
 			// Begin paused
 			paused = true;
@@ -81,102 +91,164 @@ int main( int argc, const char** argv )
 	cv::Mat distortionMatrix;
 
 	std::string line;
+	std::string ground_truth_line;
+	std::string ground_truth_timestamp_string;
 	std::string depth_list_file_name(path);
+	std::string ground_truth_file_name(path);
+
+	float timestamp;
+	float base_time = -1f;
+	float ground_truth_timestamp;
+	float base_ground_truth_time = -1f;
+
+	std::stringstream ground_truth_ss;
 
 	depth_list_file_name.append("depth.txt");
+	ground_truth_file_name.append("groundtruth.txt");
 
-	std::ifstream myfile (depth_list_file_name.c_str());
+	std::ifstream depth_list_file(depth_list_file_name.c_str());
+	std::ifstream ground_truth_file(ground_truth_file_name.c_str());
 
-	if (myfile.is_open()) {
-		while ( getline (myfile,line) ) {
+	if (depth_list_file.is_open()) {
+		if (ground_truth_file.is_open()) {
 
-			// Get Filename
-			std::stringstream ss;
-			ss.str(line);
+			// Get the first line
+			getline (ground_truth_file, ground_truth_line);
 
-			std::string depth_frame_file_name(path);
-			std::string file;
+			while ( getline (depth_list_file, line) ) {
 
-			std::getline(ss, file, ' ');
-			std::getline(ss, file, ' ');
+				// Skip comments
+				while (line[0] == '#') {
+					getline (depth_list_file, line);
+				}
 
-			std::replace( file.begin(), file.end(), '\\', '/');
+				// Skip comments
+				while (ground_truth_line[0] == '#') {
+					getline (ground_truth_file, ground_truth_line);
+				}
 
-			// Remove whitespace
-		    std::cout << file << std::endl;
-		    for (int i = 0; i < file.size(); i++) {
-		    	if (file[i] == ' ' || file[i] == '\n' || file[i] == '\r') {
-		    		file.erase(i, 1);
-		    	}
-		    }
+				// Get Filename
+				std::stringstream ss;
+				ss.str(line);
 
-		    depth_frame_file_name.append(file.c_str());
+				std::string depth_frame_file_name(path);
+				std::string file;
+				std::string timestamp_string;
 
-		    std::cout << depth_frame_file_name << std::endl;
+				std::getline(ss, timestamp_string, ' ');
+				std::getline(ss, file, ' ');
 
-		    // Read next depth frame
-		    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_COLOR);   // Read the file
-		    // CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
-		    // image.convertTo(image, CV_16U);
+				ground_truth_ss.str(ground_truth_line);
+				std::getline(ground_truth_ss, ground_truth_timestamp_string, ' ');
 
-		    if(! image.data ) // Check for invalid input
-		    {
-		        std::cout <<  "Could not open or find the image" << std::endl;
-		        cv::waitKey(1);
-		        continue;
-		    }
+				std::replace( file.begin(), file.end(), '\\', '/');
 
-		    double min;
-			double max;
+				// Remove whitespace
+			    for (int i = 0; i < file.size(); i++) {
+			    	if (file[i] == ' ' || file[i] == '\n' || file[i] == '\r') {
+			    		file.erase(i, 1);
+			    	}
+			    }
 
-		    cv::Mat colorDepth;
+			    depth_frame_file_name.append(file.c_str());
 
-		    cv::minMaxIdx(image, &min, &max);
-			cv::Mat adjMap;
+			    // Read next depth frame
+			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_COLOR);   // Read the file
+			    // CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
+			    // image.convertTo(image, CV_16U);
 
-			// expand your range to 0..255. Similar to histEq();
-			image.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min); 
+			    if(! image.data ) // Check for invalid input
+			    {
+			        std::cout <<  "Could not open or find the image" << std::endl;
+			        cv::waitKey(1);
+			        continue;
+			    }
 
-			applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+			    double min;
+				double max;
 
-		    cv::Mat undistortImage = image.clone();
+			    cv::Mat colorDepth;
 
-		    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
+			    cv::minMaxIdx(image, &min, &max);
+				cv::Mat adjMap;
 
-		    cv::Mat filtered = image.clone();
+				// expand your range to 0..255. Similar to histEq();
+				image.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min); 
 
-		    filterDepthImage(filtered, 30);
+				applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
 
-		    cv::Mat sobelFilter;
+			    cv::Mat undistortImage = image.clone();
 
-		    cv::Sobel(filtered, sobelFilter, CV_8U, 1, 0, 3);
+			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
-			std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
+			    cv::Mat filtered = image.clone();
 
-			// Draw rois
-			for (int i = 0; i < rois.size(); i++) {
-				cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
+			    filterDepthImage(filtered, 30);
+
+			    cv::Mat sobelFilter;
+
+			    cv::Sobel(filtered, sobelFilter, CV_8U, 1, 0, 3);
+
+				// First erode the image to erode noisy edges
+				cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
+				                               cv::Size( 5, 5 ),
+				                               cv::Point( 2, 2 ) );
+
+			    cv::dilate( sobelFilter, sobelFilter, erode_element);
+
+				std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
+
+				// Draw rois
+				for (int i = 0; i < rois.size(); i++) {
+					cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
+				}
+
+			    icp::getTransformation(image, image, 10, 10.0);
+
+			    timestamp = std::stof(timestamp_string);
+			    ground_truth_timestamp = std::stof(ground_truth_timestamp_string);
+
+			    if (base_time < 0) {
+			    	base_time = timestamp;
+			    }
+
+			    if (base_ground_truth_time < 0) {
+			    	base_ground_truth_time = ground_truth_timestamp;
+			    }
+
+			    std::cout << timestamp_string << ", " << ground_truth_timestamp_string << std::endl;
+
+				while (timestamp > ground_truth_timestamp) {
+					// Compare ground truth and my transformation
+					std::cout << ground_truth_line << std::endl;
+					getline (ground_truth_file, ground_truth_line);
+				}
+
+			    cv::imshow( "Filtered", filtered );
+			    cv::imshow( "Sobel", sobelFilter );
+			    cv::imshow( "Original", image );
+			    cv::imshow( "Color", colorDepth );
+
+		    	if (paused) {
+					cv::waitKey(0);
+					paused = false;
+				}
+			    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
+
+			    // TODO - The whole SLAM thing
+
+			    cv::waitKey(0); // Wait for a keystroke in the window
 			}
 
-		    cv::imshow( "Filtered", filtered );
-		    cv::imshow( "Sobel", sobelFilter );
-		    cv::imshow( "Original", image );
-		    cv::imshow( "Color", colorDepth );
+			ground_truth_file.close();
 
-	    	if (paused) {
-				cv::waitKey(0);
-				paused = false;
-			}
-		    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
-
-		    // TODO - The whole SLAM thing
-
-		    cv::waitKey(33); // Wait for a keystroke in the window
+		} else {
+			error_message();
 		}
 
-		myfile.close();
-	}
-	else {
+		depth_list_file.close();
+
+	} else {
 		error_message();
 	}
 
@@ -187,6 +259,7 @@ void error_message() {
 	std::cout << "Usage: ./SLAM.exe <path to raw dataset>" << std::endl;
 	std::cout << "Example: ./SLAM.exe /home/ben/Documents/D1_raw/" << std::endl;
 	std::cout << "The datasets can be found at: corbs.dfki.uni-kl.de" << std::endl;
+	std::cout << "Make sure the file groundtruth.txt is located in the root of the provided directory." << std::endl;
 }
 
 // Notes 
