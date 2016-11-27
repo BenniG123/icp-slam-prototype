@@ -199,7 +199,7 @@ int main( int argc, const char** argv )
 
 				int i = 0;
 				for (cv::Mat mat : translationBuffer) {
-					cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,1) * 125)), 1, cv::Scalar(255, i * 5, i * 5));
+					cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,2) * 125)), mat.at<float>(0,1) * 5, cv::Scalar(255, i * 5, i * 5), -1);
 					i++;
 				}
 
