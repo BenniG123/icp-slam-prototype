@@ -26,15 +26,20 @@
 		t1 = 0.000
 		t2 = 0.000
 		offset = -18 mm
+
+	Camera Trajectory is provided at 120 Hz
+	Camera Depth Catpures are provided at 30 Hz
 w*/
 
-void error_message();
+void errorMessage();
 
 void filterDepthImage(cv::Mat &image, int maxDistance);
 
 int curvature(cv::Mat roi);
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin);
+
+cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& ground_truth_file);
 
 int main( int argc, const char** argv )
 {
@@ -54,7 +59,7 @@ int main( int argc, const char** argv )
 		path.assign(argv[1]);
 	}
 	else {
-		error_message();
+		errorMessage();
 		return 0;
 	}
 
@@ -91,17 +96,12 @@ int main( int argc, const char** argv )
 	cv::Mat distortionMatrix;
 
 	std::string line;
-	std::string ground_truth_line;
-	std::string ground_truth_timestamp_string;
 	std::string depth_list_file_name(path);
 	std::string ground_truth_file_name(path);
 
-	float timestamp;
-	float base_time = -1f;
-	float ground_truth_timestamp;
-	float base_ground_truth_time = -1f;
-
-	std::stringstream ground_truth_ss;
+	double timestamp;
+	double base_time = -1.0;
+	double base_gt_time = -1.0;
 
 	depth_list_file_name.append("depth.txt");
 	ground_truth_file_name.append("groundtruth.txt");
@@ -111,20 +111,11 @@ int main( int argc, const char** argv )
 
 	if (depth_list_file.is_open()) {
 		if (ground_truth_file.is_open()) {
-
-			// Get the first line
-			getline (ground_truth_file, ground_truth_line);
-
 			while ( getline (depth_list_file, line) ) {
 
 				// Skip comments
 				while (line[0] == '#') {
 					getline (depth_list_file, line);
-				}
-
-				// Skip comments
-				while (ground_truth_line[0] == '#') {
-					getline (ground_truth_file, ground_truth_line);
 				}
 
 				// Get Filename
@@ -135,11 +126,11 @@ int main( int argc, const char** argv )
 				std::string file;
 				std::string timestamp_string;
 
+				// Parse next timestamp
 				std::getline(ss, timestamp_string, ' ');
-				std::getline(ss, file, ' ');
+				timestamp = std::stod(timestamp_string);
 
-				ground_truth_ss.str(ground_truth_line);
-				std::getline(ground_truth_ss, ground_truth_timestamp_string, ' ');
+				std::getline(ss, file, ' ');
 
 				std::replace( file.begin(), file.end(), '\\', '/');
 
@@ -205,24 +196,11 @@ int main( int argc, const char** argv )
 
 			    icp::getTransformation(image, image, 10, 10.0);
 
-			    timestamp = std::stof(timestamp_string);
-			    ground_truth_timestamp = std::stof(ground_truth_timestamp_string);
-
-			    if (base_time < 0) {
-			    	base_time = timestamp;
-			    }
-
-			    if (base_ground_truth_time < 0) {
-			    	base_ground_truth_time = ground_truth_timestamp;
-			    }
-
-			    std::cout << timestamp_string << ", " << ground_truth_timestamp_string << std::endl;
-
-				while (timestamp > ground_truth_timestamp) {
-					// Compare ground truth and my transformation
-					std::cout << ground_truth_line << std::endl;
-					getline (ground_truth_file, ground_truth_line);
+		        if (base_time < 0) {
+					base_time = timestamp;
 				}
+
+				getNextGroundTruth(timestamp - base_time, &base_gt_time, ground_truth_file);
 
 			    cv::imshow( "Filtered", filtered );
 			    cv::imshow( "Sobel", sobelFilter );
@@ -237,25 +215,58 @@ int main( int argc, const char** argv )
 
 			    // TODO - The whole SLAM thing
 
-			    cv::waitKey(0); // Wait for a keystroke in the window
+			    cv::waitKey(33);
 			}
 
 			ground_truth_file.close();
 
 		} else {
-			error_message();
+			errorMessage();
 		}
 
 		depth_list_file.close();
 
 	} else {
-		error_message();
+		errorMessage();
 	}
 
 	return 0;
 }
 
-void error_message() {
+cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& ground_truth_file) {
+	// Sum up the transformation and rotational components of ground truth until
+	// Ground Truth timestamp would exceed depth frame timestamp
+
+	std::string line;
+	std::string timestamp_string;
+	std::stringstream ss;
+
+	double ground_truth_timestamp;
+
+    // Get the first line
+	getline (ground_truth_file, line);
+
+	// Skip comments
+	while (line[0] == '#') {
+		getline (ground_truth_file, line);
+	}
+
+	ss.str(line);
+	std::getline(ss, timestamp_string, ' ');
+	ground_truth_timestamp = std::stod(timestamp_string);
+
+    if (*basetime < 0) {
+    	*basetime = ground_truth_timestamp;
+    }
+
+    ground_truth_timestamp -= *basetime;
+
+	std::cout<< timestamp << ", " << ground_truth_timestamp << std::endl;
+
+	return cv::Mat();
+}
+
+void errorMessage() {
 	std::cout << "Usage: ./SLAM.exe <path to raw dataset>" << std::endl;
 	std::cout << "Example: ./SLAM.exe /home/ben/Documents/D1_raw/" << std::endl;
 	std::cout << "The datasets can be found at: corbs.dfki.uni-kl.de" << std::endl;
