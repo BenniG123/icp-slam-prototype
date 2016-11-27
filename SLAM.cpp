@@ -130,6 +130,10 @@ int main( int argc, const char** argv )
 				std::getline(ss, timestamp_string, ' ');
 				timestamp = std::stod(timestamp_string);
 
+				if (base_time < 0) {
+					base_time = timestamp;
+				}
+
 				std::getline(ss, file, ' ');
 
 				std::replace( file.begin(), file.end(), '\\', '/');
@@ -165,19 +169,15 @@ int main( int argc, const char** argv )
 
 				// expand your range to 0..255. Similar to histEq();
 				image.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min); 
-
 				applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
 
 			    cv::Mat undistortImage = image.clone();
-
 			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
 			    cv::Mat filtered = image.clone();
-
 			    filterDepthImage(filtered, 30);
 
 			    cv::Mat sobelFilter;
-
 			    cv::Sobel(filtered, sobelFilter, CV_8U, 1, 0, 3);
 
 				// First erode the image to erode noisy edges
@@ -194,13 +194,8 @@ int main( int argc, const char** argv )
 					cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
 				}
 
-			    icp::getTransformation(image, image, 10, 10.0);
-
-		        if (base_time < 0) {
-					base_time = timestamp;
-				}
-
-				getNextGroundTruth(timestamp - base_time, &base_gt_time, ground_truth_file);
+			    cv::Mat translation = icp::getTransformation(image, image, 10, 10.0);
+				cv::Mat groundTruth = getNextGroundTruth(timestamp - base_time, &base_gt_time, ground_truth_file);
 
 			    cv::imshow( "Filtered", filtered );
 			    cv::imshow( "Sobel", sobelFilter );
@@ -238,7 +233,7 @@ cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& gr
 	// Ground Truth timestamp would exceed depth frame timestamp
 
 	std::string line;
-	std::string timestamp_string;
+	std::string temp;
 	std::stringstream ss;
 
 	double ground_truth_timestamp;
@@ -252,8 +247,8 @@ cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& gr
 	}
 
 	ss.str(line);
-	std::getline(ss, timestamp_string, ' ');
-	ground_truth_timestamp = std::stod(timestamp_string);
+	std::getline(ss, temp, ' ');
+	ground_truth_timestamp = std::stod(temp);
 
     if (*basetime < 0) {
     	*basetime = ground_truth_timestamp;
@@ -267,14 +262,32 @@ cv::Mat getNextGroundTruth(double timestamp, double* basetime, std::ifstream& gr
 		// Get next measurement
 		getline (ground_truth_file, line);
 		ss.str(line);
-		std::getline(ss, timestamp_string, ' ');
-		ground_truth_timestamp = std::stod(timestamp_string);
+		std::getline(ss, temp, ' ');
+		ground_truth_timestamp = std::stod(temp);
 		ground_truth_timestamp -= *basetime;
     }
 
-	std::cout<< timestamp << ", " << ground_truth_timestamp << std::endl;
+    // Translation vectors
+    float tx;
+    float ty;
+    float tz;
 
-	return cv::Mat();
+	cv::Mat translation(1, 3, CV_32FC1);
+
+    std::getline(ss, temp, ' ');
+    tx = std::stof(temp);
+    translation.at<float>(0,0) = tx;
+    std::getline(ss, temp, ' ');
+    ty = std::stof(temp);
+    translation.at<float>(0,1) = ty;
+    std::getline(ss, temp, ' ');
+    tz = std::stof(temp);
+    translation.at<float>(0,2) = tz;
+
+    // TODO - Calculate delta instead of absolute
+	std::cout << translation << std::endl;
+
+	return translation;
 }
 
 void errorMessage() {
