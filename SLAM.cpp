@@ -94,6 +94,7 @@ int main( int argc, const char** argv )
 	// Correct depth frame
 	cv::Mat cameraMatrix(3, 3, CV_32FC1, &data);
 	cv::Mat distortionMatrix;
+	cv::Mat translationPlot(500, 500, CV_8UC(3));
 
 	std::string line;
 	std::string depth_list_file_name(path);
@@ -197,10 +198,12 @@ int main( int argc, const char** argv )
 			    cv::Mat translation = icp::getTransformation(image, image, 10, 10.0);
 				cv::Mat groundTruth = getNextGroundTruth(timestamp - base_time, &base_gt_time, ground_truth_file);
 
+				cv:circle(translationPlot, cv::Point(((int) (groundTruth.at<float>(0,1) * 125) + 250), (int) (groundTruth.at<float>(0,2) * 125) + 250), 1, cv::Scalar(255, 255, 0));
 			    cv::imshow( "Filtered", filtered );
 			    cv::imshow( "Sobel", sobelFilter );
 			    cv::imshow( "Original", image );
 			    cv::imshow( "Color", colorDepth );
+			    cv::imshow( "Translation", translationPlot );
 
 		    	if (paused) {
 					cv::waitKey(0);
