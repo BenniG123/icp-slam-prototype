@@ -87,6 +87,9 @@ int main( int argc, const char** argv )
 	cv::namedWindow( "Color" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Color" , 0 , 500 );
 
+	cv::namedWindow( "Translation" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Translation" , 500 , 500 );
+
 	cv::Mat image;
 
 	// Camera Calibration Matrix
@@ -96,7 +99,8 @@ int main( int argc, const char** argv )
 	cv::Mat cameraMatrix(3, 3, CV_32FC1, &data);
 	cv::Mat distortionMatrix;
 	cv::Mat translationPlot(500, 500, CV_8UC(3));
-	boost::circular_buffer<cv::Mat> translationBuffer{33};
+	cv::Mat initialPosition;
+	boost::circular_buffer<cv::Mat> transformationBuffer{33};
 
 	std::string line;
 	std::string depth_list_file_name(path);
@@ -193,17 +197,24 @@ int main( int argc, const char** argv )
 					cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
 				}
 
-			    cv::Mat translation = icp::getTransformation(image, image, 10, 10.0);
+			    cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
 				cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
-				translationBuffer.push_back(groundTruth);
+
+				if (transformationBuffer.size() == 0) {
+					groundTruth.copyTo(initialPosition);
+					std::cout << initialPosition << std::endl;
+				}
+
+				cv::subtract(groundTruth, initialPosition, groundTruth);
+				std::cout << groundTruth << std::endl;
+				transformationBuffer.push_back(groundTruth);
 
 				int i = 0;
-				for (cv::Mat mat : translationBuffer) {
-					cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,2) * 125)), mat.at<float>(0,1) * 5, cv::Scalar(255, i * 5, i * 5), -1);
+				for (cv::Mat mat : transformationBuffer) {
+					cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,2) * 125)), mat.at<float>(0,1) * 5 + 5, cv::Scalar(255, i * 5, i * 5), -1);
 					i++;
 				}
 
-				
 			    cv::imshow( "Filtered", filtered );
 			    cv::imshow( "Sobel", sobelFilter );
 			    cv::imshow( "Original", image );
@@ -288,7 +299,6 @@ cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
     translation.at<float>(0,2) = tz;
 
     // TODO - Calculate delta instead of absolute
-	std::cout << translation << std::endl;
 
 	return translation;
 }
