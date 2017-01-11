@@ -21,11 +21,14 @@ namespace icp {
 		// Iterate through image
 		cv::MatIterator_<cv::Vec3b> it, end;
 		for (  it = data.begin<cv::Vec3b>(), end = data.end<cv::Vec3b>(); it != end; ++it) {
-				// cv::Point3i nearestNeighbor = getNearestPoint(data.at<cv::Point3i>(j), previous);
+
 				int x = (*it)[0];
 				int y = (*it)[1];
 				int z = (*it)[2];
-				// std::cout << x << "," << y << "," << z << std::endl;
+
+				cv::Point3i(x,y,z) sourcePoint;
+				cv::Point3i nearestNeighbor = getNearestPoint(sourcePoint, previous);
+				
 		}
 
 		int i = 0;
