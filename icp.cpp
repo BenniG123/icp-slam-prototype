@@ -18,6 +18,7 @@ namespace icp {
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold) {
 		cv::Mat rigidTransformation(4, 4, CV_32F);
 		std::vector<std::pair<cv::Point3i, cv::Point3i>> associations;
+		std::vector<float> errors;
 
 		// Iterate through image
 		cv::MatIterator_<cv::Vec3b> it, end;
@@ -28,6 +29,7 @@ namespace icp {
 		while (it != end) {
 			int z = (*it)[0];
 
+			// Blank cells aren't relevant
 			if (z == 0) {
 				it++;
 				continue;
@@ -38,16 +40,18 @@ namespace icp {
 			
 
 			cv::Point3i sourcePoint(x,y,z);
-			cv::Point3i nearestNeighbor = getNearestPoint(sourcePoint, previous);
-			// cv:circle(previous, cv::Point(x, y), 3, cv::Scalar(255, 255, 0));
-			// std::cout << sourcePoint << ", " << nearestNeighbor << std::endl;
+			cv::Point3i nearestNeighbor;
+			float distance = getNearestPoint(sourcePoint, nearestNeighbor, previous);
+			associations.push_back(std::make_pair(sourcePoint, nearestNeighbor));
+			errors.push_back(distance);
+
 			index++;
 			it++;
 		}
 
 		int i = 0;
 		// While we haven't gotten close enough yet and we haven't iterated too much
-		while (meanSquareError(associations) > threshold && i++ < maxIterations) {
+		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
 			// Find nearest neighber associations
 
 		}
@@ -58,13 +62,13 @@ namespace icp {
 	}
 
 	// Bottlenecking function - Hardware acceleration candidate
-	cv::Point3i getNearestPoint(cv::Point3i point, cv::Mat& data) {
+	float getNearestPoint(cv::Point3i point, cv::Point3i& nearest, cv::Mat& data) {
 		// Iterate through image
 		cv::MatIterator_<cv::Vec3b> it, end;
 		it = data.begin<cv::Vec3b>();
 		end = data.end<cv::Vec3b>();
 
-		cv::Point3i nearest((*it)[0], (*it)[1], (*it)[2]);
+		nearest = cv::Point3i((*it)[0], (*it)[1], (*it)[2]);
 		float shortestDistance = distance(point, nearest);
 		int index = 0;
 		it++;
@@ -92,7 +96,7 @@ namespace icp {
 			it++;
 		}
 
-		return nearest;
+		return shortestDistance;
 	}
 
 	float distance(cv::Point3i a, cv::Point3i b) {
@@ -104,9 +108,19 @@ namespace icp {
 		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 	}
 
-	float meanSquareError(std::vector<std::pair<cv::Point3i, cv::Point3i>> associations) {
+	float meanSquareError(std::vector<float> errors) {
 		// Return the MSE between source and data
-		return -1;
+		float error_sum = 0;
+		for(int i = 0; i < errors.size(); i++){
+			error_sum += errors[i];
+   		}
+
+   		error_sum /= errors.size();
+   		error_sum = pow(error_sum, 2);
+
+   		std::cout << "MSE: " << error_sum << std::endl;
+
+		return error_sum;
 	}
 
 	/* High level ICP Code

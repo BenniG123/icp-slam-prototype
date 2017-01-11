@@ -207,8 +207,8 @@ int main( int argc, const char** argv )
 				}
 
 				if (previous.size().area() > 0) {
-					resize(image, image_sampled, cv::Size(64, 64));
-					resize(previous, previous_sampled, cv::Size(64, 64));
+					resize(image, image_sampled, cv::Size(32, 32));
+					resize(previous, previous_sampled, cv::Size(32, 32));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
 					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 10, 10.0);
