@@ -1,4 +1,5 @@
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
 #include "icp.hpp"
 #include <iostream>
 #include <stdio.h>
@@ -20,18 +21,28 @@ namespace icp {
 
 		// Iterate through image
 		cv::MatIterator_<cv::Vec3b> it, end;
+		it = data.begin<cv::Vec3b>();
+		end = data.end<cv::Vec3b>();
 		int index = 0;
 
-		for (  it = data.begin<cv::Vec3b>(), end = data.end<cv::Vec3b>(); it != end; ++it) {
+		while (it != end) {
+			int z = (*it)[0];
 
-				int x = index % data.size().width;
-				int y = index / data.size().width;
-				int z = (*it)[0];
+			if (z == 0) {
+				it++;
+				continue;
+			}
 
-				cv::Point3i sourcePoint(x,y,z);
-				cv::Point3i nearestNeighbor = getNearestPoint(sourcePoint, previous);
+			int x = index % data.size().width;
+			int y = index / data.size().width;
+			
 
-				index++;
+			cv::Point3i sourcePoint(x,y,z);
+			cv::Point3i nearestNeighbor = getNearestPoint(sourcePoint, previous);
+			// cv:circle(previous, cv::Point(x, y), 3, cv::Scalar(255, 255, 0));
+			// std::cout << sourcePoint << ", " << nearestNeighbor << std::endl;
+			index++;
+			it++;
 		}
 
 		int i = 0;
@@ -40,6 +51,8 @@ namespace icp {
 			// Find nearest neighber associations
 
 		}
+		// imshow("Temp", previous);
+		// cv::waitKey(0);
 		
 		return rigidTransformation;
 	}
@@ -49,17 +62,24 @@ namespace icp {
 		// Iterate through image
 		cv::MatIterator_<cv::Vec3b> it, end;
 		it = data.begin<cv::Vec3b>();
-		end = data.begin<cv::Vec3b>();
+		end = data.end<cv::Vec3b>();
 
 		cv::Point3i nearest((*it)[0], (*it)[1], (*it)[2]);
 		float shortestDistance = distance(point, nearest);
 		int index = 0;
+		it++;
 
-		while ( it++ != end) {
+		while ( it != end) {
 
-			int x = index % data.size().width;;
-			int y = index / data.size().width;;
 			int z = (*it)[0];
+
+			if (z == 0) {
+				it++;
+				continue;
+			}
+
+			int x = index % data.size().width;
+			int y = index / data.size().width;
 
 			cv::Point3i p(x,y,z);
 			float d = distance(point, p);
@@ -69,6 +89,7 @@ namespace icp {
 			}
 
 			index++;
+			it++;
 		}
 
 		return nearest;
@@ -78,7 +99,9 @@ namespace icp {
 		int x = a.x - b.x;
 		int y = a.y - b.y;
 		int z = a.z - b.z;
-		return sqrt(x*x + y*y + z*z);
+		// std::cout << a << ", " << b << std::endl;
+		// cv::waitKey(0);
+		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 	}
 
 	float meanSquareError(std::vector<std::pair<cv::Point3i, cv::Point3i>> associations) {

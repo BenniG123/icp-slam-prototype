@@ -90,7 +90,16 @@ int main( int argc, const char** argv )
 	cv::namedWindow( "Translation" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Translation" , 500 , 500 );
 
+	cv::namedWindow( "Previous" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Previous" , 1000 , 500 );
+
 	cv::Mat image;
+
+	// For sub sampling pixels
+	cv::Mat image_sampled;
+
+	cv::Mat previous;
+	cv::Mat previous_sampled;
 
 	// Camera Calibration Matrix
 	float data[3][3] = {{363.58,0,250.32}, {0,363.53,212.55}, {0,0,1}}; 
@@ -197,22 +206,30 @@ int main( int argc, const char** argv )
 					cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
 				}
 
-			    cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-				cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
+				if (previous.size().area() > 0) {
+					resize(image, image_sampled, cv::Size(64, 64));
+					resize(previous, previous_sampled, cv::Size(64, 64));
 
-				if (transformationBuffer.size() == 0) {
-					groundTruth.copyTo(initialPosition);
-					std::cout << initialPosition << std::endl;
-				}
+				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 10, 10.0);
+					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
-				cv::subtract(groundTruth, initialPosition, groundTruth);
-				std::cout << groundTruth << std::endl;
-				transformationBuffer.push_back(groundTruth);
+					if (transformationBuffer.size() == 0) {
+						groundTruth.copyTo(initialPosition);
+						std::cout << initialPosition << std::endl;
+					}
 
-				int i = 0;
-				for (cv::Mat mat : transformationBuffer) {
-					cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,2) * 125)), mat.at<float>(0,1) * 5 + 5, cv::Scalar(255, i * 5, i * 5), -1);
-					i++;
+					cv::subtract(groundTruth, initialPosition, groundTruth);
+					std::cout << groundTruth << std::endl;
+					transformationBuffer.push_back(groundTruth);
+
+					int i = 0;
+					for (cv::Mat mat : transformationBuffer) {
+						cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,2) * 125)), mat.at<float>(0,1) * 5 + 5, cv::Scalar(255, i * 5, i * 5), -1);
+						i++;
+					}
+
+			    	cv::imshow( "Previous", previous );
 				}
 
 			    cv::imshow( "Filtered", filtered );
@@ -225,6 +242,8 @@ int main( int argc, const char** argv )
 					cv::waitKey(0);
 					paused = false;
 				}
+
+				previous = image.clone();
 			    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
 
 			    // TODO - The whole SLAM thing
