@@ -3,4 +3,5 @@ namespace icp {
 	cv::Point3i getNearestPoint(cv::Point3i point, cv::Mat& data);
 	cv::Mat applyTransformation(cv::Mat& data, cv::Mat& tranformation);
 	float meanSquareError(std::vector<std::pair<cv::Point3i, cv::Point3i>> associations);
+	float distance(cv::Point3i a, cv::Point3i b);
 }
