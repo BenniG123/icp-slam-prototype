@@ -16,11 +16,13 @@ set(SOURCE
   ${SOURCE}
   SLAM.cpp
   icp.cpp
+  pointcloud.cpp
 )
 
 set(HEADERS
    ${HEADERS}
    icp.hpp
+   pointcloud.hpp
 ) 
 
 add_executable( SLAM.exe ${SOURCE} ${HEADERS})
