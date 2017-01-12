@@ -17,48 +17,59 @@ namespace icp {
 	*/
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold) {
 		cv::Mat rigidTransformation(4, 4, CV_32F);
-		std::vector<std::pair<cv::Point3i, cv::Point3i>> associations;
+		// std::vector<std::pair<cv::Point3i, cv::Point3i>> associations;
 		std::vector<float> errors;
+		std::vector<cv::Point3i> dataPoints;
+		std::vector<cv::Point3i> previousPoints;
+		cv::Point3i dataCenterOfMass;
+		cv::Point3i previousCenterOfMass;
 
-		// Iterate through image
-		cv::MatIterator_<cv::Vec3b> it, end;
-		it = data.begin<cv::Vec3b>();
-		end = data.end<cv::Vec3b>();
-		int index = 0;
+		dataCenterOfMass = initializePointCloud(data, dataPoints);
+		previousCenterOfMass = initializePointCloud(previous, previousPoints);
 
-		while (it != end) {
-			int z = (*it)[0];
-
-			// Blank cells aren't relevant
-			if (z == 0) {
-				it++;
-				continue;
-			}
-
-			int x = index % data.size().width;
-			int y = index / data.size().width;
-			
-
-			cv::Point3i sourcePoint(x,y,z);
-			cv::Point3i nearestNeighbor;
-			float distance = getNearestPoint(sourcePoint, nearestNeighbor, previous);
-			associations.push_back(std::make_pair(sourcePoint, nearestNeighbor));
-			errors.push_back(distance);
-
-			index++;
-			it++;
-		}
+		findNearestNeighborAssociations(dataPoints, previousPoints, errors);
 
 		int i = 0;
+
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
-			// Find nearest neighber associations
+			// Guess new transform
 
+			// Transform the new data
+			transformPointCloud();
+
+			// Find nearest neighber associations
+			findNearestNeighborAssociations(data, previous, errors);
 		}
 		// imshow("Temp", previous);
 		// cv::waitKey(0);
 		
 		return rigidTransformation;
+	}
+
+	void findNearestNeighborAssociations(std::vector<cv::Point3i> data, std::vector<cv::Point3i> previous, std::vector<float>& errors) {
+		// Iterate through image
+		std::vector<Point3i>::iterator it, end;
+		it = data.begin();
+		end = data.end();
+		int index = 0;
+
+		while (it != end) {
+
+			// Blank cells aren't relevant
+			if ((*it).z == 0) {
+				it++;
+				continue;
+			}
+			
+			cv::Point3i nearestNeighbor;
+			float distance = getNearestPoint(*it, nearestNeighbor, previous);
+			// associations.push_back(std::make_pair(sourcePoint, nearestNeighbor));
+			errors.push_back(distance);
+
+			index++;
+			it++;
+		}
 	}
 
 	// Bottlenecking function - Hardware acceleration candidate
