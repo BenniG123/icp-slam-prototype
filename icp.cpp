@@ -47,21 +47,13 @@ namespace icp {
 		std::vector<cv::Point3i>::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
-		int index = 0;
 
 		while (it != end) {
-			// Blank cells aren't relevant
-			if ((*it).z == 0) {
-				it++;
-				continue;
-			}
-			
 			cv::Point3i nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
 			// associations.push_back(std::make_pair(sourcePoint, nearestNeighbor));
 			errors.push_back(distance);
 
-			index++;
 			it++;
 		}
 	}
@@ -75,7 +67,6 @@ namespace icp {
 
 		nearest = *it;
 		float shortestDistance = distance(point, nearest);
-		int index = 0;
 		it++;
 
 		while ( it != end) {
@@ -85,7 +76,6 @@ namespace icp {
 				nearest = *it;
 			}
 
-			index++;
 			it++;
 		}
 

@@ -17,7 +17,7 @@ namespace icp {
 		while ( it != end) {
 			int z = (*it)[0];
 
-			// Ignore blank values
+			// Blank cells aren't relevant
 			if (z == 0) 
 			{
 				it++;
