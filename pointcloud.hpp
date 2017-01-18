@@ -7,7 +7,9 @@ namespace icp {
 	      cv::Point3i center;
 	      std::vector<cv::Point3i> points;
 	      PointCloud(cv::Mat& data);
-	      void transform(cv::Mat& transformationMatrix);
+	      void rotate(cv::Mat& transformationMatrix);
+	      void translate(cv::Mat& transformationMatrix);
+	      cv::Mat matrix();
 	};
 }
 

@@ -46,7 +46,21 @@ namespace icp {
 		center.z /= index;
 	}
 
-	void PointCloud::transform(cv::Mat& transformationMatrix) {
+	void PointCloud::rotate(cv::Mat& transformationMatrix) {
+	}
 
+	void PointCloud::translate(cv::Mat& transformationMatrix) {
+	}
+
+	cv::Mat PointCloud::matrix() {
+		cv::Mat M(points.size(),3, CV_32FC1);
+
+		for (int i = 0; i < points.size(); i++) {
+			M.at<float>(i, 0) = points[i].x - center.x;
+			M.at<float>(i, 1) = points[i].y - center.y;
+			M.at<float>(i, 2) = points[i].z - center.z;
+		}
+
+		return M;
 	}
 }

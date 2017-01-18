@@ -16,25 +16,49 @@ namespace icp {
 		OpenCV FLANN tutorial here - http://www.morethantechnical.com/2010/06/06/iterative-closest-point-icp-with-opencv-w-code/
 	*/
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold) {
-		cv::Mat rigidTransformation(4, 4, CV_32F);
-		// std::vector<std::pair<cv::Point3i, cv::Point3i>> associations;
+		cv::Mat rigidTransformation(4, 4, CV_32FC1);
+		std::vector<std::pair<cv::Point3i, cv::Point3i>> associations;
 		std::vector<float> errors;
 
 		PointCloud dataCloud(data);
 		PointCloud previousCloud(previous);
 
-		findNearestNeighborAssociations(dataCloud, previousCloud, errors);
+		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 		int i = 0;
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
-			// Guess new transform
+			// Transform our data to a form that is easily solvable by SVD
+			cv::Mat P = dataCloud.matrix();
+			cv::Mat Q = previousCloud.matrix();
+
+			// Make sure the data is the same size - proper alignment
+			if (P.size().area() > Q.size().area()) {
+				P = P(cv::Rect(0, 0, Q.cols, Q.rows));
+			}
+			else if (Q.size().area() > P.size().area()) {
+				Q = Q(cv::Rect(0, 0, P.cols, P.rows));
+			}
+
+			cv::Mat M = Q.t() * P;
+
+			// Perform SVD
+			cv::SVD svd(M);
+
+			std::cout << M << std::endl;
+
+			cv::Mat R =  svd.u.t() * svd.vt.t();			
+			// cv::waitKey(0);
+
+			// rigidTransformation += R;
+
+			std::cout << R << std::endl;
 
 			// Transform the new data
-			dataCloud.transform(rigidTransformation);
+			dataCloud.rotate(R);
 
 			// Find nearest neighber associations
-			findNearestNeighborAssociations(dataCloud, previousCloud, errors);
+			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 		}
 		// imshow("Temp", previous);
 		// cv::waitKey(0);
@@ -42,18 +66,19 @@ namespace icp {
 		return rigidTransformation;
 	}
 
-	void findNearestNeighborAssociations(PointCloud data, PointCloud previous, std::vector<float>& errors) {
+	void findNearestNeighborAssociations(PointCloud data, PointCloud previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3i, cv::Point3i>> associations) {
 		// Iterate through image
 		std::vector<cv::Point3i>::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
+		errors.clear();
+		associations.clear();
 
 		while (it != end) {
 			cv::Point3i nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
-			// associations.push_back(std::make_pair(sourcePoint, nearestNeighbor));
+			associations.push_back(std::make_pair(*it, nearestNeighbor));
 			errors.push_back(distance);
-
 			it++;
 		}
 	}
@@ -69,7 +94,7 @@ namespace icp {
 		float shortestDistance = distance(point, nearest);
 		it++;
 
-		while ( it != end) {
+		while (it != end) {
 			float d = distance(point, *it);
 			if (d < shortestDistance) {
 				shortestDistance = d;
@@ -104,10 +129,6 @@ namespace icp {
    		std::cout << "MSE: " << error_sum << std::endl;
 
 		return error_sum;
-	}
-
-	void initializePointCloud(cv::Mat& data, PointCloud* cloud) {
-
 	}
 
 	/* High level ICP Code

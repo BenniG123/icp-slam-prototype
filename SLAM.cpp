@@ -211,7 +211,7 @@ int main( int argc, const char** argv )
 					resize(previous, previous_sampled, cv::Size(32, 32));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 10, 10.0);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 1, 0.5);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformationBuffer.size() == 0) {
