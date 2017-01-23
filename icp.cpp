@@ -29,8 +29,8 @@ namespace icp {
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
 			// Transform our data to a form that is easily solvable by SVD
-			cv::Mat P = dataCloud.matrix();
-			cv::Mat Q = previousCloud.matrix();
+			cv::Mat P = dataCloud.centered_matrix();
+			cv::Mat Q = previousCloud.centered_matrix();
 
 			// Make sure the data is the same size - proper alignment
 			if (P.size().area() > Q.size().area()) {
@@ -47,9 +47,8 @@ namespace icp {
 
 			std::cout << M << std::endl;
 
+			// Rotational Matrix
 			cv::Mat R =  svd.u.t() * svd.vt.t();			
-			// cv::waitKey(0);
-
 			// rigidTransformation += R;
 
 			std::cout << R << std::endl;
@@ -60,6 +59,9 @@ namespace icp {
 			// Find nearest neighber associations
 			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 		}
+
+		// dataCloud.translate();
+
 		// imshow("Temp", previous);
 		// cv::waitKey(0);
 		

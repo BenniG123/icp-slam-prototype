@@ -10,6 +10,7 @@ namespace icp {
 	      void rotate(cv::Mat& transformationMatrix);
 	      void translate(cv::Mat& transformationMatrix);
 	      cv::Mat matrix();
+	      cv::Mat centered_matrix();
 	};
 }
 

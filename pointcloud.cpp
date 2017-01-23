@@ -1,5 +1,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
 #include "pointcloud.hpp"
+#include <iostream>
 
 namespace icp {
 	// Build 3D point cloud from depth image
@@ -46,19 +48,51 @@ namespace icp {
 		center.z /= index;
 	}
 
-	void PointCloud::rotate(cv::Mat& transformationMatrix) {
+	void PointCloud::rotate(cv::Mat& rotationMatrix) {
+		cv::Mat M = matrix();
+
+		for (int i = 0; i < points.size(); i++) {
+			cv::Mat m = M.row(i) * rotationMatrix;
+			// std::cout << m << std::endl;
+			// cv::waitKey(0);
+
+			points[i].x = m.at<float>(i, 0);
+			points[i].y = m.at<float>(i, 1);
+			points[i].z = m.at<float>(i, 2);
+		}
 	}
 
 	void PointCloud::translate(cv::Mat& transformationMatrix) {
+		cv::Mat M = matrix();
+
+		for (int i = 0; i < points.size(); i++) {
+			cv::Mat m = M.row(i) * transformationMatrix;
+
+			points[i].x = m.at<float>(i, 0);
+			points[i].y = m.at<float>(i, 1);
+			points[i].z = m.at<float>(i, 2);
+		}
 	}
 
-	cv::Mat PointCloud::matrix() {
+	cv::Mat PointCloud::centered_matrix() {
 		cv::Mat M(points.size(),3, CV_32FC1);
 
 		for (int i = 0; i < points.size(); i++) {
 			M.at<float>(i, 0) = points[i].x - center.x;
 			M.at<float>(i, 1) = points[i].y - center.y;
 			M.at<float>(i, 2) = points[i].z - center.z;
+		}
+
+		return M;
+	}
+
+	cv::Mat PointCloud::matrix() {
+		cv::Mat M(points.size(),3, CV_32FC1);
+
+		for (int i = 0; i < points.size(); i++) {
+			M.at<float>(i, 0) = points[i].x;
+			M.at<float>(i, 1) = points[i].y;
+			M.at<float>(i, 2) = points[i].z;
 		}
 
 		return M;
