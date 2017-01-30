@@ -52,7 +52,10 @@ namespace icp {
 		cv::Mat M = matrix();
 
 		for (int i = 0; i < points.size(); i++) {
+			std::cout << M.row(i) << std::endl;
 			cv::Mat m = M.row(i) * rotationMatrix;
+			std::cout << m << std::endl;
+			std::getchar();
 			// std::cout << m << std::endl;
 			// cv::waitKey(0);
 
