@@ -7,7 +7,7 @@ namespace icp {
 	// Build 3D point cloud from depth image
 	PointCloud::PointCloud(cv::Mat& data) {
 		center = cv::Point3i(0,0,0);
-		points = std::vector<cv::Point3i>();
+		points = std::vector<cv::Point3f>();
 
 		cv::MatIterator_<cv::Vec3b> it, end;
 		it = data.begin<cv::Vec3b>();
@@ -18,6 +18,7 @@ namespace icp {
 
 		while ( it != end) {
 			int z = (*it)[0];
+
 
 			// Blank cells aren't relevant
 			if (z == 0) 
@@ -36,7 +37,7 @@ namespace icp {
 			center.z += z;
 
 			// Add point to point cloud
-			points.push_back(cv::Point3i(x,y,z));
+			points.push_back(cv::Point3f(x,y,z));
 
 			index++;
 			it++;
@@ -52,16 +53,12 @@ namespace icp {
 		cv::Mat M = matrix();
 
 		for (int i = 0; i < points.size(); i++) {
-			std::cout << M.row(i) << std::endl;
 			cv::Mat m = M.row(i) * rotationMatrix;
-			std::cout << m << std::endl;
-			std::getchar();
-			// std::cout << m << std::endl;
-			// cv::waitKey(0);
-
-			points[i].x = m.at<float>(i, 0);
-			points[i].y = m.at<float>(i, 1);
-			points[i].z = m.at<float>(i, 2);
+			std::cout << "Rotate: " << M.row(i) << ", " << m << std::endl;
+			
+			points[i].x = m.at<float>(0, 0);
+			points[i].y = m.at<float>(0, 1);
+			points[i].z = m.at<float>(0, 2);
 		}
 	}
 

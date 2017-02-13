@@ -4,8 +4,8 @@
 namespace icp {
 	class PointCloud {
 		public:
-	      cv::Point3i center;
-	      std::vector<cv::Point3i> points;
+	      cv::Point3f center;
+	      std::vector<cv::Point3f> points;
 	      PointCloud(cv::Mat& data);
 	      void rotate(cv::Mat& transformationMatrix);
 	      void translate(cv::Mat& transformationMatrix);

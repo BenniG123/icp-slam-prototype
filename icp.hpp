@@ -5,10 +5,10 @@
 
 namespace icp {
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold);
-	float getNearestPoint(cv::Point3i point, cv::Point3i& nearest, PointCloud cloud);
+	float getNearestPoint(cv::Point3f point, cv::Point3f& nearest, PointCloud cloud);
 	float meanSquareError(std::vector<float> errors);
-	float distance(cv::Point3i a, cv::Point3i b);
-	void findNearestNeighborAssociations(PointCloud data, PointCloud previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3i, cv::Point3i>> associations);
+	float distance(cv::Point3f a, cv::Point3f b);
+	void findNearestNeighborAssociations(PointCloud data, PointCloud previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>> associations);
 }
 
 #endif

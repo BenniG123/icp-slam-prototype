@@ -17,7 +17,7 @@ namespace icp {
 	*/
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold) {
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
-		std::vector<std::pair<cv::Point3i, cv::Point3i>> associations;
+		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
 		std::vector<float> errors;
 
 		PointCloud dataCloud(data);
@@ -29,8 +29,14 @@ namespace icp {
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
 			// Transform our data to a form that is easily solvable by SVD
-			cv::Mat P = dataCloud.centered_matrix();
-			cv::Mat Q = previousCloud.centered_matrix();
+			cv::Mat P = dataCloud.matrix();
+			cv::Mat Q = previousCloud.matrix();
+			// std::cout << dataCloud.center << std::endl;
+			// cv::waitKey(0);
+			// std::cout << P << std::endl;
+			// cv::waitKey(0);
+			// std::cout << Q << std::endl;
+			// cv::waitKey(0);
 
 			// Make sure the data is the same size - proper alignment
 			if (P.size().area() > Q.size().area()) {
@@ -45,13 +51,15 @@ namespace icp {
 			// Perform SVD
 			cv::SVD svd(M);
 
-			std::cout << M << std::endl;
+			std::cout << "Cross Covariance" << std::endl << M << std::endl;
+			cv::waitKey(0);
 
 			// Rotational Matrix
-			cv::Mat R =  svd.u.t() * svd.vt.t();			
+			cv::Mat R =  svd.u.t() * svd.vt.t();		
 			// rigidTransformation += R;
 
-			std::cout << R << std::endl;
+			std::cout << "Rotation" << std::endl << R << std::endl;
+			cv::waitKey(0);
 
 			// Transform the new data
 			dataCloud.rotate(R);
@@ -60,6 +68,7 @@ namespace icp {
 			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 		}
 
+		// TODO
 		// dataCloud.translate();
 
 		// imshow("Temp", previous);
@@ -68,16 +77,16 @@ namespace icp {
 		return rigidTransformation;
 	}
 
-	void findNearestNeighborAssociations(PointCloud data, PointCloud previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3i, cv::Point3i>> associations) {
+	void findNearestNeighborAssociations(PointCloud data, PointCloud previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>> associations) {
 		// Iterate through image
-		std::vector<cv::Point3i>::iterator it, end;
+		std::vector<cv::Point3f>::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
 		errors.clear();
 		associations.clear();
 
 		while (it != end) {
-			cv::Point3i nearestNeighbor;
+			cv::Point3f nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
 			associations.push_back(std::make_pair(*it, nearestNeighbor));
 			errors.push_back(distance);
@@ -86,9 +95,9 @@ namespace icp {
 	}
 
 	// Bottlenecking function - Hardware acceleration candidate
-	float getNearestPoint(cv::Point3i point, cv::Point3i& nearest, PointCloud cloud) {
+	float getNearestPoint(cv::Point3f point, cv::Point3f& nearest, PointCloud cloud) {
 		// Iterate through image
-		std::vector<cv::Point3i>::iterator it, end;
+		std::vector<cv::Point3f>::iterator it, end;
 		it = cloud.points.begin();
 		end = cloud.points.end();
 
@@ -109,10 +118,10 @@ namespace icp {
 		return shortestDistance;
 	}
 
-	float distance(cv::Point3i a, cv::Point3i b) {
-		int x = a.x - b.x;
-		int y = a.y - b.y;
-		int z = a.z - b.z;
+	float distance(cv::Point3f a, cv::Point3f b) {
+		float x = a.x - b.x;
+		float y = a.y - b.y;
+		float z = a.z - b.z;
 		// std::cout << a << ", " << b << std::endl;
 		// cv::waitKey(0);
 		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
