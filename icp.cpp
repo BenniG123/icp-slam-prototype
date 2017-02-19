@@ -20,17 +20,39 @@ namespace icp {
 		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
 		std::vector<float> errors;
 
+		std::vector<cv::Point3f> A;
+		A.push_back(cv::Point3f(0.23016231, 0.7118579, 0.71648664));
+		A.push_back(cv::Point3f(0.18366629, 0.78773191, 0.49343173));
+		A.push_back(cv::Point3f(0.55284858, 0.50804783, 0.88369622));
+
+		std::vector<cv::Point3f> B;
+		B.push_back(cv::Point3f(0.7742103, 1.29968919, 0.81013864));
+ 		B.push_back(cv::Point3f(0.95294229, 1.24649128, 0.65882078)),
+ 		B.push_back(cv::Point3f(0.68383717, 1.17166464, 1.19622986));
+
 		PointCloud dataCloud(data);
 		PointCloud previousCloud(previous);
 
+		/*
+		A = [[ 0.23016231  0.7118579   0.71648664]
+		 [ 0.18366629  0.78773191  0.49343173]
+		 [ 0.55284858  0.50804783  0.88369622]]
+		 z
+		B = [[ 0.7742103   1.29968919  0.81013864]
+ 			[ 0.95294229  1.24649128  0.65882078]
+ 			[ 0.68383717  1.17166464  1.19622986]]
+		*/
+
 		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
+		// dataCloud.points = B;
+		// previousCloud.points = A;
 		int i = 0;
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
 			// Transform our data to a form that is easily solvable by SVD
-			cv::Mat P = dataCloud.matrix();
-			cv::Mat Q = previousCloud.matrix();
+			cv::Mat P = dataCloud.centered_matrix();
+			cv::Mat Q = previousCloud.centered_matrix();
 			// std::cout << dataCloud.center << std::endl;
 			// cv::waitKey(0);
 			// std::cout << P << std::endl;
@@ -46,16 +68,20 @@ namespace icp {
 				Q = Q(cv::Rect(0, 0, P.cols, P.rows));
 			}
 
-			cv::Mat M = Q.t() * P;
+			cv::transpose(P, P);
+			std::cout << "Sizes: " << P.size() << Q.size() << std::endl;
+			cv::waitKey(0);
+			// Should be P * Q
+			cv::Mat M = Q * P;
 
 			// Perform SVD
 			cv::SVD svd(M);
 
-			std::cout << "Cross Covariance" << std::endl << M << std::endl;
-			cv::waitKey(0);
+			// std::cout << "Cross Covariance" << std::endl << M << std::endl;
+			// cv::waitKey(0);
 
 			// Rotational Matrix
-			cv::Mat R =  svd.u.t() * svd.vt.t();		
+			cv::Mat R =  svd.vt.t() * svd.u.t(); //.t();		
 			// rigidTransformation += R;
 
 			std::cout << "Rotation" << std::endl << R << std::endl;
@@ -91,6 +117,20 @@ namespace icp {
 			associations.push_back(std::make_pair(*it, nearestNeighbor));
 			errors.push_back(distance);
 			it++;
+		}
+
+		data.points.clear();
+		previous.points.clear();
+
+		// Reassociate the points inside the pointclouds
+		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
+		it1 = associations.begin();
+		end1 = associations.end();
+		while (it1 != end1) {
+			data.points.push_back((*it1).first);
+			previous.points.push_back((*it1).second);
+			// std::cout << "Assocation: " << (*it1).first << " " << (*it1).second << std::endl; 
+			it1++;
 		}
 	}
 

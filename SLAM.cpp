@@ -207,11 +207,11 @@ int main( int argc, const char** argv )
 				}
 
 				if (previous.size().area() > 0) {
-					resize(image, image_sampled, cv::Size(32, 32));
+					resize(filtered, image_sampled, cv::Size(32, 32));
 					resize(previous, previous_sampled, cv::Size(32, 32));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.5);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.05);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformationBuffer.size() == 0) {
@@ -243,7 +243,7 @@ int main( int argc, const char** argv )
 					paused = false;
 				}
 
-				previous = image.clone();
+				previous = filtered.clone();
 			    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
 
 			    // TODO - The whole SLAM thing
