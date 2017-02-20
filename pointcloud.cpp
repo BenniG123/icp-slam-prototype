@@ -96,21 +96,15 @@ namespace icp {
 	}
 
 	void PointCloud::rotate(cv::Mat& rotationMatrix) {
-		cv::Mat M = matrix();
-
+		cv::Mat M = centered_matrix().t();
+		std::cout << rotationMatrix.size() << M.size() << std::endl;
+		cv::Mat RM = rotationMatrix * M;
+		cv::Mat RMT = RM.t();
+		
 		for (int i = 0; i < points.size(); i++) {
-			cv::Mat point(1, 3, CV_32FC1);
-
-			point.at<float>(0,0) = M.col(i).at<float>(0,0);
-			point.at<float>(0,1) = M.col(i).at<float>(1,0);
-			point.at<float>(0,2) = M.col(i).at<float>(2,0);
-
-			cv::Mat m = point * rotationMatrix;
-			std::cout << "Rotate: " << point << ", " << m << std::endl;
-
-			points[i].x = m.at<float>(0, 0);
-			points[i].y = m.at<float>(0, 1);
-			points[i].z = m.at<float>(0, 2);
+			points[i].x = RMT.at<float>(i, 0);
+			points[i].y = RMT.at<float>(i, 1);
+			points[i].z = RMT.at<float>(i, 2);
 		}
 	}
 
@@ -128,24 +122,24 @@ namespace icp {
 	}
 
 	cv::Mat PointCloud::centered_matrix() {
-		cv::Mat M(3, points.size(), CV_32FC1);
+		cv::Mat M(points.size(), 3, CV_32FC1);
 
 		for (int i = 0; i < points.size(); i++) {
-			M.at<float>(0, i) = points[i].x;
-			M.at<float>(1, i) = points[i].y;
-			M.at<float>(2, i) = points[i].z;
+			M.at<float>(i, 0) = points[i].x;
+			M.at<float>(i, 1) = points[i].y;
+			M.at<float>(i, 2) = points[i].z;
 		}
 
 		return M;
 	}
 
 	cv::Mat PointCloud::matrix() {
-		cv::Mat M(3, points.size(), CV_32FC1);
+		cv::Mat M(points.size(), 3, CV_32FC1);
 
 		for (int i = 0; i < points.size(); i++) {
-			M.at<float>(0, i) = points[i].x + center.x;
-			M.at<float>(1, i) = points[i].y + center.y;
-			M.at<float>(2, i) = points[i].z + center.z;
+			M.at<float>(i, 0) = points[i].x + center.x;
+			M.at<float>(i, 1) = points[i].y + center.y;
+			M.at<float>(i, 2) = points[i].z + center.z;
 		}
 
 		return M;

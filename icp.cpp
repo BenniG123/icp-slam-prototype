@@ -53,6 +53,7 @@ namespace icp {
 			// Transform our data to a form that is easily solvable by SVD
 			cv::Mat P = dataCloud.centered_matrix();
 			cv::Mat Q = previousCloud.centered_matrix();
+			
 			// std::cout << dataCloud.center << std::endl;
 			// cv::waitKey(0);
 			// std::cout << P << std::endl;
@@ -68,11 +69,7 @@ namespace icp {
 				Q = Q(cv::Rect(0, 0, P.cols, P.rows));
 			}
 
-			cv::transpose(P, P);
-			std::cout << "Sizes: " << P.size() << Q.size() << std::endl;
-			cv::waitKey(0);
-			// Should be P * Q
-			cv::Mat M = Q * P;
+			cv::Mat M = Q.t() * P;
 
 			// Perform SVD
 			cv::SVD svd(M);
@@ -126,6 +123,7 @@ namespace icp {
 		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
 		it1 = associations.begin();
 		end1 = associations.end();
+
 		while (it1 != end1) {
 			data.points.push_back((*it1).first);
 			previous.points.push_back((*it1).second);
