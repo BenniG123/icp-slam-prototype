@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-set(OpenCV_DIR "/usr/local/opencv-3.0.0/release")
+set(OpenCV_DIR "/usr/local/opencv/release")
 project( SLAM CXX)
 
 find_package( OpenCV REQUIRED )

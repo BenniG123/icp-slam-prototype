@@ -44,15 +44,17 @@ namespace icp {
 		*/
 
 		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
+
 		// dataCloud.points = B;
 		// previousCloud.points = A;
 		int i = 0;
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
+			// cv::waitKey(0);
 			// Transform our data to a form that is easily solvable by SVD
-			cv::Mat P = dataCloud.centered_matrix();
-			cv::Mat Q = previousCloud.centered_matrix();
+			cv::Mat dataMat = dataCloud.centered_matrix();
+			cv::Mat previousMat = previousCloud.centered_matrix();
 			
 			// std::cout << dataCloud.center << std::endl;
 			// cv::waitKey(0);
@@ -62,14 +64,14 @@ namespace icp {
 			// cv::waitKey(0);
 
 			// Make sure the data is the same size - proper alignment
-			if (P.size().area() > Q.size().area()) {
-				P = P(cv::Rect(0, 0, Q.cols, Q.rows));
+			if (dataMat.size().area() > previousMat.size().area()) {
+				dataMat = dataMat(cv::Rect(0, 0, previousMat.cols, previousMat.rows));
 			}
-			else if (Q.size().area() > P.size().area()) {
-				Q = Q(cv::Rect(0, 0, P.cols, P.rows));
+			else if (previousMat.size().area() > dataMat.size().area()) {
+				previousMat = previousMat(cv::Rect(0, 0, dataMat.cols, dataMat.rows));
 			}
 
-			cv::Mat M = Q.t() * P;
+			cv::Mat M = previousMat.t() * dataMat;
 
 			// Perform SVD
 			cv::SVD svd(M);
@@ -81,11 +83,12 @@ namespace icp {
 			cv::Mat R =  svd.vt.t() * svd.u.t(); //.t();		
 			// rigidTransformation += R;
 
-			std::cout << "Rotation" << std::endl << R << std::endl;
-			cv::waitKey(0);
+			// std::cout << "Rotation" << std::endl << R << std::endl;
+			// cv::waitKey(0);
 
 			// Transform the new data
-			dataCloud.rotate(R);
+			// R = R.inv();
+			previousCloud.rotate(R);
 
 			// Find nearest neighber associations
 			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);

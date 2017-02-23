@@ -2,6 +2,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/features2d/features2d.hpp"
+#include "opencv2/viz/vizcore.hpp"
 #include "icp.hpp"
 
 // #include "boost/program_options.hpp"
@@ -93,10 +94,14 @@ int main( int argc, const char** argv )
 	cv::namedWindow( "Previous" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Previous" , 1000 , 500 );
 
-	cv::Mat image;
+	cv::viz::Viz3d depthWindow("Depth Frame");
 
+	cv::Mat image;
+	cv::Mat filtered;
 	// For sub sampling pixels
 	cv::Mat image_sampled;
+	cv::Mat colorDepth;
+	cv::Mat colorFiltered;
 
 	cv::Mat previous;
 	cv::Mat previous_sampled;
@@ -174,8 +179,6 @@ int main( int argc, const char** argv )
 			    double min;
 				double max;
 
-			    cv::Mat colorDepth;
-
 			    cv::minMaxIdx(image, &min, &max);
 				cv::Mat adjMap;
 
@@ -186,11 +189,13 @@ int main( int argc, const char** argv )
 			    cv::Mat undistortImage = image.clone();
 			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
-			    cv::Mat filtered = image.clone();
+			    filtered = image.clone();
 			    filterDepthImage(filtered, 30);
 
 			    cv::Mat sobelFilter;
 			    cv::Sobel(filtered, sobelFilter, CV_8U, 1, 0, 3);
+
+				applyColorMap(adjMap, colorFiltered, cv::COLORMAP_JET);
 
 				// First erode the image to erode noisy edges
 				cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
@@ -211,7 +216,7 @@ int main( int argc, const char** argv )
 					resize(previous, previous_sampled, cv::Size(32, 32));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.05);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.01);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformationBuffer.size() == 0) {
@@ -232,10 +237,26 @@ int main( int argc, const char** argv )
 			    	cv::imshow( "Previous", previous );
 				}
 
+			    cv::Mat pointCloudMat(filtered.rows, filtered.cols, CV_32FC3);
+
+			    for (int x = 0; x < filtered.rows; x++) {
+			    	for (int y = 0; y < filtered.cols; y++) {
+			    		// std::cout << "\r" << x << " " << y << " " << filtered.at<cv::Vec3b>(x,y);
+			    		pointCloudMat.at<cv::Vec3f>(x,y) = cv::Vec3f(2 * x, 2 * y, filtered.at<cv::Vec3b>(x,y)[0] * 5);
+			    	}
+			    }
+
+				cv::viz::WCloud cloudWidget(pointCloudMat, colorFiltered);
+				cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, 2);
+
+				depthWindow.showWidget( "Depth", cloudWidget);
+				depthWindow.spinOnce(33, true);
+
 			    cv::imshow( "Filtered", filtered );
-			    cv::imshow( "Sobel", sobelFilter );
-			    cv::imshow( "Original", image );
+			    // cv::imshow( "Sobel", sobelFilter );
+			    // cv::imshow( "Original", image );
 			    cv::imshow( "Color", colorDepth );
+			    cv::imshow( "Color Filtered", colorFiltered );
 			    cv::imshow( "Translation", translationPlot );
 
 		    	if (paused) {
