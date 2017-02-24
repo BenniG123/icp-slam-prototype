@@ -35,7 +35,7 @@ namespace icp {
 		PointCloud previousCloud(previous);
 
 		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
-		showPointCloud(previous, depthWindow, cv::viz::Color().blue(), "Previous");
+		showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
 
 		/*
 		A = [[ 0.23016231  0.7118579   0.71648664]
@@ -124,9 +124,10 @@ namespace icp {
 	   	cv::minMaxIdx(pointCloudMat, &min, &max);
 		pointCloudMat.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min);
 		applyColorMap(adjMap, colorMap, cv::COLORMAP_JET);
-		*/ 
+		*/
+
 		cv::viz::WCloud cloudWidget(pointCloudMat, color);
-		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, 3);
+		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, 2);
 		depthWindow.showWidget( name , cloudWidget);
 	}
 

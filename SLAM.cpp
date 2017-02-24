@@ -80,8 +80,6 @@ int main( int argc, const char** argv )
 
 	/* 
 	cv::namedWindow( "Original" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow( "Filtered" , 500 , 0 );
 
 	cv::namedWindow( "Sobel" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Sobel" , 1000 , 0 );
@@ -95,9 +93,13 @@ int main( int argc, const char** argv )
 	cv::namedWindow( "Previous" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Previous" , 1000 , 500 );
 	*/
+	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Filtered" , 500 , 0 );
 
 	cv::viz::Viz3d depthWindow("Depth Frame");
-	// depthWindow.setCamera(cv::viz(makeCameraPose(cv::Vec3f(0, 0, 300), cv::Vec3f(0, 0, 0), cv::Vec3f(0, 1, 0)));
+
+	// Set our viewpoint
+	depthWindow.setViewerPose(cv::viz::makeCameraPose(cv::Vec3f(200, 0, 400), cv::Vec3f(0, 0, 0), cv::Vec3f(0, 1, 0)));
 
 	cv::Mat image;
 	cv::Mat filtered;
@@ -198,8 +200,6 @@ int main( int argc, const char** argv )
 			    cv::Mat sobelFilter;
 			    cv::Sobel(filtered, sobelFilter, CV_8U, 1, 0, 3);
 
-			    cv::bitwise_not(filtered, filtered);
-
 				// First erode the image to erode noisy edges
 				cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
 				                               cv::Size( 5, 5 ),
@@ -240,7 +240,7 @@ int main( int argc, const char** argv )
 			    	// cv::imshow( "Previous", previous );
 				}
 
-			    // cv::imshow( "Filtered", filtered );
+			    cv::imshow( "Filtered", filtered );
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
 			    // cv::imshow( "Color", colorDepth );
@@ -343,8 +343,8 @@ void errorMessage() {
 // Notes 
 // Sensor accuracy increases quadratically with distance
 // Sensor is noisy near depth discontinuities - Mask edges
-void filterDepthImage(cv::Mat &image, int maxDistance) {
-
+void filterDepthImage(cv::Mat &image, int minDistance) {
+	cv::bitwise_not(image, image);
 	cv::Size matSize = image.size();
 	cv::Vec3b max(255,255,255);
 
@@ -363,8 +363,8 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 	for ( int x = 0; x < matSize.width; x++) {
 		for (int y = 0; y < matSize.height; y++) {
 			// std:: cout << x << ", " << y << std::endl;
-			if (image.at<cv::Vec3b>(y, x)[0] > maxDistance) {
-				image.at<cv::Vec3b>(y, x) = max;
+			if (image.at<cv::Vec3b>(y, x)[0] < minDistance) {
+				image.at<cv::Vec3b>(y, x) = 0;
 			}
 		}
 	}
