@@ -78,6 +78,7 @@ int main( int argc, const char** argv )
 		path.append("/");
 	}
 
+	/* 
 	cv::namedWindow( "Original" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Filtered" , 500 , 0 );
@@ -93,8 +94,10 @@ int main( int argc, const char** argv )
 
 	cv::namedWindow( "Previous" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Previous" , 1000 , 500 );
+	*/
 
 	cv::viz::Viz3d depthWindow("Depth Frame");
+	// depthWindow.setCamera(cv::viz(makeCameraPose(cv::Vec3f(0, 0, 300), cv::Vec3f(0, 0, 0), cv::Vec3f(0, 1, 0)));
 
 	cv::Mat image;
 	cv::Mat filtered;
@@ -190,12 +193,12 @@ int main( int argc, const char** argv )
 			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
 			    filtered = image.clone();
-			    filterDepthImage(filtered, 30);
+			    filterDepthImage(filtered, 50);
 
 			    cv::Mat sobelFilter;
 			    cv::Sobel(filtered, sobelFilter, CV_8U, 1, 0, 3);
 
-				applyColorMap(adjMap, colorFiltered, cv::COLORMAP_JET);
+			    cv::bitwise_not(filtered, filtered);
 
 				// First erode the image to erode noisy edges
 				cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
@@ -216,7 +219,7 @@ int main( int argc, const char** argv )
 					resize(previous, previous_sampled, cv::Size(32, 32));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.01);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 0, 0.01, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformationBuffer.size() == 0) {
@@ -234,30 +237,17 @@ int main( int argc, const char** argv )
 						i++;
 					}
 
-			    	cv::imshow( "Previous", previous );
+			    	// cv::imshow( "Previous", previous );
 				}
 
-			    cv::Mat pointCloudMat(filtered.rows, filtered.cols, CV_32FC3);
-
-			    for (int x = 0; x < filtered.rows; x++) {
-			    	for (int y = 0; y < filtered.cols; y++) {
-			    		// std::cout << "\r" << x << " " << y << " " << filtered.at<cv::Vec3b>(x,y);
-			    		pointCloudMat.at<cv::Vec3f>(x,y) = cv::Vec3f(2 * x, 2 * y, filtered.at<cv::Vec3b>(x,y)[0] * 5);
-			    	}
-			    }
-
-				cv::viz::WCloud cloudWidget(pointCloudMat, colorFiltered);
-				cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, 2);
-
-				depthWindow.showWidget( "Depth", cloudWidget);
-				depthWindow.spinOnce(33, true);
-
-			    cv::imshow( "Filtered", filtered );
+			    // cv::imshow( "Filtered", filtered );
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
-			    cv::imshow( "Color", colorDepth );
-			    cv::imshow( "Color Filtered", colorFiltered );
-			    cv::imshow( "Translation", translationPlot );
+			    // cv::imshow( "Color", colorDepth );
+			    // cv::imshow( "Color Filtered", colorFiltered );
+			    // cv::imshow( "Translation", translationPlot );
+
+			    depthWindow.spinOnce(33, true);
 
 		    	if (paused) {
 					cv::waitKey(0);
@@ -356,7 +346,7 @@ void errorMessage() {
 void filterDepthImage(cv::Mat &image, int maxDistance) {
 
 	cv::Size matSize = image.size();
-	cv::Vec3b zero(0,0,0);
+	cv::Vec3b max(255,255,255);
 
 	// First erode the image to erode noisy edges
 	cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
@@ -374,7 +364,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		for (int y = 0; y < matSize.height; y++) {
 			// std:: cout << x << ", " << y << std::endl;
 			if (image.at<cv::Vec3b>(y, x)[0] > maxDistance) {
-				image.at<cv::Vec3b>(y, x) = zero;
+				image.at<cv::Vec3b>(y, x) = max;
 			}
 		}
 	}

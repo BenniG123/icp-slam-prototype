@@ -1,5 +1,6 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/viz/vizcore.hpp"
 #include "icp.hpp"
 #include <iostream>
 #include <stdio.h>
@@ -15,7 +16,7 @@ namespace icp {
 			Transform M
 		OpenCV FLANN tutorial here - http://www.morethantechnical.com/2010/06/06/iterative-closest-point-icp-with-opencv-w-code/
 	*/
-	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold) {
+	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
 		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
 		std::vector<float> errors;
@@ -32,6 +33,9 @@ namespace icp {
 
 		PointCloud dataCloud(data);
 		PointCloud previousCloud(previous);
+
+		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
+		showPointCloud(previous, depthWindow, cv::viz::Color().blue(), "Previous");
 
 		/*
 		A = [[ 0.23016231  0.7118579   0.71648664]
@@ -101,6 +105,29 @@ namespace icp {
 		// cv::waitKey(0);
 		
 		return rigidTransformation;
+	}
+
+	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name) {
+		double min;
+		double max;
+
+		cv::Mat adjMap;
+		cv::Mat colorMap;
+
+	    cv::Mat pointCloudMat(p.points.size() + 1, 1, CV_32FC3);
+
+	    for (int i = 0; i < p.points.size(); i++) {
+	    	pointCloudMat.at<cv::Vec3f>(i,1) = p.points[i];
+	    }
+
+	   	/*
+	   	cv::minMaxIdx(pointCloudMat, &min, &max);
+		pointCloudMat.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min);
+		applyColorMap(adjMap, colorMap, cv::COLORMAP_JET);
+		*/ 
+		cv::viz::WCloud cloudWidget(pointCloudMat, color);
+		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, 3);
+		depthWindow.showWidget( name , cloudWidget);
 	}
 
 	void findNearestNeighborAssociations(PointCloud data, PointCloud previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>> associations) {
