@@ -28,7 +28,7 @@ namespace icp {
 			// TODO - Worldspace from cameraspace
 			int x = index % data.size().width;
 			int y = index / data.size().width;
-			float z = ((float) (*it))/ 5000.0;
+			float z = ((float) (*it))/ 500.0;
 
 			// Update Center
 			center.x += x;

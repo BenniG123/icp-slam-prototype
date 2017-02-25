@@ -99,7 +99,7 @@ int main( int argc, const char** argv )
 	cv::viz::Viz3d depthWindow("Depth Frame");
 
 	// Set our viewpoint
-	depthWindow.setViewerPose(cv::viz::makeCameraPose(cv::Vec3f(0, 0, 200), cv::Vec3f(0, 0, 0), cv::Vec3f(0, 1, 0)));
+	depthWindow.setViewerPose(cv::viz::makeCameraPose(cv::Vec3f(100, 0, 200), cv::Vec3f(0, 0, 0), cv::Vec3f(0, 1, 0)));
 
 	cv::Mat image;
 	cv::Mat filtered;
@@ -198,7 +198,7 @@ int main( int argc, const char** argv )
 
 			    filtered = image.clone();
 			    // Filter all points > x * 5000 m away
-			    filterDepthImage(filtered, 20000);
+			    filterDepthImage(filtered, 8500);
 
 			    cv::Mat sobelFilter;
 			    cv::Sobel(filtered, sobelFilter, CV_16U, 1, 0, 3);
@@ -222,7 +222,7 @@ int main( int argc, const char** argv )
 					resize(previous, previous_sampled, cv::Size(64, 64));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 4, 0.01, depthWindow);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 1, 0.01, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformationBuffer.size() == 0) {
@@ -243,6 +243,7 @@ int main( int argc, const char** argv )
 			    	// cv::imshow( "Previous", previous );
 				}
 
+				// cv::bitwise_not(filtered, filtered);
 			    cv::imshow( "Filtered", filtered );
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
@@ -357,19 +358,24 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		}
 		it++;
 	}
-	std::cout << "Done Filtering Range" << std::endl;
+
+	// Subtract edges
+    // cv::Mat sobelFilter;
+    // cv::Sobel(image, sobelFilter, CV_16U, 3, 3, 5);
+    // image = image - sobelFilter;
 
 	// First erode the image to erode noisy edges
-	cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
-	                               cv::Size( 3, 3 ),
-	                               cv::Point( 1, 1 ) );
+	/* cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
+	                               cv::Size( 5, 5 ),
+	                               cv::Point( 3, 3 ) );
 
 	cv::Mat dilate_element = cv::getStructuringElement( cv::MORPH_RECT,
-                               cv::Size( 3, 3 ),
-                               cv::Point( 1, 1 ) );
+                               cv::Size( 5, 5 ),
+                               cv::Point( 3, 3 ) );
 
 	cv::erode( image, image, erode_element);
 	cv::dilate( image, image, dilate_element);
+	*/
 }
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin = 0) {
