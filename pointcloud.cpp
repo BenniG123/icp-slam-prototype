@@ -9,19 +9,18 @@ namespace icp {
 		center = cv::Point3f(0,0,0);
 		points = std::vector<cv::Point3f>();
 
-		cv::MatIterator_<cv::Vec3b> it, end;
-		it = data.begin<cv::Vec3b>();
-		end = data.end<cv::Vec3b>();
+		cv::MatIterator_<uint16_t> it, end;
+		it = data.begin<uint16_t>();
+		end = data.end<uint16_t>();
 
 		int index = 0;
 		it++;
 
 		while ( it != end) {
-			int z = (*it)[0];
-
 			// Blank cells aren't relevant
-			if (z == 0) 
+			if ((*it) == 0) 
 			{
+				index++;
 				it++;
 				continue;
 			}
@@ -29,6 +28,7 @@ namespace icp {
 			// TODO - Worldspace from cameraspace
 			int x = index % data.size().width;
 			int y = index / data.size().width;
+			float z = ((float) (*it))/ 5000.0;
 
 			// Update Center
 			center.x += x;

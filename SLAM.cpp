@@ -94,12 +94,12 @@ int main( int argc, const char** argv )
 	cv::moveWindow( "Previous" , 1000 , 500 );
 	*/
 	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow( "Filtered" , 500 , 0 );
+	cv::moveWindow( "Filtered" , 0 , 700 );
 
 	cv::viz::Viz3d depthWindow("Depth Frame");
 
 	// Set our viewpoint
-	depthWindow.setViewerPose(cv::viz::makeCameraPose(cv::Vec3f(200, 0, 400), cv::Vec3f(0, 0, 0), cv::Vec3f(0, 1, 0)));
+	depthWindow.setViewerPose(cv::viz::makeCameraPose(cv::Vec3f(0, 0, 200), cv::Vec3f(0, 0, 0), cv::Vec3f(0, 1, 0)));
 
 	cv::Mat image;
 	cv::Mat filtered;
@@ -168,7 +168,8 @@ int main( int argc, const char** argv )
 			    depth_frame_file_name.append(file.c_str());
 
 			    // Read next depth frame
-			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_COLOR);   // Read the file
+			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_ANYDEPTH);   // Read the fileW
+
 			    // CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
 			    // image.convertTo(image, CV_16U);
 
@@ -184,21 +185,23 @@ int main( int argc, const char** argv )
 			    double min;
 				double max;
 
-			    cv::minMaxIdx(image, &min, &max);
+			    /* cv::minMaxIdx(image, &min, &max);
 				cv::Mat adjMap;
 
 				// expand your range to 0..255. Similar to histEq();
 				image.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min); 
 				applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+				*/
 
 			    cv::Mat undistortImage = image.clone();
 			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
 			    filtered = image.clone();
-			    filterDepthImage(filtered, 50);
+			    // Filter all points > x * 5000 m away
+			    filterDepthImage(filtered, 20000);
 
 			    cv::Mat sobelFilter;
-			    cv::Sobel(filtered, sobelFilter, CV_8U, 1, 0, 3);
+			    cv::Sobel(filtered, sobelFilter, CV_16U, 1, 0, 3);
 
 				// First erode the image to erode noisy edges
 				cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
@@ -207,19 +210,19 @@ int main( int argc, const char** argv )
 
 			    cv::dilate( sobelFilter, sobelFilter, erode_element);
 
-				std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
+				// std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
 
 				// Draw rois
-				for (int i = 0; i < rois.size(); i++) {
-					cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
-				}
+				// for (int i = 0; i < rois.size(); i++) {
+				// 	cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
+				// }
 
 				if (previous.size().area() > 0) {
-					resize(filtered, image_sampled, cv::Size(32, 32));
-					resize(previous, previous_sampled, cv::Size(32, 32));
+					resize(filtered, image_sampled, cv::Size(64, 64));
+					resize(previous, previous_sampled, cv::Size(64, 64));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 0, 0.01, depthWindow);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 4, 0.01, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformationBuffer.size() == 0) {
@@ -247,7 +250,7 @@ int main( int argc, const char** argv )
 			    // cv::imshow( "Color Filtered", colorFiltered );
 			    // cv::imshow( "Translation", translationPlot );
 
-			    depthWindow.spinOnce(33, true);
+			    // depthWindow.spinOnce(33, true);
 
 		    	if (paused) {
 					cv::waitKey(0);
@@ -343,32 +346,30 @@ void errorMessage() {
 // Notes 
 // Sensor accuracy increases quadratically with distance
 // Sensor is noisy near depth discontinuities - Mask edges
-void filterDepthImage(cv::Mat &image, int minDistance) {
-	cv::bitwise_not(image, image);
-	cv::Size matSize = image.size();
-	cv::Vec3b max(255,255,255);
+void filterDepthImage(cv::Mat &image, int maxDistance) {
+	cv::MatIterator_<uint16_t> it, end;
+	it = image.begin<uint16_t>();
+	end = image.end<uint16_t>();
+
+	while (it != end) {
+		if ((*it) > maxDistance) {
+			(*it) = 0;
+		}
+		it++;
+	}
+	std::cout << "Done Filtering Range" << std::endl;
 
 	// First erode the image to erode noisy edges
 	cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
-	                               cv::Size( 7, 7 ),
-	                               cv::Point( 3, 3 ) );
+	                               cv::Size( 3, 3 ),
+	                               cv::Point( 1, 1 ) );
 
 	cv::Mat dilate_element = cv::getStructuringElement( cv::MORPH_RECT,
-                               cv::Size( 7, 7 ),
-                               cv::Point( 3, 3 ) );
+                               cv::Size( 3, 3 ),
+                               cv::Point( 1, 1 ) );
 
 	cv::erode( image, image, erode_element);
 	cv::dilate( image, image, dilate_element);
-
-	for ( int x = 0; x < matSize.width; x++) {
-		for (int y = 0; y < matSize.height; y++) {
-			// std:: cout << x << ", " << y << std::endl;
-			if (image.at<cv::Vec3b>(y, x)[0] < minDistance) {
-				image.at<cv::Vec3b>(y, x) = 0;
-			}
-		}
-	}
-
 }
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin = 0) {

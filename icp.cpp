@@ -34,9 +34,6 @@ namespace icp {
 		PointCloud dataCloud(data);
 		PointCloud previousCloud(previous);
 
-		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
-		showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
-
 		/*
 		A = [[ 0.23016231  0.7118579   0.71648664]
 		 [ 0.18366629  0.78773191  0.49343173]
@@ -55,6 +52,11 @@ namespace icp {
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
+
+			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
+			showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
+			depthWindow.spinOnce(33, true);
+
 			// cv::waitKey(0);
 			// Transform our data to a form that is easily solvable by SVD
 			cv::Mat dataMat = dataCloud.centered_matrix();
@@ -127,7 +129,7 @@ namespace icp {
 		*/
 
 		cv::viz::WCloud cloudWidget(pointCloudMat, color);
-		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, 2);
+		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, 3);
 		depthWindow.showWidget( name , cloudWidget);
 	}
 
