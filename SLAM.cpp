@@ -218,11 +218,11 @@ int main( int argc, const char** argv )
 				// }
 
 				if (previous.size().area() > 0) {
-					resize(filtered, image_sampled, cv::Size(64, 56));
-					resize(previous, previous_sampled, cv::Size(64, 56));
+					resize(filtered, image_sampled, cv::Size(128, 106));
+					resize(previous, previous_sampled, cv::Size(128, 106));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 1, 0.01, depthWindow);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.001, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformationBuffer.size() == 0) {
@@ -230,8 +230,13 @@ int main( int argc, const char** argv )
 						std::cout << initialPosition << std::endl;
 					}
 
+					if (rotation) {
+						previous = filtered.clone();
+					}
+
 					cv::subtract(groundTruth, initialPosition, groundTruth);
 					std::cout << groundTruth << std::endl;
+					std::cout << transformation.row(0) << std::endl;
 					transformationBuffer.push_back(groundTruth);
 
 					int i = 0;
@@ -241,6 +246,9 @@ int main( int argc, const char** argv )
 					}
 
 			    	// cv::imshow( "Previous", previous );
+				}
+				else {
+					previous = filtered.clone();
 				}
 
 				// cv::bitwise_not(filtered, filtered);
@@ -264,8 +272,6 @@ int main( int argc, const char** argv )
 					cv::waitKey(0);
 					paused = false;
 				}
-
-				previous = filtered.clone();
 			    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
 
 			    // TODO - The whole SLAM thing

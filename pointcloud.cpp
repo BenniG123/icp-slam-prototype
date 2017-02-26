@@ -17,9 +17,6 @@ namespace icp {
 
 		float x_coeff = 512.0 / ((float) data.size().width);
 		float y_coeff = 424.0 / ((float) data.size().height);
-		std::cout << x_coeff << std::endl;
-		std::cout << y_coeff << std::endl;
-		std::cout << "Point Cloud constructor" << std::endl;
 
 		int index = 0;
 		it++;
@@ -42,7 +39,7 @@ namespace icp {
 			// P3D.z = depth(x_d,y_d)
 			float x = (float) (index % width) * x_coeff;
 			float y = (float) (index / width) * y_coeff;
-			float p_z = ((float) (*it)) / 100;
+			float p_z = ((float) (*it)) / 1000;
 			float p_x = (x - 250.32) * p_z / 363.58;
 			float p_y = (y - 212.55) * p_z / 363.53;
 

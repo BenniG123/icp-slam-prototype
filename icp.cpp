@@ -17,7 +17,7 @@ namespace icp {
 		OpenCV FLANN tutorial here - http://www.morethantechnical.com/2010/06/06/iterative-closest-point-icp-with-opencv-w-code/
 	*/
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
-		cv::Mat rigidTransformation(4, 4, CV_32FC1);
+		cv::Mat rigidTransformation(3, 3, CV_32FC1);
 		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
 		std::vector<float> errors;
 
@@ -54,7 +54,7 @@ namespace icp {
 		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
 
 			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
-			// showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
+			showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
 			// Set our viewpoint
 			// cv::Point3f c = dataCloud.center;
 			// cv::Vec3f v(c.x, c.y, c.z);
@@ -100,14 +100,18 @@ namespace icp {
 			// Transform the new data
 			// R = R.inv();
 			previousCloud.rotate(R);
-			std::cout << "Rotate" << std::endl;
 
 			// Find nearest neighber associations
 			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 		}
 
-		// TODO
-		// dataCloud.translate();
+		cv::Point3f translation(0,0,0);
+		translation = dataCloud.center - previousCloud.center;
+
+		rigidTransformation.at<float>(0,0) = translation.x;
+		rigidTransformation.at<float>(0,1) = translation.y;
+		rigidTransformation.at<float>(0,2) = translation.z;
+
 
 		// imshow("Temp", previous);
 		// cv::waitKey(0);
@@ -151,10 +155,11 @@ namespace icp {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
 
-			// if (distance < .2) {
+			if (distance < .3) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
-			// }
+			}
+
 			// else {
 			// 	data.points.erase(it);
 			// }
