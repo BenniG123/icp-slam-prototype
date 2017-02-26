@@ -14,6 +14,7 @@ namespace icp {
 	      cv::Mat centered_matrix();
 	    private:
 	      void center_points();
+		  void std_dev_filter_points();
 	};
 }
 

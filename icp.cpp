@@ -54,7 +54,12 @@ namespace icp {
 		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
 
 			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
-			showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
+			// showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
+			// Set our viewpoint
+			// cv::Point3f c = dataCloud.center;
+			// cv::Vec3f v(c.x, c.y, c.z);
+			// depthWindow.setViewerPose(cv::viz::makeCameraPose(cv::Vec3f(0, 0, 20), v, cv::Vec3f(0, 1, 0)));
+
 			depthWindow.spinOnce(33, true);
 
 			// cv::waitKey(0);
@@ -95,6 +100,7 @@ namespace icp {
 			// Transform the new data
 			// R = R.inv();
 			previousCloud.rotate(R);
+			std::cout << "Rotate" << std::endl;
 
 			// Find nearest neighber associations
 			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
@@ -116,10 +122,10 @@ namespace icp {
 		cv::Mat adjMap;
 		cv::Mat colorMap;
 
-	    cv::Mat pointCloudMat(p.points.size() + 1, 1, CV_32FC3);
+	    cv::Mat pointCloudMat(p.points.size(), 1, CV_32FC3);
 
 	    for (int i = 0; i < p.points.size(); i++) {
-	    	pointCloudMat.at<cv::Vec3f>(i,1) = p.points[i];
+	    	pointCloudMat.at<cv::Vec3f>(i,0) = p.points[i];
 	    }
 
 	   	/*
@@ -144,8 +150,14 @@ namespace icp {
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
-			associations.push_back(std::make_pair(*it, nearestNeighbor));
-			errors.push_back(distance);
+
+			// if (distance < .2) {
+				associations.push_back(std::make_pair(*it, nearestNeighbor));
+				errors.push_back(distance);
+			// }
+			// else {
+			// 	data.points.erase(it);
+			// }
 			it++;
 		}
 

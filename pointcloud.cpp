@@ -1,5 +1,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "opencv2/viz/vizcore.hpp"
+#include "icp.hpp"
 #include "pointcloud.hpp"
 #include <iostream>
 
@@ -13,12 +15,20 @@ namespace icp {
 		it = data.begin<uint16_t>();
 		end = data.end<uint16_t>();
 
+		float x_coeff = 512.0 / ((float) data.size().width);
+		float y_coeff = 424.0 / ((float) data.size().height);
+		std::cout << x_coeff << std::endl;
+		std::cout << y_coeff << std::endl;
+		std::cout << "Point Cloud constructor" << std::endl;
+
 		int index = 0;
 		it++;
 
+		int width = data.size().width;
+
 		while ( it != end) {
 			// Blank cells aren't relevant
-			if ((*it) == 0) 
+			if ((*it) < 3500) 
 			{
 				index++;
 				it++;
@@ -26,17 +36,25 @@ namespace icp {
 			}
 
 			// TODO - Worldspace from cameraspace
-			int x = index % data.size().width;
-			int y = index / data.size().width;
-			float z = ((float) (*it))/ 500.0;
+			// http://nicolas.burrus.name/index.php/Research/KinectCalibration#tocLink7
+			// P3D.x = (x_d - cx_d (250.32)) * depth(x_d,y_d) / fx_d (363.58)
+			// P3D.y = (y_d - cy_d (212.55)) * depth(x_d,y_d) / fy_d (363.53)
+			// P3D.z = depth(x_d,y_d)
+			float x = (float) (index % width) * x_coeff;
+			float y = (float) (index / width) * y_coeff;
+			float p_z = ((float) (*it)) / 100;
+			float p_x = (x - 250.32) * p_z / 363.58;
+			float p_y = (y - 212.55) * p_z / 363.53;
+
+			// std::cout << p_x << " " << p_y << " " << p_z << std::endl;
 
 			// Update Center
-			center.x += x;
-			center.y += y;
-			center.z += z;
+			center.x += p_x;
+			center.y += p_y;
+			center.z += p_z;
 
 			// Add point to point cloud
-			points.push_back(cv::Point3f(x,y,z));
+			points.push_back(cv::Point3f(p_x,p_y,p_z));
 
 			index++;
 			it++;
@@ -48,6 +66,41 @@ namespace icp {
 		center.z /= index;
 
 		center_points();
+		// std_dev_filter_points();
+	}
+
+	void PointCloud::std_dev_filter_points() {
+		std::vector<cv::Point3f>::iterator it, end;
+		it = points.begin();
+		end = points.end();
+
+		float stddev = 0;
+		float sum = 0;
+
+		while ( it != end) {
+			sum += pow(center.x - (*it).x, 2);
+			sum += pow(center.y - (*it).y, 2);
+			sum += pow(center.z - (*it).z, 2);
+			it++;
+		}
+
+		sum /= points.size();
+
+		stddev = sqrt(sum);
+
+		std::cout << center.z << std::endl;
+
+		it = points.begin();
+		while ( it != end) {
+			if (icp::distance(center, *it) > stddev) {
+				// std::cout << (*it).z << std::endl;
+				points.erase(it);
+			}
+
+			it++;
+		}
+
+		std::cout << "Stddev " << stddev << std::endl;
 	}
 
 	// Build a point cloud from a vector

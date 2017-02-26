@@ -81,8 +81,7 @@ int main( int argc, const char** argv )
 	/* 
 	cv::namedWindow( "Original" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 
-	cv::namedWindow( "Sobel" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow( "Sobel" , 1000 , 0 );
+	
 
 	cv::namedWindow( "Color" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Color" , 0 , 500 );
@@ -92,14 +91,15 @@ int main( int argc, const char** argv )
 
 	cv::namedWindow( "Previous" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Previous" , 1000 , 500 );
+
+	cv::namedWindow( "Sobel" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Sobel" , 500 , 700 );
 	*/
+
 	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Filtered" , 0 , 700 );
 
 	cv::viz::Viz3d depthWindow("Depth Frame");
-
-	// Set our viewpoint
-	depthWindow.setViewerPose(cv::viz::makeCameraPose(cv::Vec3f(100, 0, 200), cv::Vec3f(0, 0, 0), cv::Vec3f(0, 1, 0)));
 
 	cv::Mat image;
 	cv::Mat filtered;
@@ -200,15 +200,15 @@ int main( int argc, const char** argv )
 			    // Filter all points > x * 5000 m away
 			    filterDepthImage(filtered, 8500);
 
-			    cv::Mat sobelFilter;
-			    cv::Sobel(filtered, sobelFilter, CV_16U, 1, 0, 3);
+			    // cv::Mat sobelFilter;
+			    // cv::Sobel(filtered, sobelFilter, CV_16U, 1, 0, 3);
 
 				// First erode the image to erode noisy edges
-				cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
-				                               cv::Size( 5, 5 ),
-				                               cv::Point( 2, 2 ) );
+				// cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
+				//                               cv::Size( 5, 5 ),
+				//                               cv::Point( 2, 2 ) );
 
-			    cv::dilate( sobelFilter, sobelFilter, erode_element);
+			    // cv::dilate( sobelFilter, sobelFilter, erode_element);
 
 				// std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
 
@@ -218,8 +218,8 @@ int main( int argc, const char** argv )
 				// }
 
 				if (previous.size().area() > 0) {
-					resize(filtered, image_sampled, cv::Size(64, 64));
-					resize(previous, previous_sampled, cv::Size(64, 64));
+					resize(filtered, image_sampled, cv::Size(64, 56));
+					resize(previous, previous_sampled, cv::Size(64, 56));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
 					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 1, 0.01, depthWindow);
@@ -244,7 +244,14 @@ int main( int argc, const char** argv )
 				}
 
 				// cv::bitwise_not(filtered, filtered);
-			    cv::imshow( "Filtered", filtered );
+				cv::minMaxIdx(filtered, &min, &max);
+				cv::Mat adjMap;
+
+				// expand your range to 0..255. Similar to histEq();
+				filtered.convertTo(adjMap, CV_8UC1, 255 / (max-min), -min); 
+				applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+
+			    cv::imshow( "Filtered", colorDepth );
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
 			    // cv::imshow( "Color", colorDepth );
@@ -359,23 +366,77 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		it++;
 	}
 
-	// Subtract edges
-    // cv::Mat sobelFilter;
-    // cv::Sobel(image, sobelFilter, CV_16U, 3, 3, 5);
-    // image = image - sobelFilter;
+  	// Using Canny's output as a mask, we display our result
+	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
+	                               cv::Size( 9, 9 ),
+	                               cv::Point( 5, 5 ) );
+	cv::Mat image8u;
+	cv::Mat detected_edges;
+	cv::Mat maskedImage;
+
+	cv::Mat detected_edges_16u;
+	image.convertTo(image8u, CV_8U);
+
+	// Canny detector for edges
+  	cv::Canny( image8u, detected_edges, 1.0, 5.0, 3 );
+
+	cv::dilate( detected_edges, detected_edges, element);
+	detected_edges.convertTo(detected_edges_16u, CV_16U);
+
+	cv::bitwise_not(detected_edges, detected_edges);
+ 	image.copyTo(maskedImage, detected_edges);
+ 	image = maskedImage;
+ 	cv::dilate( image, image, element);
+ 	cv::dilate( image, image, element);
+
+	// cv::GaussianBlur(image, image, cv::Size(5,5), 1);
+	// cv::imshow("Edges", detected_edges);
+
+	// cv::blur( image, image, cv::Size(3,3));
+	// 
+	// 
+
+	// cv::erode( image, image, element);
+	// cv::dilate( image, image, element);
+
+	// cv::erode( image, image, element);
+	// cv::erode( image, image, element);
+
+	// Denoise
+	/* cv::dilate( image, image, element);
+	cv::erode( image, image, element);
+	cv::dilate( image, image, element);
+	cv::erode( image, image, element);
+	cv::dilate( image, image, element);
+	cv::erode( image, image, element);
+	*/
 
 	// First erode the image to erode noisy edges
 	/* cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
-	                               cv::Size( 5, 5 ),
-	                               cv::Point( 3, 3 ) );
+	                               cv::Size( 7, 7 ),
+	                               cv::Point( 4, 4 ) );
 
 	cv::Mat dilate_element = cv::getStructuringElement( cv::MORPH_RECT,
-                               cv::Size( 5, 5 ),
-                               cv::Point( 3, 3 ) );
+                               cv::Size( 11, 11 ),
+                               cv::Point( 6, 6 ) );
 
 	cv::erode( image, image, erode_element);
 	cv::dilate( image, image, dilate_element);
-	*/
+	cv::erode( image, image, erode_element);
+	cv::dilate( image, image, dilate_element);
+	cv::erode( image, image, erode_element);
+	cv::dilate( image, image, dilate_element);
+
+	// Subtract edges
+    cv::Mat sobelFilter;
+    cv::Sobel(image, sobelFilter, CV_16U, 1, 1, 7);
+	// cv::dilate( sobelFilter, sobelFilter, erode_element);
+	// cv::dilate( sobelFilter, sobelFilter, erode_element);
+    cv::imshow( "Sobel", sobelFilter );
+    // cv::threshold(sobelFilter, sobelFilter, 1, 10000, cv::THRESH_BINARY);
+    image = image - sobelFilter;
+    */
+    
 }
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin = 0) {
