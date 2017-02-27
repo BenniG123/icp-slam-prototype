@@ -25,7 +25,7 @@ namespace icp {
 
 		while ( it != end) {
 			// Blank cells aren't relevant
-			if ((*it) < 3500) 
+			if ((*it) < 4500) 
 			{
 				index++;
 				it++;
@@ -85,8 +85,6 @@ namespace icp {
 
 		stddev = sqrt(sum);
 
-		std::cout << center.z << std::endl;
-
 		it = points.begin();
 		while ( it != end) {
 			if (icp::distance(center, *it) > stddev) {
@@ -96,8 +94,6 @@ namespace icp {
 
 			it++;
 		}
-
-		std::cout << "Stddev " << stddev << std::endl;
 	}
 
 	// Build a point cloud from a vector
@@ -147,7 +143,7 @@ namespace icp {
 
 	void PointCloud::rotate(cv::Mat& rotationMatrix) {
 		cv::Mat M = centered_matrix().t();
-		std::cout << rotationMatrix.size() << M.size() << std::endl;
+		// std::cout << rotationMatrix.size() << M.size() << std::endl;
 		cv::Mat RM = rotationMatrix * M;
 		cv::Mat RMT = RM.t();
 		

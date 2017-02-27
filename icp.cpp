@@ -17,9 +17,10 @@ namespace icp {
 		OpenCV FLANN tutorial here - http://www.morethantechnical.com/2010/06/06/iterative-closest-point-icp-with-opencv-w-code/
 	*/
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
-		cv::Mat rigidTransformation(3, 3, CV_32FC1);
+		cv::Mat rigidTransformation(4, 4, CV_32FC1);
 		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
 		std::vector<float> errors;
+		cv::Mat R;
 
 		std::vector<cv::Point3f> A;
 		A.push_back(cv::Point3f(0.23016231, 0.7118579, 0.71648664));
@@ -51,7 +52,7 @@ namespace icp {
 		int i = 0;
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
-		while (meanSquareError(errors) > threshold && i++ < maxIterations) {
+		while (meanSquareError(errors) > threshold && i < maxIterations) {
 
 			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
 			showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
@@ -91,8 +92,15 @@ namespace icp {
 			// cv::waitKey(0);
 
 			// Rotational Matrix
-			cv::Mat R =  svd.vt.t() * svd.u.t(); //.t();		
-			// rigidTransformation += R;
+			cv::Mat R =  svd.vt.t() * svd.u.t();
+			if (i == 0) {
+				R.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
+			}
+			else {
+				R = R * rigidTransformation(cv::Rect(0, 0, 3, 3));
+				R.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
+			}
+
 
 			// std::cout << "Rotation" << std::endl << R << std::endl;
 			// cv::waitKey(0);
@@ -103,18 +111,21 @@ namespace icp {
 
 			// Find nearest neighber associations
 			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
+
+			i++;
 		}
+
+		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
+		showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
+		depthWindow.spinOnce(33, true);
 
 		cv::Point3f translation(0,0,0);
 		translation = dataCloud.center - previousCloud.center;
 
-		rigidTransformation.at<float>(0,0) = translation.x;
-		rigidTransformation.at<float>(0,1) = translation.y;
-		rigidTransformation.at<float>(0,2) = translation.z;
-
-
-		// imshow("Temp", previous);
-		// cv::waitKey(0);
+		rigidTransformation.at<float>(0,3) = translation.x;
+		rigidTransformation.at<float>(1,3) = translation.y;
+		// Scale this to m
+		rigidTransformation.at<float>(2,3) = translation.z / 5;
 		
 		return rigidTransformation;
 	}
