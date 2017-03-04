@@ -197,6 +197,7 @@ int main( int argc, const char** argv )
 			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 
 			    filtered = image.clone();
+
 			    // Filter all points > x * 5000 m away
 			    filterDepthImage(filtered, 8500);
 
@@ -222,7 +223,7 @@ int main( int argc, const char** argv )
 					resize(previous, previous_sampled, cv::Size(64, 53));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 4, 0.001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 4, 0.000, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformationBuffer.size() == 0) {

@@ -93,6 +93,10 @@ namespace icp {
 
 			// Rotational Matrix
 			cv::Mat R =  svd.vt.t() * svd.u.t();
+
+			float data[3][3] = {{0, -1, 0}, {1, 0, 0}, {0,0,1}}; 
+			R = cv::Mat(3, 3, CV_32FC1, &data);
+			
 			if (i == 0) {
 				R.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 			}
