@@ -45,8 +45,15 @@ namespace icp {
  			[ 0.68383717  1.17166464  1.19622986]]
 		*/
 
+		/* double x = -2 * 3.14 / 180;
+		float d[3][3] = {{1, 0, 0}, {0, (float) cos(x), (float) -sin(x)}, {0, (float) sin(x),(float) cos(x)}};
+		cv::Mat a(3, 3, CV_32FC1, &d);
+
+		dataCloud.rotate(a);
+		*/
+
 		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
-		std::cout << dataCloud.points.size() << std::endl;
+		
 		// dataCloud.points = B;
 		// previousCloud.points = A;
 		int i = 0;
@@ -55,7 +62,7 @@ namespace icp {
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 
 			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
-			showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
+			showPointCloud(previousCloud, depthWindow, cv::viz::Color().yellow(), "Previous");
 			// Set our viewpoint
 			// cv::Point3f c = dataCloud.center;
 			// cv::Vec3f v(c.x, c.y, c.z);
@@ -65,6 +72,7 @@ namespace icp {
 
 			// cv::waitKey(0);
 			// Transform our data to a form that is easily solvable by SVD
+
 			cv::Mat dataMat = dataCloud.centered_matrix();
 			cv::Mat previousMat = previousCloud.centered_matrix();
 			
@@ -94,8 +102,9 @@ namespace icp {
 			// Rotational Matrix
 			cv::Mat R =  svd.vt.t() * svd.u.t();
 
-			float data[3][3] = {{0, -1, 0}, {1, 0, 0}, {0,0,1}}; 
-			R = cv::Mat(3, 3, CV_32FC1, &data);
+			// Testing rotation
+			// float data[3][3] = {{0, -1, 0}, {1, 0, 0}, {0,0,1}}; 
+			// R = cv::Mat(3, 3, CV_32FC1, &data);
 			
 			if (i == 0) {
 				R.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
@@ -113,8 +122,8 @@ namespace icp {
 			// R = R.inv();
 			previousCloud.rotate(R);
 
-			showPointCloud(previous, depthWindow, cv::viz::Color().red(), "Rotated Previous");
-			depthWindow.spinOnce(33, true);
+			// showPointCloud(previousCloud, depthWindow, cv::viz::Color().red(), "Rotated Previous");
+			// depthWindow.spinOnce(1000, true);
 
 
 			// Find nearest neighber associations
@@ -170,13 +179,20 @@ namespace icp {
 		errors.clear();
 		associations.clear();
 
+		// std::cout << previous.points.size() << std::endl;
+
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
-
+			// std::cout << end - it << std::endl;
+			// std::cout << nearestNeighbor << std::endl;
 			// if (distance < 2) {
-				associations.push_back(std::make_pair(*it, nearestNeighbor));
-				errors.push_back(distance);
+			// std::cout << "Pushing back association" << std::endl;
+
+			associations.push_back(std::make_pair(*it, nearestNeighbor));
+			errors.push_back(distance);
+
+			// std::cout << "Pushed back association" << std::endl;
 			// }
 
 			// else {
@@ -185,6 +201,9 @@ namespace icp {
 			it++;
 		}
 
+		// std::cout << previous.points.size() << std::endl;
+
+		/* 
 		data.points.clear();
 		previous.points.clear();
 
@@ -199,12 +218,14 @@ namespace icp {
 			// std::cout << "Assocation: " << (*it1).first << " " << (*it1).second << std::endl; 
 			it1++;
 		}
+		*/
+
 	}
 
 	// Bottlenecking function - Hardware acceleration candidate
-	float getNearestPoint(cv::Point3f point, cv::Point3f& nearest, PointCloud cloud) {
+	float getNearestPoint(cv::Point3f point, cv::Point3f& nearest, PointCloud& cloud) {
 		// Iterate through image
-		std::vector<cv::Point3f>::iterator it, end;
+		std::vector<cv::Point3f>::iterator it, end; //, near;
 		it = cloud.points.begin();
 		end = cloud.points.end();
 
@@ -217,10 +238,17 @@ namespace icp {
 			if (d < shortestDistance) {
 				shortestDistance = d;
 				nearest = *it;
+				// near = it;
 			}
 
 			it++;
 		}
+
+		// Deep copy of point
+		// nearest = cv::Point3f(nearest.x, nearest.y, nearest.z);
+		// cloud.points.erase(near);
+		// std::cout << cloud.points.size() << std::endl;
+		// nearest = deepCopy;
 
 		return shortestDistance;
 	}

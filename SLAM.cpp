@@ -133,6 +133,10 @@ int main( int argc, const char** argv )
 	std::ifstream depth_list_file(depth_list_file_name.c_str());
 	std::ifstream ground_truth_file(ground_truth_file_name.c_str());
 
+	int subsample_factor = 6;
+	int subsample_width = 512 / subsample_factor;
+	int subsample_height = 424 / subsample_factor;
+
 	if (depth_list_file.is_open()) {
 		if (ground_truth_file.is_open()) {
 			while ( getline (depth_list_file, line) ) {
@@ -225,11 +229,11 @@ int main( int argc, const char** argv )
 				}
 
 				if (previous.size().area() > 0) {
-					resize(filtered, image_sampled, cv::Size(128, 106));
-					resize(previous, previous_sampled, cv::Size(128, 106));
+					resize(filtered, image_sampled, cv::Size(subsample_width, subsample_height));
+					resize(previous, previous_sampled, cv::Size(subsample_width, subsample_height));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 2, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 10, 0.0001, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformation.at<float>(2,2) > 0) {
