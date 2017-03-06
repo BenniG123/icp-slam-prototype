@@ -1,0 +1,6 @@
+You can do it! Don't get left behind
+Fix reverse rotations in ICP 
+Correctly calculate final translation in ICP 
+Correctly calculate rotation difference between ground truth and get Transformation
+Filter points better
+Finally evaluate accuracy
