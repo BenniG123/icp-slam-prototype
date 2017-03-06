@@ -219,8 +219,8 @@ int main( int argc, const char** argv )
 				// }
 
 				if (previous.size().area() > 0) {
-					resize(filtered, image_sampled, cv::Size(64, 53));
-					resize(previous, previous_sampled, cv::Size(64, 53));
+					resize(filtered, image_sampled, cv::Size(128, 106));
+					resize(previous, previous_sampled, cv::Size(128, 106));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
 					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 4, 0.000, depthWindow);
@@ -375,8 +375,8 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 
   	// Using Canny's output as a mask, we display our result
 	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
-	                               cv::Size( 9, 9 ),
-	                               cv::Point( 5, 5 ) );
+	                               cv::Size( 7, 7 ),
+	                               cv::Point( 4, 4 ) );
 	cv::Mat image8u;
 	cv::Mat detected_edges;
 	cv::Mat maskedImage;

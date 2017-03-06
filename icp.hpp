@@ -9,7 +9,7 @@ namespace icp {
 	float meanSquareError(std::vector<float> errors);
 	float distance(cv::Point3f a, cv::Point3f b);
 	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name);
-	void findNearestNeighborAssociations(PointCloud data, PointCloud previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>> associations);
+	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>> associations);
 }
 
 #endif

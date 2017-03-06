@@ -46,7 +46,7 @@ namespace icp {
 		*/
 
 		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
-
+		std::cout << dataCloud.points.size() << std::endl;
 		// dataCloud.points = B;
 		// previousCloud.points = A;
 		int i = 0;
@@ -101,8 +101,8 @@ namespace icp {
 				R.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 			}
 			else {
-				R = R * rigidTransformation(cv::Rect(0, 0, 3, 3));
-				R.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
+				cv::Mat Rp = R * rigidTransformation(cv::Rect(0, 0, 3, 3));
+				Rp.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 			}
 
 
@@ -128,7 +128,7 @@ namespace icp {
 
 		rigidTransformation.at<float>(0,3) = translation.x;
 		rigidTransformation.at<float>(1,3) = translation.y;
-		// Scale this to m
+		// TODO - zScale this to m
 		rigidTransformation.at<float>(2,3) = translation.z / 5;
 		
 		return rigidTransformation;
@@ -158,7 +158,7 @@ namespace icp {
 		depthWindow.showWidget( name , cloudWidget);
 	}
 
-	void findNearestNeighborAssociations(PointCloud data, PointCloud previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>> associations) {
+	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>> associations) {
 		// Iterate through image
 		std::vector<cv::Point3f>::iterator it, end;
 		it = data.points.begin();
@@ -170,10 +170,10 @@ namespace icp {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
 
-			if (distance < .3) {
+			// if (distance < 2) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
-			}
+			// }
 
 			// else {
 			// 	data.points.erase(it);
