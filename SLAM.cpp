@@ -218,26 +218,27 @@ int main( int argc, const char** argv )
 				// 	cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
 				// }
 
+				// Get the world origin and rotation so we can compute delta
+				if (transformationBuffer.size() == 0) {
+					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
+					groundTruth.copyTo(initialPosition);
+				}
+
 				if (previous.size().area() > 0) {
 					resize(filtered, image_sampled, cv::Size(128, 106));
 					resize(previous, previous_sampled, cv::Size(128, 106));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 4, 0.000, depthWindow);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 2, 0.0001, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
-
-					if (transformationBuffer.size() == 0) {
-						groundTruth.copyTo(initialPosition);
-						std::cout << initialPosition << std::endl;
-					}
 
 					if (transformation.at<float>(2,2) > 0) {
 						previous = filtered.clone();
 					}
 
-					cv::subtract(groundTruth, initialPosition, groundTruth);
-					std::cout << groundTruth << std::endl;
-					std::cout << transformation.col(3).t() << std::endl;
+					// cv::subtract(groundTruth, initialPosition, groundTruth);
+					std::cout << "Ground Truth:" << std::endl << groundTruth << std::endl;
+					std::cout << "Transformation:" << std::endl << transformation << std::endl;
 					transformationBuffer.push_back(groundTruth);
 
 					int i = 0;
@@ -334,21 +335,42 @@ cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
     float ty;
     float tz;
 
-	cv::Mat translation(1, 3, CV_32FC1);
-
     std::getline(ss, temp, ' ');
     tx = std::stof(temp);
-    translation.at<float>(0,0) = tx;
+    // transformation.at<float>(0,3) = tx;
     std::getline(ss, temp, ' ');
     ty = std::stof(temp);
-    translation.at<float>(0,1) = ty;
+    // transformation.at<float>(1,3) = ty;
     std::getline(ss, temp, ' ');
     tz = std::stof(temp);
-    translation.at<float>(0,2) = tz;
+    // transformation.at<float>(2,3) = tz;
+
+    float qx;
+    float qy;
+    float qz;
+    float qw;
+
+    std::getline(ss, temp, ' ');
+    qx = std::stof(temp);
+    std::getline(ss, temp, ' ');
+    qy = std::stof(temp);
+    std::getline(ss, temp, ' ');
+    qz = std::stof(temp);
+    std::getline(ss, temp, ' ');
+    qw = std::stof(temp);
+
+    float rot_data[3][3] = {{1 - 2*qy*qy - 2*qz*qz, 2*qx*qy - 2*qz*qw, 2*qx*qz + 2*qy*qw},
+    					   {2*qx*qy + 2*qz*qw, 1 - 2*qx*qx - 2*qz*qz, 2*qy*qz - 2*qx*qw},
+    					   {2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx*qx - 2*qy*qy}};
+
+	cv::Mat transformation(4, 4, CV_32FC1, &rot_data);
+	transformation.at<float>(0,3) = tx;
+	transformation.at<float>(1,3) = ty;
+	transformation.at<float>(2,3) = tz;
 
     // TODO - Calculate delta instead of absolute
 
-	return translation;
+	return transformation;
 }
 
 void errorMessage() {

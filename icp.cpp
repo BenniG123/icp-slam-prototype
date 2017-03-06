@@ -113,6 +113,10 @@ namespace icp {
 			// R = R.inv();
 			previousCloud.rotate(R);
 
+			showPointCloud(previous, depthWindow, cv::viz::Color().red(), "Rotated Previous");
+			depthWindow.spinOnce(33, true);
+
+
 			// Find nearest neighber associations
 			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 
