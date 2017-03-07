@@ -31,11 +31,12 @@ namespace icp {
 		tempDataCloud.center = dataCloud.center;
 		tempPreviousCloud.center = previousCloud.center;
 
-		double x = -30 * 3.14 / 180;
+		/* double x = -30 * 3.14 / 180;
 		float d[3][3] = {{1, 0, 0}, {0, (float) cos(x), (float) -sin(x)}, {0, (float) sin(x),(float) cos(x)}};
 		cv::Mat a(3, 3, CV_32FC1, &d);
 		
 		dataCloud.rotate(a);
+		*/
 
 		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 		
@@ -64,7 +65,7 @@ namespace icp {
 				tempPreviousCloud.points.push_back((*it1).second);
 				it1++;
 			}
-			
+
 			cv::Mat dataMat = tempDataCloud.centered_matrix();
 			cv::Mat previousMat = tempPreviousCloud.centered_matrix();
 
@@ -86,11 +87,7 @@ namespace icp {
 
 			if (cv::determinant(R) < 0) {
 				std::cout << "Reflection Detected" << std::endl;
-				cv::Mat Vt = svd.vt;
-				std::cout << Vt << std::endl;
-				Vt.col(2) *= -1;
-				R = Vt.t() * svd.u.t();
-				cv::waitKey(0);
+				R.col(2) *= -1;
 			}
 			
 			if (i == 0) {

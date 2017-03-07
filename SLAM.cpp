@@ -35,6 +35,8 @@ w*/
 
 void errorMessage();
 
+void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y, float& z);
+
 void filterDepthImage(cv::Mat &image, int maxDistance);
 
 int curvature(cv::Mat roi);
@@ -184,7 +186,7 @@ int main( int argc, const char** argv )
 			        continue;
 			    }
 
-			    translationPlot = cv::Mat::zeros(500, 500, CV_8UC(3));
+			    // translationPlot = cv::Mat::zeros(500, 500, CV_8UC(3));
 
 			    double min;
 				double max;
@@ -233,7 +235,7 @@ int main( int argc, const char** argv )
 					resize(previous, previous_sampled, cv::Size(subsample_width, subsample_height));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 16, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 0, 0.0001, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformation.at<float>(2,2) > 0) {
@@ -363,6 +365,15 @@ cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
     std::getline(ss, temp, ' ');
     qw = std::stof(temp);
 
+    float x, y, z;
+
+    // Get X, Y, Z rotation
+    toEulerianAngle(qw, qx, qy, qz, x, y, z);
+
+    std::cout << "X: " << x << std::endl;
+    std::cout << "Y: " << y << std::endl;
+    std::cout << "Z: " << z << std::endl;
+
     float rot_data[3][3] = {{1 - 2*qy*qy - 2*qz*qz, 2*qx*qy - 2*qz*qw, 2*qx*qz + 2*qy*qw},
     					   {2*qx*qy + 2*qz*qw, 1 - 2*qx*qx - 2*qz*qz, 2*qy*qz - 2*qx*qw},
     					   {2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx*qx - 2*qy*qy}};
@@ -413,63 +424,36 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 	// Canny detector for edges
   	cv::Canny( image8u, detected_edges, 1.0, 5.0, 3 );
 
+  	// Subtract edges  from the image
 	cv::dilate( detected_edges, detected_edges, element);
 	detected_edges.convertTo(detected_edges_16u, CV_16U);
-
 	cv::bitwise_not(detected_edges, detected_edges);
  	image.copyTo(maskedImage, detected_edges);
  	image = maskedImage;
+
  	cv::dilate( image, image, element);
  	cv::dilate( image, image, element);
+}
 
-	// cv::GaussianBlur(image, image, cv::Size(5,5), 1);
-	// cv::imshow("Edges", detected_edges);
+void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y, float& z)
+{
+	float ysqr = qy * qy;
 
-	// cv::blur( image, image, cv::Size(3,3));
-	// 
-	// 
+	// roll (x-axis rotation)
+	float t0 = 2.0 * (qw * qx + qy * qz);
+	float t1 = 1.0 - 2.0 * (qx * qx + ysqr);
+	x = (float) std::atan2(t0, t1);
 
-	// cv::erode( image, image, element);
-	// cv::dilate( image, image, element);
+	// pitch (y-axis rotation)
+	float t2 = +2.0 * (qw * qy - qz * qx);
+	t2 = t2 > 1.0 ? 1.0 : t2;
+	t2 = t2 < -1.0 ? -1.0 : t2;
+	y = (float) std::asin(t2);
 
-	// cv::erode( image, image, element);
-	// cv::erode( image, image, element);
-
-	// Denoise
-	/* cv::dilate( image, image, element);
-	cv::erode( image, image, element);
-	cv::dilate( image, image, element);
-	cv::erode( image, image, element);
-	cv::dilate( image, image, element);
-	cv::erode( image, image, element);
-	*/
-
-	// First erode the image to erode noisy edges
-	/* cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
-	                               cv::Size( 7, 7 ),
-	                               cv::Point( 4, 4 ) );
-
-	cv::Mat dilate_element = cv::getStructuringElement( cv::MORPH_RECT,
-                               cv::Size( 11, 11 ),
-                               cv::Point( 6, 6 ) );
-
-	cv::erode( image, image, erode_element);
-	cv::dilate( image, image, dilate_element);
-	cv::erode( image, image, erode_element);
-	cv::dilate( image, image, dilate_element);
-	cv::erode( image, image, erode_element);
-	cv::dilate( image, image, dilate_element);
-
-	// Subtract edges
-    cv::Mat sobelFilter;
-    cv::Sobel(image, sobelFilter, CV_16U, 1, 1, 7);
-	// cv::dilate( sobelFilter, sobelFilter, erode_element);
-	// cv::dilate( sobelFilter, sobelFilter, erode_element);
-    cv::imshow( "Sobel", sobelFilter );
-    // cv::threshold(sobelFilter, sobelFilter, 1, 10000, cv::THRESH_BINARY);
-    image = image - sobelFilter;
-    */
-    
+	// yaw (z-axis rotation)
+	float t3 = +2.0 * (qw * qz + qx * qy);
+	float t4 = +1.0 - 2.0 * (ysqr + qz * qz);  
+	z = (float) std::atan2(t3, t4);
 }
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin = 0) {
