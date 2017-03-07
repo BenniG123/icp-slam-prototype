@@ -22,36 +22,21 @@ namespace icp {
 		std::vector<float> errors;
 		cv::Mat R;
 
-		std::vector<cv::Point3f> A;
-		A.push_back(cv::Point3f(0.23016231, 0.7118579, 0.71648664));
-		A.push_back(cv::Point3f(0.18366629, 0.78773191, 0.49343173));
-		A.push_back(cv::Point3f(0.55284858, 0.50804783, 0.88369622));
-
-		std::vector<cv::Point3f> B;
-		B.push_back(cv::Point3f(0.7742103, 1.29968919, 0.81013864));
- 		B.push_back(cv::Point3f(0.95294229, 1.24649128, 0.65882078)),
- 		B.push_back(cv::Point3f(0.68383717, 1.17166464, 1.19622986));
-
 		PointCloud dataCloud(data);
 		PointCloud previousCloud(previous);
 
-		/*
-		A = [[ 0.23016231  0.7118579   0.71648664]
-		 [ 0.18366629  0.78773191  0.49343173]
-		 [ 0.55284858  0.50804783  0.88369622]]
-		 z
-		B = [[ 0.7742103   1.29968919  0.81013864]
- 			[ 0.95294229  1.24649128  0.65882078]
- 			[ 0.68383717  1.17166464  1.19622986]]
-		*/
+		PointCloud tempDataCloud = PointCloud();
+		PointCloud tempPreviousCloud = PointCloud();
 
-		/* double x = -2 * 3.14 / 180;
+		tempDataCloud.center = dataCloud.center;
+		tempPreviousCloud.center = previousCloud.center;
+
+		double x = -30 * 3.14 / 180;
 		float d[3][3] = {{1, 0, 0}, {0, (float) cos(x), (float) -sin(x)}, {0, (float) sin(x),(float) cos(x)}};
 		cv::Mat a(3, 3, CV_32FC1, &d);
 		
 		dataCloud.rotate(a);
-		*/
-		
+
 		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 		
 		// dataCloud.points = B;
@@ -66,8 +51,22 @@ namespace icp {
 
 			depthWindow.spinOnce(33, true);
 
-			cv::Mat dataMat = dataCloud.centered_matrix();
-			cv::Mat previousMat = previousCloud.centered_matrix();
+			tempDataCloud.points.clear();
+			tempPreviousCloud.points.clear();
+
+			// Reassociate the points inside the pointclouds
+			std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
+			it1 = associations.begin();
+			end1 = associations.end();
+
+			while (it1 != end1) {
+				tempDataCloud.points.push_back((*it1).first);
+				tempPreviousCloud.points.push_back((*it1).second);
+				it1++;
+			}
+			
+			cv::Mat dataMat = tempDataCloud.centered_matrix();
+			cv::Mat previousMat = tempPreviousCloud.centered_matrix();
 
 			// Make sure the data is the same size - proper alignment
 			if (dataMat.size().area() > previousMat.size().area()) {
@@ -89,6 +88,7 @@ namespace icp {
 				std::cout << "Reflection Detected" << std::endl;
 				cv::Mat Vt = svd.vt;
 				std::cout << Vt << std::endl;
+				Vt.col(2) *= -1;
 				R = Vt.t() * svd.u.t();
 				cv::waitKey(0);
 			}
@@ -148,7 +148,7 @@ namespace icp {
 		depthWindow.showWidget( name , cloudWidget);
 	}
 
-	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>> associations) {
+	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>>& associations) {
 		// Iterate through image
 		std::vector<cv::Point3f>::iterator it, end;
 		it = data.points.begin();
@@ -176,24 +176,6 @@ namespace icp {
 			// 	data.points.erase(it);
 			// }
 			it++;
-		}
-
-		// std::cout << previous.points.size() << std::endl;
-
-		
-		data.points.clear();
-		previous.points.clear();
-
-		// Reassociate the points inside the pointclouds
-		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
-		it1 = associations.begin();
-		end1 = associations.end();
-
-		while (it1 != end1) {
-			data.points.push_back((*it1).first);
-			previous.points.push_back((*it1).second);
-			// std::cout << "Assocation: " << (*it1).first << " " << (*it1).second << std::endl; 
-			it1++;
 		}
 	}
 

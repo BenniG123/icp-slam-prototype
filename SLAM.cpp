@@ -233,7 +233,7 @@ int main( int argc, const char** argv )
 					resize(previous, previous_sampled, cv::Size(subsample_width, subsample_height));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 16, 0.0001, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformation.at<float>(2,2) > 0) {

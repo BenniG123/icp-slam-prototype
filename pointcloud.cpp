@@ -127,6 +127,12 @@ namespace icp {
 		center_points();
 	}
 
+	// Initialize an empty point cloud
+	PointCloud::PointCloud() {
+		center = cv::Point3f(0,0,0);
+		points = std::vector<cv::Point3f>();
+	}
+
 	void PointCloud::center_points() {
 		std::vector<cv::Point3f>::iterator it, end;
 		it = points.begin();

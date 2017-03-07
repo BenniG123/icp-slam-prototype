@@ -1,5 +1,5 @@
 You can do it! Don't get left behind
-Fix reverse rotations in ICP 
+Don't lose points when they are aligned
 Correctly calculate final translation in ICP 
 Correctly calculate rotation difference between ground truth and get Transformation
 Filter points better
