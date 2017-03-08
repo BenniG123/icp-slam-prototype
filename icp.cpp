@@ -31,13 +31,14 @@ namespace icp {
 		tempDataCloud.center = dataCloud.center;
 		tempPreviousCloud.center = previousCloud.center;
 
-		/* double x = -30 * 3.14 / 180;
+		/*
+		double x = -30 * 3.14 / 180;
 		float d[3][3] = {{1, 0, 0}, {0, (float) cos(x), (float) -sin(x)}, {0, (float) sin(x),(float) cos(x)}};
 		cv::Mat a(3, 3, CV_32FC1, &d);
 		
 		dataCloud.rotate(a);
-		*/
-
+		*/	
+	
 		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 		
 		// dataCloud.points = B;

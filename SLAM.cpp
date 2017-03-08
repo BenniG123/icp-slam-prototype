@@ -35,6 +35,8 @@ w*/
 
 void errorMessage();
 
+void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z);
+
 void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y, float& z);
 
 void filterDepthImage(cv::Mat &image, int maxDistance);
@@ -44,6 +46,8 @@ int curvature(cv::Mat roi);
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin);
 
 cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file);
+
+float PI;
 
 int main( int argc, const char** argv )
 {
@@ -135,9 +139,11 @@ int main( int argc, const char** argv )
 	std::ifstream depth_list_file(depth_list_file_name.c_str());
 	std::ifstream ground_truth_file(ground_truth_file_name.c_str());
 
-	int subsample_factor = 6;
-	int subsample_width = 512 / subsample_factor;
-	int subsample_height = 424 / subsample_factor;
+	const int subsample_factor = 6;
+	const int subsample_width = 512 / subsample_factor;
+	const int subsample_height = 424 / subsample_factor;
+
+	PI = (float) 2*std::acos(0.0);
 
 	if (depth_list_file.is_open()) {
 		if (ground_truth_file.is_open()) {
@@ -205,6 +211,7 @@ int main( int argc, const char** argv )
 			    filtered = image.clone();
 
 			    // Filter all points > x * 5000 m away
+			    // 8500
 			    filterDepthImage(filtered, 8500);
 
 			    // cv::Mat sobelFilter;
@@ -235,7 +242,7 @@ int main( int argc, const char** argv )
 					resize(previous, previous_sampled, cv::Size(subsample_width, subsample_height));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 0, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.0001, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
 					if (transformation.at<float>(2,2) > 0) {
@@ -243,8 +250,8 @@ int main( int argc, const char** argv )
 					}
 
 					// cv::subtract(groundTruth, initialPosition, groundTruth);
-					std::cout << "Ground Truth:" << std::endl << groundTruth << std::endl;
-					std::cout << "Transformation:" << std::endl << transformation << std::endl;
+					// std::cout << "Ground Truth:" << std::endl << groundTruth << std::endl;
+					// std::cout << "Transformation:" << std::endl << transformation << std::endl;
 					transformationBuffer.push_back(groundTruth);
 
 					int i = 0;
@@ -383,6 +390,11 @@ cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
 	transformation.at<float>(1,3) = ty;
 	transformation.at<float>(2,3) = tz;
 
+	transformationMatToEulerianAngle(transformation, x, y, z);
+	std::cout << "X: " << x << std::endl;
+    std::cout << "Y: " << y << std::endl;
+    std::cout << "Z: " << z << std::endl;
+
     // TODO - Calculate delta instead of absolute
 
 	return transformation;
@@ -454,6 +466,26 @@ void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y,
 	float t3 = +2.0 * (qw * qz + qx * qy);
 	float t4 = +1.0 - 2.0 * (ysqr + qz * qz);  
 	z = (float) std::atan2(t3, t4);
+}
+
+void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z) {
+
+	// Assuming the angles are in radians.
+	if (t.at<float>(0,1) > 0.998) { // singularity at north pole
+		y = std::atan2(t.at<float>(2,0),t.at<float>(2,2));
+		x = PI/2;
+		z = 0;
+		return;
+	}
+	if (t.at<float>(0,1) < -0.998) { // singularity at south pole
+		y = std::atan2(t.at<float>(2,0),t.at<float>(2,2));
+		x = -1 * PI/2;
+		z = 0;
+		return;
+	}
+	y = std::atan2(-1.0 * t.at<float>(0,2),-1 * t.at<float>(0,0));
+	z = std::atan2(-t.at<float>(2,1),t.at<float>(1,1));
+	x = std::asin(t.at<float>(0,1));
 }
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin = 0) {

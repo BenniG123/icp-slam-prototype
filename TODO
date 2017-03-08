@@ -1,5 +1,6 @@
 You can do it! Don't get left behind
-Correctly calculate rotation difference between ground truth and get Transformation
-Correctly calculate final translation in ICP 
-Filter points better
+Correctly calculate rotation difference between ground truth and get Transformation - Transformation Matrix to Euler angles
+Correctly calculate final translation in ICP
 Finally evaluate accuracy
+Filter points better
+Get started on mapping!
