@@ -35,6 +35,10 @@ w*/
 
 void errorMessage();
 
+void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name);
+
+cv::Mat makeRotationMatrix(float x, float y, float z);
+
 void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z);
 
 void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y, float& z);
@@ -86,8 +90,6 @@ int main( int argc, const char** argv )
 
 	/* 
 	cv::namedWindow( "Original" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-
-	
 
 	cv::namedWindow( "Color" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Color" , 0 , 500 );
@@ -192,18 +194,8 @@ int main( int argc, const char** argv )
 			        continue;
 			    }
 
-			    // translationPlot = cv::Mat::zeros(500, 500, CV_8UC(3));
-
 			    double min;
 				double max;
-
-			    /* cv::minMaxIdx(image, &min, &max);
-				cv::Mat adjMap;
-
-				// expand your range to 0..255. Similar to histEq();
-				image.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min); 
-				applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
-				*/
 
 			    cv::Mat undistortImage = image.clone();
 			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
@@ -211,18 +203,7 @@ int main( int argc, const char** argv )
 			    filtered = image.clone();
 
 			    // Filter all points > x * 5000 m away
-			    // 8500
 			    filterDepthImage(filtered, 8500);
-
-			    // cv::Mat sobelFilter;
-			    // cv::Sobel(filtered, sobelFilter, CV_16U, 1, 0, 3);
-
-				// First erode the image to erode noisy edges
-				// cv::Mat erode_element = cv::getStructuringElement( cv::MORPH_RECT,
-				//                               cv::Size( 5, 5 ),
-				//                               cv::Point( 2, 2 ) );
-
-			    // cv::dilate( sobelFilter, sobelFilter, erode_element);
 
 				// std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
 
@@ -245,6 +226,13 @@ int main( int argc, const char** argv )
 					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.0001, depthWindow);
 					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
 
+					
+					float x, y, z;
+					transformationMatToEulerianAngle(transformation, x, y, z);
+					std::cout << "X: " << x << std::endl;
+					std::cout << "Y: " << y << std::endl;
+					std::cout << "Z: " << z << std::endl;
+
 					if (transformation.at<float>(2,2) > 0) {
 						previous = filtered.clone();
 					}
@@ -259,8 +247,6 @@ int main( int argc, const char** argv )
 						cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,2) * 125)), mat.at<float>(0,1) * 5 + 5, cv::Scalar(255, i * 5, i * 5), -1);
 						i++;
 					}
-
-			    	// cv::imshow( "Previous", previous );
 				}
 				else {
 					previous = filtered.clone();
@@ -280,6 +266,7 @@ int main( int argc, const char** argv )
 			    // cv::imshow( "Color", colorDepth );
 			    // cv::imshow( "Color Filtered", colorFiltered );
 			    // cv::imshow( "Translation", translationPlot );
+
 
 			    // depthWindow.spinOnce(33, true);
 
@@ -376,8 +363,7 @@ cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
 
     // Get X, Y, Z rotation
     toEulerianAngle(qw, qx, qy, qz, x, y, z);
-
-    std::cout << "X: " << x << std::endl;
+	std::cout << "X: " << x << std::endl;
     std::cout << "Y: " << y << std::endl;
     std::cout << "Z: " << z << std::endl;
 
@@ -390,14 +376,29 @@ cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
 	transformation.at<float>(1,3) = ty;
 	transformation.at<float>(2,3) = tz;
 
-	transformationMatToEulerianAngle(transformation, x, y, z);
-	std::cout << "X: " << x << std::endl;
-    std::cout << "Y: " << y << std::endl;
-    std::cout << "Z: " << z << std::endl;
-
     // TODO - Calculate delta instead of absolute
 
 	return transformation;
+}
+
+cv::Mat makeRotationMatrix(float x, float y, float z) {
+	double rotX = x * PI / 180;
+	double rotY = y * PI / 180;
+	double rotZ = z * PI / 180;
+
+	float d[3][3] = {{1, 0, 0}, {0, (float) cos(rotX), (float) sin(rotX)}, {0, (float) -sin(rotX),(float) cos(rotX)}};
+	float f[3][3] = {{(float) cos(rotY), 0, (float) -sin(rotY)}, {0, 1, 0}, {(float) sin(rotY), 0,(float) cos(rotY)}};
+	float g[3][3] = {{(float) cos(rotZ), (float) sin(rotZ), 0}, {(float) -sin(rotZ), (float) cos(rotZ), 0}, {0, 0, 1}};
+	cv::Mat a(3, 3, CV_32FC1, &d);
+	cv::Mat b(3, 3, CV_32FC1, &f);
+	cv::Mat c(3, 3, CV_32FC1, &g);
+
+	return a * b * c;
+}
+
+void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name) {
+	cv::viz::WText textWidget(text, pos);
+	depthWindow.showWidget( name , textWidget);
 }
 
 void errorMessage() {
@@ -443,8 +444,8 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
  	image.copyTo(maskedImage, detected_edges);
  	image = maskedImage;
 
- 	cv::dilate( image, image, element);
- 	cv::dilate( image, image, element);
+ 	// cv::dilate( image, image, element);
+ 	// cv::dilate( image, image, element);
 }
 
 void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y, float& z)
@@ -466,26 +467,22 @@ void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y,
 	float t3 = +2.0 * (qw * qz + qx * qy);
 	float t4 = +1.0 - 2.0 * (ysqr + qz * qz);  
 	z = (float) std::atan2(t3, t4);
+
+	x = x * 180 / PI;
+	y = y * 180 / PI;
+	z = z * 180 / PI;
 }
 
 void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z) {
+    float c2 = sqrt(pow(t.at<float>(0,0), 2) + pow(t.at<float>(0,1), 2));
 
-	// Assuming the angles are in radians.
-	if (t.at<float>(0,1) > 0.998) { // singularity at north pole
-		y = std::atan2(t.at<float>(2,0),t.at<float>(2,2));
-		x = PI/2;
-		z = 0;
-		return;
-	}
-	if (t.at<float>(0,1) < -0.998) { // singularity at south pole
-		y = std::atan2(t.at<float>(2,0),t.at<float>(2,2));
-		x = -1 * PI/2;
-		z = 0;
-		return;
-	}
-	y = std::atan2(-1.0 * t.at<float>(0,2),-1 * t.at<float>(0,0));
-	z = std::atan2(-t.at<float>(2,1),t.at<float>(1,1));
-	x = std::asin(t.at<float>(0,1));
+	x = std::atan2(t.at<float>(1,2), t.at<float>(2,2));
+    y = std::atan2(-t.at<float>(0,2), c2);
+    z = std::atan2(t.at<float>(0,1),t.at<float>(0,0));
+
+    x = x * 180 / PI;
+	y = y * 180 / PI;
+	z = z * 180 / PI;
 }
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin = 0) {

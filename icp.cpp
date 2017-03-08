@@ -14,7 +14,6 @@ namespace icp {
 			Find best transform for this 
 			correspondance
 			Transform M
-		OpenCV FLANN tutorial here - http://www.morethantechnical.com/2010/06/06/iterative-closest-point-icp-with-opencv-w-code/
 	*/
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
@@ -32,17 +31,15 @@ namespace icp {
 		tempPreviousCloud.center = previousCloud.center;
 
 		/*
-		double x = -30 * 3.14 / 180;
+		double x = -15 * 3.14 / 180;
 		float d[3][3] = {{1, 0, 0}, {0, (float) cos(x), (float) -sin(x)}, {0, (float) sin(x),(float) cos(x)}};
 		cv::Mat a(3, 3, CV_32FC1, &d);
 		
 		dataCloud.rotate(a);
-		*/	
-	
+		*/
+
 		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
 		
-		// dataCloud.points = B;
-		// previousCloud.points = A;
 		int i = 0;
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
@@ -109,7 +106,7 @@ namespace icp {
 
 		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
 		showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
-		depthWindow.spinOnce(33, true);
+		depthWindow.spinOnce(0, true);
 
 		cv::Point3f translation(0,0,0);
 		translation = dataCloud.center - previousCloud.center;
