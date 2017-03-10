@@ -49,7 +49,7 @@ int curvature(cv::Mat roi);
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin);
 
-cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file);
+void getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file, float& rx, float& ry, float& rz, float& tx, float& ty, float& tz);
 
 float PI;
 
@@ -145,6 +145,11 @@ int main( int argc, const char** argv )
 	const int subsample_width = 512 / subsample_factor;
 	const int subsample_height = 424 / subsample_factor;
 
+	// Euler rotation and transformation variables for groundtruth and latest scan
+	float rx, ry, rz, tx, ty, tz;
+	float g_rx, g_ry, g_rz, g_tx, g_ty, g_tz;
+	float g_irx, g_iry, g_irz, g_itx, g_ity, g_itz;
+
 	PI = (float) 2*std::acos(0.0);
 
 	if (depth_list_file.is_open()) {
@@ -214,8 +219,8 @@ int main( int argc, const char** argv )
 
 				// Get the world origin and rotation so we can compute delta
 				if (transformationBuffer.size() == 0) {
-					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
-					groundTruth.copyTo(initialPosition);
+					// Get the initial ground truth
+					getNextGroundTruth(timestamp, ground_truth_file, g_irx, g_iry, g_irz, g_itx, g_ity, g_itz);
 				}
 
 				if (previous.size().area() > 0) {
@@ -224,14 +229,14 @@ int main( int argc, const char** argv )
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
 					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.0001, depthWindow);
-					cv::Mat groundTruth = getNextGroundTruth(timestamp, ground_truth_file);
-
-					
-					float x, y, z;
-					transformationMatToEulerianAngle(transformation, x, y, z);
-					std::cout << "X: " << x << std::endl;
-					std::cout << "Y: " << y << std::endl;
-					std::cout << "Z: " << z << std::endl;
+					getNextGroundTruth(timestamp, ground_truth_file, g_rx, g_ry, g_rz, g_tx, g_ty, g_tz);
+					transformationMatToEulerianAngle(transformation, rx, ry, rz);
+					std::cout << "G_RX: " << g_irx - g_rx << std::endl;
+					std::cout << "G_RY: " << g_iry - g_ry << std::endl;
+					std::cout << "G_RZ: " << g_irz - g_rz << std::endl;
+					std::cout << "RX: " << rx << std::endl;
+					std::cout << "RY: " << ry << std::endl;
+					std::cout << "RZ: " << rz << std::endl;
 
 					if (transformation.at<float>(2,2) > 0) {
 						previous = filtered.clone();
@@ -240,7 +245,7 @@ int main( int argc, const char** argv )
 					// cv::subtract(groundTruth, initialPosition, groundTruth);
 					// std::cout << "Ground Truth:" << std::endl << groundTruth << std::endl;
 					// std::cout << "Transformation:" << std::endl << transformation << std::endl;
-					transformationBuffer.push_back(groundTruth);
+					// transformationBuffer.push_back(groundTruth);
 
 					int i = 0;
 					for (cv::Mat mat : transformationBuffer) {
@@ -296,7 +301,8 @@ int main( int argc, const char** argv )
 	return 0;
 }
 
-cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
+void getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file,
+						float& rx, float& ry, float& rz, float& tx, float& ty, float& tz) {
 	// Sum up the transformation and rotational components of ground truth until
 	// Ground Truth timestamp would exceed depth frame timestamp
 
@@ -326,30 +332,22 @@ cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
 		ss.str(line);
 		std::getline(ss, temp, ' ');
 		ground_truth_timestamp = std::stod(temp);
-
-		// std::cout << ground_truth_timestamp << ", " << timestamp << std::endl;
     }
 
-    // Translation vectors
-    float tx;
-    float ty;
-    float tz;
-
+    // Get translation vectors
     std::getline(ss, temp, ' ');
     tx = std::stof(temp);
-    // transformation.at<float>(0,3) = tx;
     std::getline(ss, temp, ' ');
     ty = std::stof(temp);
-    // transformation.at<float>(1,3) = ty;
     std::getline(ss, temp, ' ');
     tz = std::stof(temp);
-    // transformation.at<float>(2,3) = tz;
 
     float qx;
     float qy;
     float qz;
     float qw;
 
+    // Get quaternions
     std::getline(ss, temp, ' ');
     qx = std::stof(temp);
     std::getline(ss, temp, ' ');
@@ -359,26 +357,8 @@ cv::Mat getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file) {
     std::getline(ss, temp, ' ');
     qw = std::stof(temp);
 
-    float x, y, z;
-
     // Get X, Y, Z rotation
-    toEulerianAngle(qw, qx, qy, qz, x, y, z);
-	std::cout << "X: " << x << std::endl;
-    std::cout << "Y: " << y << std::endl;
-    std::cout << "Z: " << z << std::endl;
-
-    float rot_data[3][3] = {{1 - 2*qy*qy - 2*qz*qz, 2*qx*qy - 2*qz*qw, 2*qx*qz + 2*qy*qw},
-    					   {2*qx*qy + 2*qz*qw, 1 - 2*qx*qx - 2*qz*qz, 2*qy*qz - 2*qx*qw},
-    					   {2*qx*qz - 2*qy*qw, 2*qy*qz + 2*qx*qw, 1 - 2*qx*qx - 2*qy*qy}};
-
-	cv::Mat transformation(4, 4, CV_32FC1, &rot_data);
-	transformation.at<float>(0,3) = tx;
-	transformation.at<float>(1,3) = ty;
-	transformation.at<float>(2,3) = tz;
-
-    // TODO - Calculate delta instead of absolute
-
-	return transformation;
+    toEulerianAngle(qw, qx, qy, qz, rx, ry, rz);
 }
 
 cv::Mat makeRotationMatrix(float x, float y, float z) {
@@ -473,7 +453,7 @@ void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y,
 	z = z * 180 / PI;
 }
 
-void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z) {
+void transformationMatToEulerianAngle(cv::Mat t, float& x, float& y, float& z) {
     float c2 = sqrt(pow(t.at<float>(0,0), 2) + pow(t.at<float>(0,1), 2));
 
 	x = std::atan2(t.at<float>(1,2), t.at<float>(2,2));

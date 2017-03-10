@@ -4,6 +4,9 @@ project( SLAM CXX)
 
 find_package( OpenCV REQUIRED )
 find_package( Boost REQUIRED )
+find_package( Eigen3 REQUIRED )
+
+include_directories(EIGEN3_INCLUDE_DIR)
 
 include_directories( ${Boost_INCLUDE_DIR} )
 link_directories( ${Boost_LIBRARY_DIRS} )
