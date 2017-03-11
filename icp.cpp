@@ -84,7 +84,7 @@ namespace icp {
 			cv::Mat R =  svd.vt.t() * svd.u.t();
 
 			if (cv::determinant(R) < 0) {
-				std::cout << "Reflection Detected" << std::endl;
+				// std::cout << "Reflection Detected" << std::endl;
 				R.col(2) *= -1;
 			}
 			
@@ -103,6 +103,9 @@ namespace icp {
 
 			i++;
 		}
+
+		// Log MSE
+		std::cout << meanSquareError(errors);
 
 		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
 		showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
@@ -224,7 +227,7 @@ namespace icp {
    		error_sum /= errors.size();
    		error_sum = pow(error_sum, 2);
 
-   		std::cout << "MSE: " << error_sum << std::endl;
+   		// std::cout << "MSE: " << error_sum << std::endl;
 
 		return error_sum;
 	}

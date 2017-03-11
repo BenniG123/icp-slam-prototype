@@ -7,6 +7,7 @@
 #include "quaternion.hpp"
 
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <fstream>
 #include <stdio.h>
@@ -40,7 +41,7 @@ cv::Mat makeRotationMatrix(float x, float y, float z);
 
 void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z);
 
-void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y, float& z);
+void toEulerianAngle(Quaternion q, float& x, float& y, float& z);
 
 void filterDepthImage(cv::Mat &image, int maxDistance);
 
@@ -226,6 +227,7 @@ int main( int argc, const char** argv )
 				if (transformationBuffer.size() == 0) {
 					// Get the initial ground truth
 					initialPosition = getNextGroundTruth(timestamp, ground_truth_file, initialRotation);
+					currentRotation = initialRotation;
 				}
 
 				if (previous.size().area() > 0) {
@@ -233,9 +235,20 @@ int main( int argc, const char** argv )
 					resize(previous, previous_sampled, cv::Size(subsample_width, subsample_height));
 
 				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
+					// std::cout << std::setprecision (15) << timestamp << ",";
 					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.0001, depthWindow);
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
-					// transformationMatToEulerianAngle(transformation, rx, ry, rz);
+					deltaRotation = currentRotation * previousRotation.inverse();
+					float rx, ry, rz;
+					transformationMatToEulerianAngle(transformation, rx, ry, rz);
+					std::cout << "," << rx << "," << ry << "," << rz;
+    				toEulerianAngle(deltaRotation, rx, ry, rz);
+					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
+
+					// std::cout << currentRotation << std::endl;
+					// std::cout << initialRotation << std::endl;
+					// std::cout << deltaRotation << std::endl;
+
 
 					if (transformation.at<float>(2,2) > 0) {
 						previous = filtered.clone();
@@ -244,7 +257,7 @@ int main( int argc, const char** argv )
 					// cv::subtract(groundTruth, initialPosition, groundTruth);
 					// std::cout << "Ground Truth:" << std::endl << groundTruth << std::endl;
 					// std::cout << "Transformation:" << std::endl << transformation << std::endl;
-					// transformationBuffer.push_back(groundTruth);
+					transformationBuffer.push_back(transformation);
 
 					int i = 0;
 					for (cv::Mat mat : transformationBuffer) {
@@ -254,6 +267,7 @@ int main( int argc, const char** argv )
 				}
 				else {
 					previous = filtered.clone();
+					previousRotation = currentRotation;
 				}
 
 				// cv::bitwise_not(filtered, filtered);
@@ -358,9 +372,6 @@ cv::Vec3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file,
     rotation = Quaternion(qw, qx, qy, qz);
     cv::Vec3f position(tx, ty, tz);
     return position;
-
-    // Get X, Y, Z rotation
-    // toEulerianAngle(qw, qx, qy, qz, rx, ry, rz);
 }
 
 cv::Mat makeRotationMatrix(float x, float y, float z) {
@@ -430,24 +441,24 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
  	// cv::dilate( image, image, element);
 }
 
-void toEulerianAngle(float qw, float qx, float qy, float qz, float& x, float& y, float& z)
+void toEulerianAngle(Quaternion q, float& x, float& y, float& z)
 {
-	float ysqr = qy * qy;
+	float ysqr = q.y * q.y;
 
 	// roll (x-axis rotation)
-	float t0 = 2.0 * (qw * qx + qy * qz);
-	float t1 = 1.0 - 2.0 * (qx * qx + ysqr);
+	float t0 = 2.0 * (q.w * q.x + q.y * q.z);
+	float t1 = 1.0 - 2.0 * (q.x * q.x + ysqr);
 	x = (float) std::atan2(t0, t1);
 
 	// pitch (y-axis rotation)
-	float t2 = +2.0 * (qw * qy - qz * qx);
+	float t2 = +2.0 * (q.w * q.y - q.z * q.x);
 	t2 = t2 > 1.0 ? 1.0 : t2;
 	t2 = t2 < -1.0 ? -1.0 : t2;
 	y = (float) std::asin(t2);
 
 	// yaw (z-axis rotation)
-	float t3 = +2.0 * (qw * qz + qx * qy);
-	float t4 = +1.0 - 2.0 * (ysqr + qz * qz);  
+	float t3 = +2.0 * (q.w * q.z + q.x * q.y);
+	float t4 = +1.0 - 2.0 * (ysqr + q.z * q.z);  
 	z = (float) std::atan2(t3, t4);
 
 	x = x * 180 / PI;

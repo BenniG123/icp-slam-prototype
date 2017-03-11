@@ -184,7 +184,6 @@ class Quaternion
   void toEuler(float e[3], int order);
 #endif
 
- private:
   // [w, (x, y, z)]
   float w, x, y, z;
   
