@@ -4,9 +4,6 @@ project( SLAM CXX)
 
 find_package( OpenCV REQUIRED )
 find_package( Boost REQUIRED )
-find_package( Eigen3 REQUIRED )
-
-include_directories(EIGEN3_INCLUDE_DIR)
 
 include_directories( ${Boost_INCLUDE_DIR} )
 link_directories( ${Boost_LIBRARY_DIRS} )
@@ -17,16 +14,20 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(SOURCE
   ${SOURCE}
-  SLAM.cpp
   icp.cpp
+  quaternion.cpp
   pointcloud.cpp
+  SLAM.cpp
 )
 
 set(HEADERS
    ${HEADERS}
    icp.hpp
+   quaternion.hpp
    pointcloud.hpp
-) 
+)
+
+# add_library (quaternion SHARED quaternion.cpp)
 
 add_executable( SLAM.exe ${SOURCE} ${HEADERS})
-target_link_libraries( SLAM.exe ${OpenCV_LIBS} ${Boost_LIBRARIES} )
+target_link_libraries( SLAM.exe ${OpenCV_LIBS} ${Boost_LIBRARIES})

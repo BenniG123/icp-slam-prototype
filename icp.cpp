@@ -4,7 +4,6 @@
 #include "icp.hpp"
 #include <iostream>
 #include <stdio.h>
-#include <Eigen/Dense>
 
 namespace icp {
 
