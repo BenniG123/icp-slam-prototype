@@ -16,7 +16,6 @@ namespace icp {
 		end = data.end<uint16_t>();
 
 		int index = 0;
-		it++;
 
 		int width = data.size().width;
 

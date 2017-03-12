@@ -1,7 +1,7 @@
 #ifndef ICP_HPP
 #define ICP_HPP
 
-#define SUBSAMPLE_FACTOR 8
+#define SUBSAMPLE_FACTOR 12
 
 #include "pointcloud.hpp"
 
