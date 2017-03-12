@@ -1,7 +1,5 @@
 You can do it! Don't get left behind
-Compare Quaternions between consecutive ground truths and convert that quaternion to Euler
-Compare Euler angles in CSV file
-Correctly calculate rotation difference between ground truth and get Transformation - Transformation Matrix to Euler angles
+Create ODT file to import CSV values and display results
 Correctly calculate final translation in ICP
 Finally evaluate accuracy
 Filter points better

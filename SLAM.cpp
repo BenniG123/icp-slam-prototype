@@ -119,6 +119,8 @@ int main( int argc, const char** argv )
 	cv::Mat previous;
 	cv::Mat previous_sampled;
 
+	cv::Vec3f initialPosition;
+
 	// Camera Calibration Matrix
 	float data[3][3] = {{363.58,0,250.32}, {0,363.53,212.55}, {0,0,1}}; 
 
@@ -126,7 +128,7 @@ int main( int argc, const char** argv )
 	cv::Mat cameraMatrix(3, 3, CV_32FC1, &data);
 	cv::Mat distortionMatrix;
 	cv::Mat translationPlot(500, 500, CV_8UC(3));
-	cv::Mat initialPosition;
+	cv::Mat rotation = makeRotationMatrix(0,0,0);
 	boost::circular_buffer<cv::Mat> transformationBuffer{33};
 
 	std::string line;
@@ -141,7 +143,7 @@ int main( int argc, const char** argv )
 	std::ifstream depth_list_file(depth_list_file_name.c_str());
 	std::ifstream ground_truth_file(ground_truth_file_name.c_str());
 
-	const int subsample_factor = 6;
+	const int subsample_factor = 4;
 	const int subsample_width = 512 / subsample_factor;
 	const int subsample_height = 424 / subsample_factor;
 
@@ -223,13 +225,6 @@ int main( int argc, const char** argv )
 				// 	cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
 				// }
 
-				// Get the world origin and rotation so we can compute delta
-				if (transformationBuffer.size() == 0) {
-					// Get the initial ground truth
-					initialPosition = getNextGroundTruth(timestamp, ground_truth_file, initialRotation);
-					currentRotation = initialRotation;
-				}
-
 				if (previous.size().area() > 0) {
 					resize(filtered, image_sampled, cv::Size(subsample_width, subsample_height));
 					resize(previous, previous_sampled, cv::Size(subsample_width, subsample_height));
@@ -238,9 +233,10 @@ int main( int argc, const char** argv )
 					// std::cout << std::setprecision (15) << timestamp << ",";
 					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.0001, depthWindow);
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
-					deltaRotation = currentRotation * previousRotation.inverse();
+					deltaRotation = currentRotation * initialRotation.inverse();
+					rotation = rotation * transformation;
 					float rx, ry, rz;
-					transformationMatToEulerianAngle(transformation, rx, ry, rz);
+					transformationMatToEulerianAngle(rotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz;
     				toEulerianAngle(deltaRotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
@@ -250,24 +246,30 @@ int main( int argc, const char** argv )
 					// std::cout << deltaRotation << std::endl;
 
 
-					if (transformation.at<float>(2,2) > 0) {
-						previous = filtered.clone();
-					}
+					// if (transformation.at<float>(2,2) > 0) {
+					previous = filtered.clone();
+					previousRotation = currentRotation;
+					// }
 
 					// cv::subtract(groundTruth, initialPosition, groundTruth);
 					// std::cout << "Ground Truth:" << std::endl << groundTruth << std::endl;
 					// std::cout << "Transformation:" << std::endl << transformation << std::endl;
-					transformationBuffer.push_back(transformation);
 
 					int i = 0;
-					for (cv::Mat mat : transformationBuffer) {
+					/* for (cv::Mat mat : transformationBuffer) {
 						cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,2) * 125)), mat.at<float>(0,1) * 5 + 5, cv::Scalar(255, i * 5, i * 5), -1);
 						i++;
-					}
+					} */
 				}
 				else {
 					previous = filtered.clone();
-					previousRotation = currentRotation;
+
+					// Get the initial ground truth
+					initialPosition = getNextGroundTruth(timestamp, ground_truth_file, initialRotation);
+
+					currentRotation = initialRotation;
+					// Print out column names
+					std::cout << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
 				}
 
 				// cv::bitwise_not(filtered, filtered);
@@ -437,7 +439,32 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
  	image.copyTo(maskedImage, detected_edges);
  	image = maskedImage;
 
- 	// cv::dilate( image, image, element);
+ 	cv::dilate( image, image, element);
+ 	cv::erode( image, image, element);
+
+ 	/*
+ 	it = image.begin<uint16_t>();
+	end = image.end<uint16_t>();
+
+	it++;
+
+	while (it != end) {
+		if ((*it) - (*(it - 1)) > 5000) {
+			(*it) = 0;
+		}
+		it++;
+	}
+
+	/*
+		it++;
+	while (it != end) {
+		if ((*it) - (*it2) > 100) {
+			(*it2) = 0;
+		}
+		it++;
+		it2++;
+	}
+	*/
  	// cv::dilate( image, image, element);
 }
 

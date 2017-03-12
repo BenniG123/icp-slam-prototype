@@ -117,9 +117,9 @@ namespace icp {
 		rigidTransformation.at<float>(0,3) = translation.x;
 		rigidTransformation.at<float>(1,3) = translation.y;
 		// TODO - zScale this to m
-		rigidTransformation.at<float>(2,3) = translation.z / 5;
+		rigidTransformation.at<float>(2,3) = translation.z; // / 5;
 		
-		return rigidTransformation;
+		return rigidTransformation(cv::Rect(0,0,3,3));
 	}
 
 	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name) {

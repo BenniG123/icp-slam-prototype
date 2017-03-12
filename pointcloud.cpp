@@ -25,7 +25,8 @@ namespace icp {
 
 		while ( it != end) {
 			// Blank cells aren't relevant
-			if ((*it) < 4500) 
+			// < 4500
+			if ((*it) == 0) 
 			{
 				index++;
 				it++;
@@ -39,7 +40,7 @@ namespace icp {
 			// P3D.z = depth(x_d,y_d)
 			float x = (float) (index % width) * x_coeff;
 			float y = (float) (index / width) * y_coeff;
-			float p_z = ((float) (*it)) / 1000;
+			float p_z = ((float) (*it)) / 500;
 			float p_x = (x - 250.32) * p_z / 363.58;
 			float p_y = (y - 212.55) * p_z / 363.53;
 
@@ -62,8 +63,8 @@ namespace icp {
 		center.y /= index;
 		center.z /= index;
 
-		center_points();
 		// std_dev_filter_points();
+		center_points();
 	}
 
 	void PointCloud::std_dev_filter_points() {
