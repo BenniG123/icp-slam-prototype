@@ -15,9 +15,6 @@ namespace icp {
 		it = data.begin<uint16_t>();
 		end = data.end<uint16_t>();
 
-		float x_coeff = 512.0 / ((float) data.size().width);
-		float y_coeff = 424.0 / ((float) data.size().height);
-
 		int index = 0;
 		it++;
 
@@ -38,9 +35,9 @@ namespace icp {
 			// P3D.x = (x_d - cx_d (250.32)) * depth(x_d,y_d) / fx_d (363.58)
 			// P3D.y = (y_d - cy_d (212.55)) * depth(x_d,y_d) / fy_d (363.53)
 			// P3D.z = depth(x_d,y_d)
-			float x = (float) (index % width) * x_coeff;
-			float y = (float) (index / width) * y_coeff;
-			float p_z = ((float) (*it)) / 500;
+			float x = (float) (index % width);
+			float y = (float) (index / width);
+			float p_z = ((float) (*it)) / 1000;
 			float p_x = (x - 250.32) * p_z / 363.58;
 			float p_y = (y - 212.55) * p_z / 363.53;
 
@@ -54,9 +51,13 @@ namespace icp {
 			// Add point to point cloud
 			points.push_back(cv::Point3f(p_x,p_y,p_z));
 
-			index++;
-			it++;
+			index+=SUBSAMPLE_FACTOR;
+			it+=SUBSAMPLE_FACTOR;
 		}
+
+		std::vector<cv::Point3f>::iterator itp, endp;
+		itp = points.begin();
+		endp = points.end();
 
 		// Average Center
 		center.x /= index;

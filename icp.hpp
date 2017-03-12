@@ -1,6 +1,8 @@
 #ifndef ICP_HPP
 #define ICP_HPP
 
+#define SUBSAMPLE_FACTOR 8
+
 #include "pointcloud.hpp"
 
 namespace icp {

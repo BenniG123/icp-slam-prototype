@@ -111,13 +111,9 @@ int main( int argc, const char** argv )
 
 	cv::Mat image;
 	cv::Mat filtered;
-	// For sub sampling pixels
-	cv::Mat image_sampled;
 	cv::Mat colorDepth;
 	cv::Mat colorFiltered;
-
 	cv::Mat previous;
-	cv::Mat previous_sampled;
 
 	cv::Vec3f initialPosition;
 
@@ -142,10 +138,6 @@ int main( int argc, const char** argv )
 
 	std::ifstream depth_list_file(depth_list_file_name.c_str());
 	std::ifstream ground_truth_file(ground_truth_file_name.c_str());
-
-	const int subsample_factor = 4;
-	const int subsample_width = 512 / subsample_factor;
-	const int subsample_height = 424 / subsample_factor;
 
 	// Euler rotation and transformation variables for groundtruth and latest scan
 	Quaternion initialRotation;
@@ -226,12 +218,8 @@ int main( int argc, const char** argv )
 				// }
 
 				if (previous.size().area() > 0) {
-					resize(filtered, image_sampled, cv::Size(subsample_width, subsample_height));
-					resize(previous, previous_sampled, cv::Size(subsample_width, subsample_height));
-
-				    // cv::Mat transformation = icp::getTransformation(image, image, 10, 10.0);
 					// std::cout << std::setprecision (15) << timestamp << ",";
-					cv::Mat transformation = icp::getTransformation(image_sampled, previous_sampled, 8, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(filtered, previous, 8, 0.0001, depthWindow);
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
 					deltaRotation = currentRotation * initialRotation.inverse();
 					rotation = rotation * transformation;
@@ -418,6 +406,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		it++;
 	}
 
+
   	// Using Canny's output as a mask, we display our result
 	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
 	                               cv::Size( 7, 7 ),
@@ -430,7 +419,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 	image.convertTo(image8u, CV_8U);
 
 	// Canny detector for edges
-  	cv::Canny( image8u, detected_edges, 1.0, 5.0, 3 );
+  	cv::Canny( image8u, detected_edges, 1.0, 5.0, 5 );
 
   	// Subtract edges  from the image
 	cv::dilate( detected_edges, detected_edges, element);
