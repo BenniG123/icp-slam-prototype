@@ -25,6 +25,8 @@ namespace icp {
 		PointCloud dataCloud(data);
 		PointCloud previousCloud(previous);
 
+		logDeltaTime(LOG_GEN_POINT_CLOUD);
+
 		PointCloud tempDataCloud = PointCloud();
 		PointCloud tempPreviousCloud = PointCloud();
 
@@ -53,6 +55,8 @@ namespace icp {
 
 			depthWindow.spinOnce(33, true);
 
+			logDeltaTime( LOG_UI );
+
 			tempDataCloud.points.clear();
 			tempPreviousCloud.points.clear();
 
@@ -78,6 +82,8 @@ namespace icp {
 				previousMat = previousMat(cv::Rect(0, 0, dataMat.cols, dataMat.rows));
 			}
 
+			logDeltaTime( LOG_RECONSTRUCT_POINT_CLOUDS );
+
 			cv::Mat M = previousMat.t() * dataMat;
 
 			// Perform SVD
@@ -90,6 +96,8 @@ namespace icp {
 				// std::cout << "Reflection Detected" << std::endl;
 				R.col(2) *= -1;
 			}
+
+			logDeltaTime( LOG_SVD );
 			
 			if (i == 0) {
 				R.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
@@ -100,6 +108,8 @@ namespace icp {
 			}
 
 			previousCloud.rotate(R);
+
+			logDeltaTime( LOG_ROTATE );
 
 			// Find nearest neighber associations
 			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
@@ -179,6 +189,9 @@ namespace icp {
 			// }
 			it++;
 		}
+
+		logDeltaTime( LOG_NEAREST_NEIGHBOR, associations.size());
+
 	}
 
 	// Bottlenecking function - Hardware acceleration candidate

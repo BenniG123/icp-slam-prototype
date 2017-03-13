@@ -39,7 +39,8 @@
 w*/
 
 
-std::chrono::high_resolution_clock::time_point start;
+std::chrono::high_resolution_clock::time_point start, t2;
+logEntry myLog[10];
 
 int main( int argc, const char** argv )
 {
@@ -139,8 +140,7 @@ int main( int argc, const char** argv )
 	cv::Vec3f deltaPosition;
 
 	start = std::chrono::high_resolution_clock::now();
-
-	// PI = (float) 2*std::acos(0.0);
+	t2 = std::chrono::high_resolution_clock::now();
 
 	if (depth_list_file.is_open()) {
 		if (ground_truth_file.is_open()) {
@@ -189,6 +189,8 @@ int main( int argc, const char** argv )
 			        continue;
 			    }
 
+			    logDeltaTime(LOG_LOAD_IMAGE);
+
 			    double min;
 				double max;
 
@@ -199,6 +201,7 @@ int main( int argc, const char** argv )
 
 			    // Filter all points > x * 5000 m away
 			    filterDepthImage(filtered, 8500);
+			    logDeltaTime( LOG_FILTER_IMAGE );
 
 				// std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
 
@@ -218,6 +221,8 @@ int main( int argc, const char** argv )
 					std::cout << "," << rx << "," << ry << "," << rz;
     				toEulerianAngle(deltaRotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
+
+					logDeltaTime(LOG_RETRIEVE_TRANSFORM);
 
 					// std::cout << currentRotation << std::endl;
 					// std::cout << initialRotation << std::endl;
@@ -277,6 +282,8 @@ int main( int argc, const char** argv )
 			    // TODO - The whole SLAM thing
 
 			    cv::waitKey(33);
+
+			    logDeltaTime(LOG_UI);
 			}
 
 			ground_truth_file.close();
@@ -355,10 +362,39 @@ cv::Vec3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file,
 }
 
 
-void logDeltaTime() {
+void logDeltaTime(int logKey, int quantity) {
 	std::chrono::high_resolution_clock::time_point t = std::chrono::high_resolution_clock::now();
-    auto int_us = std::chrono::duration_cast<std::chrono::microseconds>(t - start);
-	std::cout << int_us.count() << std::endl;
+    auto int_us = std::chrono::duration_cast<std::chrono::microseconds>(t - t2);
+
+    t2 = t;
+    myLog[logKey].time += int_us.count();
+    myLog[logKey].count++;
+    myLog[logKey].quantity = quantity;
+
+
+    /* 
+    if (verbose) {
+		std::cout << log[logKey].name << " " << int_us.count() << std::endl;
+    }
+    */
+}
+
+std::string logToText() {
+	std::string output;
+
+	for (logEntry l : myLog) {
+		output += 
+	}
+    myLog[logKey].time += int_us.count();
+    myLog[logKey].count++;
+    myLog[logKey].quantity = quantity;
+
+
+    /* 
+    if (verbose) {
+		std::cout << log[logKey].name << " " << int_us.count() << std::endl;
+    }
+    */
 }
 
 void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name) {
