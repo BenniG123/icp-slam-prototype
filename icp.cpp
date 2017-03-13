@@ -1,6 +1,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/viz/vizcore.hpp"
+#include "SLAM.hpp"
 #include "icp.hpp"
 #include <iostream>
 #include <stdio.h>
@@ -30,6 +31,8 @@ namespace icp {
 		tempDataCloud.center = dataCloud.center;
 		tempPreviousCloud.center = previousCloud.center;
 
+		// cv::Mat a = makeRotationMatrix(0, 0, 5);
+		// dataCloud.rotate(a);
 		/*
 		double x = -5 * 3.14 / 180;
 		float d[3][3] = {{1, 0, 0}, {0, (float) cos(x), (float) -sin(x)}, {0, (float) sin(x),(float) cos(x)}};
@@ -109,6 +112,7 @@ namespace icp {
 
 		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
 		showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
+		showText(depthWindow, "Test", cv::Point(10,10), "Rotation");
 		depthWindow.spinOnce(0, true);
 
 		cv::Point3f translation(0,0,0);
@@ -231,4 +235,21 @@ namespace icp {
 
 		return error_sum;
 	}
+
+	cv::Mat makeRotationMatrix(float x, float y, float z) {
+	double rotX = x * PI / 180;
+	double rotY = y * PI / 180;
+	double rotZ = z * PI / 180;
+
+	float d[3][3] = {{1, 0, 0}, {0, (float) cos(rotX), (float) sin(rotX)}, {0, (float) -sin(rotX),(float) cos(rotX)}};
+	float f[3][3] = {{(float) cos(rotY), 0, (float) -sin(rotY)}, {0, 1, 0}, {(float) sin(rotY), 0,(float) cos(rotY)}};
+	float g[3][3] = {{(float) cos(rotZ), (float) sin(rotZ), 0}, {(float) -sin(rotZ), (float) cos(rotZ), 0}, {0, 0, 1}};
+	cv::Mat a(3, 3, CV_32FC1, &d);
+	cv::Mat b(3, 3, CV_32FC1, &f);
+	cv::Mat c(3, 3, CV_32FC1, &g);
+
+	return a * b * c;
+	}
+
+
 }

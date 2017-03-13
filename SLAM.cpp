@@ -1,10 +1,4 @@
-#include "opencv2/objdetect/objdetect.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/viz/vizcore.hpp"
-#include "icp.hpp"
-#include "quaternion.hpp"
+#include "SLAM.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -15,6 +9,17 @@
 #include <vector>
 #include <iterator>
 #include <boost/circular_buffer.hpp>
+#include <ctime>
+#include <ratio>
+#include <chrono>
+
+#include "icp.hpp"
+#include "quaternion.hpp"
+#include "opencv2/objdetect/objdetect.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/viz/vizcore.hpp"
 
 /*
 	depth/ir intrinsic parameters on the Kinect V2:
@@ -33,25 +38,8 @@
 	Camera Depth Catpures are provided at 30 Hz
 w*/
 
-void errorMessage();
 
-void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name);
-
-cv::Mat makeRotationMatrix(float x, float y, float z);
-
-void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z);
-
-void toEulerianAngle(Quaternion q, float& x, float& y, float& z);
-
-void filterDepthImage(cv::Mat &image, int maxDistance);
-
-int curvature(cv::Mat roi);
-
-std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin);
-
-cv::Vec3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file, Quaternion& rotation);
-
-float PI;
+std::chrono::high_resolution_clock::time_point start;
 
 int main( int argc, const char** argv )
 {
@@ -124,7 +112,7 @@ int main( int argc, const char** argv )
 	cv::Mat cameraMatrix(3, 3, CV_32FC1, &data);
 	cv::Mat distortionMatrix;
 	cv::Mat translationPlot(500, 500, CV_8UC(3));
-	cv::Mat rotation = makeRotationMatrix(0,0,0);
+	cv::Mat rotation = icp::makeRotationMatrix(0,0,0);
 	boost::circular_buffer<cv::Mat> transformationBuffer{33};
 
 	std::string line;
@@ -150,7 +138,9 @@ int main( int argc, const char** argv )
 	cv::Vec3f currentPosition;
 	cv::Vec3f deltaPosition;
 
-	PI = (float) 2*std::acos(0.0);
+	start = std::chrono::high_resolution_clock::now();
+
+	// PI = (float) 2*std::acos(0.0);
 
 	if (depth_list_file.is_open()) {
 		if (ground_truth_file.is_open()) {
@@ -219,7 +209,7 @@ int main( int argc, const char** argv )
 
 				if (previous.size().area() > 0) {
 					// std::cout << std::setprecision (15) << timestamp << ",";
-					cv::Mat transformation = icp::getTransformation(filtered, previous, 8, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(filtered, previous, 16, 0.0001, depthWindow);
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
 					deltaRotation = currentRotation * initialRotation.inverse();
 					rotation = rotation * transformation;
@@ -364,19 +354,11 @@ cv::Vec3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file,
     return position;
 }
 
-cv::Mat makeRotationMatrix(float x, float y, float z) {
-	double rotX = x * PI / 180;
-	double rotY = y * PI / 180;
-	double rotZ = z * PI / 180;
 
-	float d[3][3] = {{1, 0, 0}, {0, (float) cos(rotX), (float) sin(rotX)}, {0, (float) -sin(rotX),(float) cos(rotX)}};
-	float f[3][3] = {{(float) cos(rotY), 0, (float) -sin(rotY)}, {0, 1, 0}, {(float) sin(rotY), 0,(float) cos(rotY)}};
-	float g[3][3] = {{(float) cos(rotZ), (float) sin(rotZ), 0}, {(float) -sin(rotZ), (float) cos(rotZ), 0}, {0, 0, 1}};
-	cv::Mat a(3, 3, CV_32FC1, &d);
-	cv::Mat b(3, 3, CV_32FC1, &f);
-	cv::Mat c(3, 3, CV_32FC1, &g);
-
-	return a * b * c;
+void logDeltaTime() {
+	std::chrono::high_resolution_clock::time_point t = std::chrono::high_resolution_clock::now();
+    auto int_us = std::chrono::duration_cast<std::chrono::microseconds>(t - start);
+	std::cout << int_us.count() << std::endl;
 }
 
 void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name) {

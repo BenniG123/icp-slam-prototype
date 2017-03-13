@@ -87,6 +87,9 @@
 		<Unit filename="/home/ben/workspace/icp-slam-prototype/SLAM.cpp">
 			<Option target="SLAM.exe"/>
 		</Unit>
+		<Unit filename="/home/ben/workspace/icp-slam-prototype/SLAM.hpp">
+			<Option target="SLAM.exe"/>
+		</Unit>
 		<Unit filename="/home/ben/workspace/icp-slam-prototype/icp.cpp">
 			<Option target="SLAM.exe"/>
 		</Unit>

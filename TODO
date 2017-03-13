@@ -1,7 +1,9 @@
 You can do it! Don't get left behind
 To import latest run into LibreOffice, go to Sheet -> Import Sheet from File.  Move that sheet as the first.
-Figure out how to subsample points better
+
+Autogenerate CSV from command line
+Profile image filtering, point cloud generation, nearest neighbor, rotation
+Figure out how to subsample points better - Grid
 Correctly calculate final translation in ICP
-Finally evaluate accuracy
 Filter points better
 Get started on mapping!

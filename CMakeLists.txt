@@ -22,6 +22,7 @@ set(SOURCE
 
 set(HEADERS
    ${HEADERS}
+   SLAM.hpp
    icp.hpp
    quaternion.hpp
    pointcloud.hpp

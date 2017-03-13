@@ -19,11 +19,43 @@ namespace icp {
 
 		int width = data.size().width;
 
+		/*
+		int height = data.size().height;
+
+		for (int y = 0; y < height; y+=8) {
+			for (int x = 0; x < width; x+=8) {
+				uint16_t z = data.at<uint16_t>(x,y);
+				float p_z = ((float) z) / 1000;
+				float p_x = (x - 250.32) * p_z / 363.58;
+				float p_y = (y - 212.55) * p_z / 363.53;
+
+				// Update Center
+				center.x += p_x;
+				center.y += p_y;
+				center.z += p_z;
+
+				// Add point to point cloud
+				points.push_back(cv::Point3f(p_x,p_y,p_z));
+				index++;
+			}
+		}
+
+		std::cout << index << std::endl;
+		
+		*/
+		float y_prev = 0;
+		
 		while ( it != end) {
 			// Blank cells aren't relevant
 			// < 4500
 			if ((*it) == 0) 
 			{
+				index++;
+				it++;
+				continue;
+			}
+
+			if (rand() % 32) {
 				index++;
 				it++;
 				continue;
@@ -50,13 +82,23 @@ namespace icp {
 			// Add point to point cloud
 			points.push_back(cv::Point3f(p_x,p_y,p_z));
 
-			index+=SUBSAMPLE_FACTOR;
-			it+=SUBSAMPLE_FACTOR;
+				index++; // += SUBSAMPLE_FACTOR;
+				it++; // += SUBSAMPLE_FACTOR;
 		}
 
+		/*
 		std::vector<cv::Point3f>::iterator itp, endp;
 		itp = points.begin();
 		endp = points.end();
+
+		while ( itp != endp ) {
+			if (rand() % 8) {
+				points.erase(itp);
+			}
+			itp++;
+		}
+		*/
+		
 
 		// Average Center
 		center.x /= index;
