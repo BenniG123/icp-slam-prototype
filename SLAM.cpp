@@ -222,6 +222,13 @@ int main( int argc, const char** argv )
     				toEulerianAngle(deltaRotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
 
+					showText(depthWindow, "Ground Truth", cv::Point(10,30), "Ground Truth Text");
+					showTransfom(depthWindow, rotation, cv::Point(10,10), "Ground Truth");
+					showText(depthWindow, "ICP", cv::Point(10,80), "ICP Text");
+					showTransfom(depthWindow, deltaRotation, cv::Point(10,60), "ICP");
+
+					depthWindow.spinOnce(0, true);
+
 					logDeltaTime(LOG_RETRIEVE_TRANSFORM);
 
 					// std::cout << currentRotation << std::endl;
@@ -379,27 +386,35 @@ void logDeltaTime(int logKey, int quantity) {
     */
 }
 
-std::string logToText() {
-	std::string output;
-
-	for (logEntry l : myLog) {
-		output += 
-	}
-    myLog[logKey].time += int_us.count();
-    myLog[logKey].count++;
-    myLog[logKey].quantity = quantity;
-
-
-    /* 
-    if (verbose) {
-		std::cout << log[logKey].name << " " << int_us.count() << std::endl;
-    }
-    */
-}
-
 void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name) {
 	cv::viz::WText textWidget(text, pos);
 	depthWindow.showWidget( name , textWidget);
+}
+
+void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name) {
+	float rx, ry, rz;
+	transformationMatToEulerianAngle(t, rx, ry, rz);
+	std::ostringstream ss;
+	ss << rx;
+	ss << " ";
+	ss << ry;
+	ss << " ";
+	ss << rz;
+	std::string s(ss.str());
+	showText(depthWindow, s, pos, name);
+}
+
+void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std::string name) {
+	float rx, ry, rz;
+	toEulerianAngle(q, rx, ry, rz);
+	std::ostringstream ss;
+	ss << rx;
+	ss << " ";
+	ss << ry;
+	ss << " ";
+	ss << rz;
+	std::string s(ss.str());
+	showText(depthWindow, s, pos, name);
 }
 
 void errorMessage() {

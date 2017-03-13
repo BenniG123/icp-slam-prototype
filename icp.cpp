@@ -122,8 +122,6 @@ namespace icp {
 
 		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
 		showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
-		showText(depthWindow, "Test", cv::Point(10,10), "Rotation");
-		depthWindow.spinOnce(0, true);
 
 		cv::Point3f translation(0,0,0);
 		translation = dataCloud.center - previousCloud.center;

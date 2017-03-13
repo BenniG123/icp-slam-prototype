@@ -29,6 +29,10 @@ void logDeltaTime(int logKey, int quantity = 0);
 
 void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name);
 
+void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name);
+
+void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std::string name);
+
 void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z);
 
 void toEulerianAngle(Quaternion q, float& x, float& y, float& z);
