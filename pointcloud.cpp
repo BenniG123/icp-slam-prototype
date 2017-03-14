@@ -15,34 +15,11 @@ namespace icp {
 		it = data.begin<uint16_t>();
 		end = data.end<uint16_t>();
 
+		int p_index = 0;
 		int index = 0;
 
 		int width = data.size().width;
 
-		/*
-		int height = data.size().height;
-
-		for (int y = 0; y < height; y+=8) {
-			for (int x = 0; x < width; x+=8) {
-				uint16_t z = data.at<uint16_t>(x,y);
-				float p_z = ((float) z) / 1000;
-				float p_x = (x - 250.32) * p_z / 363.58;
-				float p_y = (y - 212.55) * p_z / 363.53;
-
-				// Update Center
-				center.x += p_x;
-				center.y += p_y;
-				center.z += p_z;
-
-				// Add point to point cloud
-				points.push_back(cv::Point3f(p_x,p_y,p_z));
-				index++;
-			}
-		}
-
-		std::cout << index << std::endl;
-		
-		*/
 		float y_prev = 0;
 		
 		while ( it != end) {
@@ -50,13 +27,14 @@ namespace icp {
 			// < 4500
 			if ((*it) == 0) 
 			{
-				index++;
+				p_index++;
 				it++;
 				continue;
 			}
 
-			if (rand() % 32) {
-				index++;
+			// Subsample
+			if (rand() % 40) {
+				p_index++;
 				it++;
 				continue;
 			}
@@ -66,9 +44,9 @@ namespace icp {
 			// P3D.x = (x_d - cx_d (250.32)) * depth(x_d,y_d) / fx_d (363.58)
 			// P3D.y = (y_d - cy_d (212.55)) * depth(x_d,y_d) / fy_d (363.53)
 			// P3D.z = depth(x_d,y_d)
-			float x = (float) (index % width);
-			float y = (float) (index / width);
-			float p_z = ((float) (*it)) / 1000;
+			float x = (float) (p_index % width);
+			float y = (float) (p_index / width);
+			float p_z = ((float) (*it)) / 5000;
 			float p_x = (x - 250.32) * p_z / 363.58;
 			float p_y = (y - 212.55) * p_z / 363.53;
 
@@ -82,7 +60,8 @@ namespace icp {
 			// Add point to point cloud
 			points.push_back(cv::Point3f(p_x,p_y,p_z));
 
-				index++; // += SUBSAMPLE_FACTOR;
+				p_index++; // += SUBSAMPLE_FACTOR;
+				index++;
 				it++; // += SUBSAMPLE_FACTOR;
 		}
 

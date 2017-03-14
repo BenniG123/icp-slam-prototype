@@ -213,9 +213,11 @@ int main( int argc, const char** argv )
 				if (previous.size().area() > 0) {
 					// std::cout << std::setprecision (15) << timestamp << ",";
 					cv::Mat transformation = icp::getTransformation(filtered, previous, 16, 0.0001, depthWindow);
+					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
 					deltaRotation = currentRotation * initialRotation.inverse();
-					rotation = rotation * transformation;
+					rotation = rotation * icpRotation;
+
 					float rx, ry, rz;
 					transformationMatToEulerianAngle(rotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz;
@@ -223,18 +225,13 @@ int main( int argc, const char** argv )
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
 
 					showText(depthWindow, "Ground Truth", cv::Point(10,30), "Ground Truth Text");
-					showTransfom(depthWindow, rotation, cv::Point(10,10), "Ground Truth");
+					showTransfom(depthWindow, deltaRotation, cv::Point(10,10), "Ground Truth");
 					showText(depthWindow, "ICP", cv::Point(10,80), "ICP Text");
-					showTransfom(depthWindow, deltaRotation, cv::Point(10,60), "ICP");
+					showTransfom(depthWindow, rotation, cv::Point(10,60), "ICP");
 
 					depthWindow.spinOnce(0, true);
 
 					logDeltaTime(LOG_RETRIEVE_TRANSFORM);
-
-					// std::cout << currentRotation << std::endl;
-					// std::cout << initialRotation << std::endl;
-					// std::cout << deltaRotation << std::endl;
-
 
 					// if (transformation.at<float>(2,2) > 0) {
 					previous = filtered.clone();
