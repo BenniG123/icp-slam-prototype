@@ -10,6 +10,7 @@
 #define LOG_SVD 6
 #define LOG_ROTATE 7
 #define LOG_RETRIEVE_TRANSFORM 7
+#define LOG_MSE 8
 
 #include "quaternion.hpp"
 #include "opencv2/viz/vizcore.hpp"

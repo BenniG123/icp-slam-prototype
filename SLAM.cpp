@@ -139,6 +139,18 @@ int main( int argc, const char** argv )
 	cv::Vec3f currentPosition;
 	cv::Vec3f deltaPosition;
 
+	// Init profiling znames
+	myLog[LOG_NEAREST_NEIGHBOR].name = "Nearest Neighbor";
+	myLog[LOG_UI].name = "UI";
+	myLog[LOG_LOAD_IMAGE].name = "Load Image";
+	myLog[LOG_FILTER_IMAGE].name = "Filter Image";
+	myLog[LOG_GEN_POINT_CLOUD].name = "Gen Point Cloud";
+	myLog[LOG_RECONSTRUCT_POINT_CLOUDS].name = "Reconstruct Point Clouds";
+	myLog[LOG_SVD].name = "SVD";
+	myLog[LOG_ROTATE].name = "Rotate";
+	myLog[LOG_RETRIEVE_TRANSFORM].name = "Retrieve Transform";
+	myLog[LOG_MSE].name = "MSE";
+
 	start = std::chrono::high_resolution_clock::now();
 	t2 = std::chrono::high_resolution_clock::now();
 
@@ -374,6 +386,8 @@ void logDeltaTime(int logKey, int quantity) {
     myLog[logKey].time += int_us.count();
     myLog[logKey].count++;
     myLog[logKey].quantity = quantity;
+
+    std::cout << myLog[logKey].name << " " << int_us.count() << std::endl;
 
 
     /* 

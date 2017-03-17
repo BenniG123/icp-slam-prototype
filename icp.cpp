@@ -37,7 +37,7 @@ namespace icp {
 		tempDataCloud.center = dataCloud.center;
 		tempPreviousCloud.center = previousCloud.center;
 
-		// cv::Mat a = makeRotationMatrix(0, 2, 0);
+		// cv::Mat a = makeRotationMatrix(10, 5, -5);
 		// dataCloud.rotate(a);
 
 		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
@@ -241,6 +241,8 @@ namespace icp {
    		error_sum = pow(error_sum, 2);
 
    		// std::cout << "MSE: " << error_sum << std::endl;
+
+		logDeltaTime(LOG_MSE, errors.size());
 
 		return error_sum;
 	}
