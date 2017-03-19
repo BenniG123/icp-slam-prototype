@@ -227,6 +227,9 @@ int main( int argc, const char** argv )
 					cv::Mat transformation = icp::getTransformation(filtered, previous, 16, 0.0001, depthWindow);
 					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
+					
+					icpRotation = icpRotation * icp::makeRotationMatrix(0, 0, 180);
+
 					deltaRotation = currentRotation * initialRotation.inverse();
 					rotation = rotation * icpRotation;
 
@@ -387,7 +390,7 @@ void logDeltaTime(int logKey, int quantity) {
     myLog[logKey].count++;
     myLog[logKey].quantity = quantity;
 
-    std::cout << myLog[logKey].name << " " << int_us.count() << std::endl;
+    // std::cout << myLog[logKey].name << " " << int_us.count() << std::endl;
 
 
     /* 
