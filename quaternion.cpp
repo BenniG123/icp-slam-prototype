@@ -7,6 +7,7 @@
 //****************************************************
 
 #include "quaternion.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
 //Quaternion
 // -default constructor
@@ -17,6 +18,64 @@ Quaternion::Quaternion(void)
   y = 0;
   z = 0;
   w = 0;
+}
+
+Quaternion::Quaternion(cv::Mat rotationMatrix) {
+
+  float r11 = rotationMatrix.at<float>(0,0);
+  float r12 = rotationMatrix.at<float>(0,1);
+  float r13 = rotationMatrix.at<float>(0,2);
+  float r21 = rotationMatrix.at<float>(1,0);
+  float r22 = rotationMatrix.at<float>(1,1);
+  float r23 = rotationMatrix.at<float>(1,2);
+  float r31 = rotationMatrix.at<float>(2,0);
+  float r32 = rotationMatrix.at<float>(2,1);
+  float r33 = rotationMatrix.at<float>(2,2);
+
+  w = ( r11 + r22 + r33 + 1.0f) / 4.0f;
+  x = ( r11 - r22 - r33 + 1.0f) / 4.0f;
+  y = (-r11 + r22 - r33 + 1.0f) / 4.0f;
+  z = (-r11 - r22 + r33 + 1.0f) / 4.0f;
+
+  if(w < 0.0f) w = 0.0f;
+  if(x < 0.0f) x = 0.0f;
+  if(y < 0.0f) y = 0.0f;
+  if(z < 0.0f) z = 0.0f;
+  w = sqrt(w);
+  x = sqrt(x);
+  y = sqrt(y);
+  z = sqrt(z);
+
+  if(w >= x && w >= y && w >= z) {
+      w *= +1.0f;
+      x *= SIGN(r32 - r23);
+      y *= SIGN(r13 - r31);
+      z *= SIGN(r21 - r12);
+  } else if(x >= w && x >= y && x >= z) {
+      w *= SIGN(r32 - r23);
+      x *= +1.0f;
+      y *= SIGN(r21 + r12);
+      z *= SIGN(r13 + r31);
+  } else if(y >= w && y >= x && y >= z) {
+      w *= SIGN(r13 - r31);
+      x *= SIGN(r21 + r12);
+      y *= +1.0f;
+      z *= SIGN(r32 + r23);
+  } else if(z >= w && z >= x && z >= y) {
+      w *= SIGN(r21 - r12);
+      x *= SIGN(r31 + r13);
+      y *= SIGN(r32 + r23);
+      z *= +1.0f;
+  } else {
+      printf("coding error\n");
+  }
+
+  float r = NORM(w, x, y, z);
+  w /= r;
+  x /= r;
+  y /= r;
+  z /= r;
+
 }
 
 

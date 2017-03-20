@@ -114,6 +114,7 @@ int main( int argc, const char** argv )
 	cv::Mat distortionMatrix;
 	cv::Mat translationPlot(500, 500, CV_8UC(3));
 	cv::Mat rotation = icp::makeRotationMatrix(0,0,0);
+
 	boost::circular_buffer<cv::Mat> transformationBuffer{33};
 
 	std::string line;
@@ -133,6 +134,8 @@ int main( int argc, const char** argv )
 	Quaternion previousRotation;
 	Quaternion currentRotation;
 	Quaternion deltaRotation;
+
+	Quaternion rotationQ;
 
 	cv::Vec3f groundTruthPosition;
 	cv::Vec3f previousPosition;
@@ -212,7 +215,7 @@ int main( int argc, const char** argv )
 			    filtered = image.clone();
 
 			    // Filter all points > x * 5000 m away
-			    filterDepthImage(filtered, 8500);
+			    filterDepthImage(filtered, 25000);
 			    logDeltaTime( LOG_FILTER_IMAGE );
 
 				// std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
@@ -228,13 +231,15 @@ int main( int argc, const char** argv )
 					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
 					
-					icpRotation = icpRotation * icp::makeRotationMatrix(0, 0, 180);
+					// icpRotation = icpRotation * icp::makeRotationMatrix(0, 0, 180);
 
 					deltaRotation = currentRotation * initialRotation.inverse();
 					rotation = rotation * icpRotation;
 
 					float rx, ry, rz;
-					transformationMatToEulerianAngle(rotation, rx, ry, rz);
+					// transformationMatToEulerianAngle(rotation, rx, ry, rz);
+					rotationQ = Quaternion(rotation); // * rotationQ.inverse();
+    				toEulerianAngle(rotationQ, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz;
     				toEulerianAngle(deltaRotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;

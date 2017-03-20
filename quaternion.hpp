@@ -13,9 +13,14 @@
 #include <iostream>
 #include <math.h>
 
+#include "opencv2/imgproc/imgproc.hpp"
+
 #ifdef SHOEMAKE
 #include "EulerAngles.h"
 #endif
+
+inline float SIGN(float x) {return (x >= 0.0f) ? +1.0f : -1.0f;}
+inline float NORM(float a, float b, float c, float d) {return sqrt(a * a + b * b + c * c + d * d);}
 
 class Quaternion
 {
@@ -26,6 +31,10 @@ class Quaternion
   // -default constructor
   // -creates a new quaternion with all parts equal to zero
   Quaternion(void);
+
+  //Quaternion
+  // Create Quaternion from 3x3 CV Mat
+  Quaternion(cv::Mat rotationMatrix);
   
   //Quaternion
   // -constructor
