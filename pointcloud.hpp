@@ -13,8 +13,8 @@ namespace icp {
 	      void translate(cv::Mat& transformationMatrix);
 	      cv::Mat matrix();
 	      cv::Mat centered_matrix();
-	    private:
 	      void center_points();
+	    private:
 		  void std_dev_filter_points();
 	};
 }

@@ -16,13 +16,22 @@ namespace icp {
 			correspondance
 			Transform M
 	*/
-	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
+
+	PointCloud map;
+
+	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
 		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
 		std::vector<float> errors;
 		cv::Mat R;
 
 		PointCloud dataCloud(data);
+
+		if (map.points.size() == 0) {
+			std::cout << "Map initialized" << std::endl;
+			map = PointCloud(previous);
+		}
+
 		PointCloud previousCloud(previous);
 
 		logDeltaTime(LOG_GEN_POINT_CLOUD);
@@ -37,10 +46,11 @@ namespace icp {
 		tempDataCloud.center = dataCloud.center;
 		tempPreviousCloud.center = previousCloud.center;
 
-		// cv::Mat a = makeRotationMatrix(10, 5, -5);
-		// dataCloud.rotate(a);
+		// cv::Mat a = makeRotationMatrix(45, 0, 0);
+		// dataCloud.rotate(rotation);
+		// previousCloud.rotate(rotation);
 
-		findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
+		findNearestNeighborAssociations(dataCloud, map, errors, associations);
 		
 		int i = 0;
 
@@ -48,10 +58,10 @@ namespace icp {
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 
 			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
-			showPointCloud(previousCloud, depthWindow, cv::viz::Color().yellow(), "Previous");
+			showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous");
 			showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero");
 
-			depthWindow.spinOnce(33, true);
+			depthWindow.spinOnce(1, true);
 
 			logDeltaTime( LOG_UI );
 
@@ -105,12 +115,12 @@ namespace icp {
 				Rp.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 			}
 
-			previousCloud.rotate(R);
+			map.rotate(R);
 
 			logDeltaTime( LOG_ROTATE );
 
 			// Find nearest neighber associations
-			findNearestNeighborAssociations(dataCloud, previousCloud, errors, associations);
+			findNearestNeighborAssociations(dataCloud, map, errors, associations);
 
 			i++;
 		}
@@ -119,15 +129,60 @@ namespace icp {
 		std::cout << meanSquareError(errors);
 
 		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
-		showPointCloud(previous, depthWindow, cv::viz::Color().yellow(), "Previous");
+		showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous");
 
 		cv::Point3f translation(0,0,0);
-		translation = dataCloud.center - previousCloud.center;
+		translation = dataCloud.center - map.center;
 
 		rigidTransformation.at<float>(0,3) = translation.x;
 		rigidTransformation.at<float>(1,3) = translation.y;
 		// TODO - zScale this to m
 		rigidTransformation.at<float>(2,3) = translation.z; // / 5;
+
+		std::vector<cv::Point3f>::iterator it, end;
+		it = dataCloud.points.begin();
+		end = dataCloud.points.end();
+
+		while (it < end) {
+			if (rand() % 10 == 0) {
+				map.points.push_back(*it);
+			}
+			it++;
+		}
+
+		std::cout << std::endl << map.points.size() << std::endl;
+
+		if (map.points.size() > 4000) {
+			it = map.points.begin();
+			end = map.points.end();
+			while (it < end) {
+				if (rand() % 10 == 0) {
+					map.points.erase(it);
+				}
+				it++;
+			}
+		}
+
+		// Update translation
+		it = map.points.begin();
+		end = map.points.end();
+
+		// if (distance(translation, cv::Point3f(0,0,0)) > .04) {
+		while (it < end) {
+			*it += translation;
+			it++;
+		}
+
+		map.center += translation;
+		std::cout << translation << std::endl;
+
+		// }
+
+		// map.points.insert(map.points.end(), dataCloud.points.begin(), dataCloud.points.end());
+
+		// map.center += cv::Point3f(5,5,5);
+		// std::cout << map.center << std::endl;
+		// map.center_points();
 		
 		return rigidTransformation;
 	}

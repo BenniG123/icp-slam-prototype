@@ -227,7 +227,7 @@ int main( int argc, const char** argv )
 
 				if (previous.size().area() > 0) {
 					// std::cout << std::setprecision (15) << timestamp << ",";
-					cv::Mat transformation = icp::getTransformation(filtered, previous, 16, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 16, 0.0001, depthWindow);
 					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
 					
@@ -458,7 +458,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		it++;
 	}
 
-
+	/*
   	// Using Canny's output as a mask, we display our result
 	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
 	                               cv::Size( 7, 7 ),
@@ -482,6 +482,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 
  	cv::dilate( image, image, element);
  	cv::erode( image, image, element);
+ 	*/
 
  	/*
  	it = image.begin<uint16_t>();

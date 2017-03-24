@@ -8,7 +8,7 @@
 
 namespace icp {
 	cv::Mat makeRotationMatrix(float x, float y, float z);
-	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow);
+	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow);
 	float getNearestPoint(cv::Point3f point, cv::Point3f& nearest, PointCloud& cloud);
 	float meanSquareError(std::vector<float> errors);
 	float distance(cv::Point3f a, cv::Point3f b);

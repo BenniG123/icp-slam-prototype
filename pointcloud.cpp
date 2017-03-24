@@ -33,7 +33,7 @@ namespace icp {
 			}
 
 			// Subsample
-			if (rand() % 40) {
+			if (rand() % 80) {
 				p_index++;
 				it++;
 				continue;
