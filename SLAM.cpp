@@ -95,6 +95,8 @@ int main( int argc, const char** argv )
 
 	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Filtered" , 0 , 700 );
+	cv::namedWindow( "Normals" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Normals" , 550 , 700 );
 
 	cv::viz::Viz3d depthWindow("Depth Frame");
 
@@ -211,8 +213,29 @@ int main( int argc, const char** argv )
 
 			    cv::Mat undistortImage = image.clone();
 			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
+			    image = undistortImage;
 
 			    filtered = image.clone();
+
+			    // Get Image Normals
+			    cv::Mat image32FC1;
+				image.convertTo(image32FC1, CV_32FC1); 
+			    cv::Mat normals(image.size(), CV_32FC3);
+				
+				for(int x = 0; x < image32FC1.rows; ++x)
+				{
+				    for(int y = 0; y < image32FC1.cols; ++y)
+				    {
+
+				        float dzdx = (image32FC1.at<float>(x+1, y) - image32FC1.at<float>(x-1, y)) / 2.0;
+				        float dzdy = (image32FC1.at<float>(x, y+1) - image32FC1.at<float>(x, y-1)) / 2.0;
+
+				        cv::Vec3f d(-dzdx, -dzdy, 1.0f);
+				        cv::Vec3f n = cv::normalize(d);
+
+				        normals.at<cv::Vec3f>(x, y) = n;
+				    }
+				}
 
 			    // Filter all points > x * 5000 m away
 			    filterDepthImage(filtered, 25000);
@@ -285,9 +308,10 @@ int main( int argc, const char** argv )
 
 				// expand your range to 0..255. Similar to histEq();
 				filtered.convertTo(adjMap, CV_8UC1, 255 / (max-min), -min); 
-				applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+				cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
 
 			    cv::imshow( "Filtered", colorDepth );
+				cv::imshow("Normals", normals);
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
 			    // cv::imshow( "Color", colorDepth );

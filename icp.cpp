@@ -57,9 +57,9 @@ namespace icp {
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 
-			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
-			showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous");
-			showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero");
+			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
+			showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
+			showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
 
 			depthWindow.spinOnce(1, true);
 
@@ -128,8 +128,8 @@ namespace icp {
 		// Log MSE
 		std::cout << meanSquareError(errors);
 
-		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data");
-		showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous");
+		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
+		showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
 
 		cv::Point3f translation(0,0,0);
 		translation = dataCloud.center - map.center;
@@ -195,7 +195,7 @@ namespace icp {
 		return rigidTransformation;
 	}
 
-	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name) {
+	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name, int size) {
 		double min;
 		double max;
 
@@ -209,7 +209,7 @@ namespace icp {
 	    }
 
 		cv::viz::WCloud cloudWidget(pointCloudMat, color);
-		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, 3);
+		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, size);
 		depthWindow.showWidget( name , cloudWidget);
 	}
 
@@ -228,14 +228,14 @@ namespace icp {
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
 			// std::cout << end - it << std::endl;
 			// std::cout << nearestNeighbor << std::endl;
-			// if (distance < 2) {
-			// std::cout << "Pushing back association" << std::endl;
+			if (distance < .1) {
+				// std::cout << "Pushing back association" << std::endl;
 
-			associations.push_back(std::make_pair(*it, nearestNeighbor));
-			errors.push_back(distance);
+				associations.push_back(std::make_pair(*it, nearestNeighbor));
+				errors.push_back(distance);
 
-			// std::cout << "Pushed back association" << std::endl;
-			// }
+				// std::cout << "Pushed back association" << std::endl;
+			}
 
 			// else {
 			// 	data.points.erase(it);
