@@ -105,6 +105,7 @@ int main( int argc, const char** argv )
 	cv::Mat colorDepth;
 	cv::Mat colorFiltered;
 	cv::Mat previous;
+	cv::Mat normals;
 
 	cv::Vec3f initialPosition;
 
@@ -216,26 +217,10 @@ int main( int argc, const char** argv )
 			    image = undistortImage;
 
 			    filtered = image.clone();
+    			normals = cv::Mat(image.size(), CV_32FC3);
 
 			    // Get Image Normals
-			    cv::Mat image32FC1;
-				image.convertTo(image32FC1, CV_32FC1); 
-			    cv::Mat normals(image.size(), CV_32FC3);
-				
-				for(int x = 0; x < image32FC1.rows; ++x)
-				{
-				    for(int y = 0; y < image32FC1.cols; ++y)
-				    {
-
-				        float dzdx = (image32FC1.at<float>(x+1, y) - image32FC1.at<float>(x-1, y)) / 2.0;
-				        float dzdy = (image32FC1.at<float>(x, y+1) - image32FC1.at<float>(x, y-1)) / 2.0;
-
-				        cv::Vec3f d(-dzdx, -dzdy, 1.0f);
-				        cv::Vec3f n = cv::normalize(d);
-
-				        normals.at<cv::Vec3f>(x, y) = n;
-				    }
-				}
+			    getNormalMap(image, normals);
 
 			    // Filter all points > x * 5000 m away
 			    filterDepthImage(filtered, 25000);
@@ -347,6 +332,26 @@ int main( int argc, const char** argv )
 	}
 
 	return 0;
+}
+
+void getNormalMap(cv::Mat& image, cv::Mat& normals) {
+	cv::Mat image32FC1;
+	image.convertTo(image32FC1, CV_32FC1);
+
+	for(int x = 1; x < image32FC1.rows; x++)
+	{
+	    for(int y = 1; y < image32FC1.cols; y++)
+	    {
+
+	        float dzdx = (image32FC1.at<float>(x+1, y) - image32FC1.at<float>(x-1, y)) / 2.0;
+	        float dzdy = (image32FC1.at<float>(x, y+1) - image32FC1.at<float>(x, y-1)) / 2.0;
+
+	        cv::Vec3f d(-dzdx, -dzdy, 1.0f);
+	        cv::Vec3f n = cv::normalize(d);
+
+	        normals.at<cv::Vec3f>(x, y) = n;
+	    }
+	}
 }
 
 cv::Vec3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file, Quaternion& rotation) {

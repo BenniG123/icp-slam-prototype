@@ -46,4 +46,6 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 
 cv::Vec3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file, Quaternion& rotation);
 
+void getNormalMap(cv::Mat& image, cv::Mat& normals);
+
 #endif
