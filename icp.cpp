@@ -46,8 +46,8 @@ namespace icp {
 		tempDataCloud.center = dataCloud.center;
 		tempPreviousCloud.center = previousCloud.center;
 
-		// cv::Mat a = makeRotationMatrix(45, 0, 0);
-		// dataCloud.rotate(rotation);
+		cv::Mat a = makeRotationMatrix(1, 0, 0);
+		dataCloud.rotate(a);
 		// previousCloud.rotate(rotation);
 
 		findNearestNeighborAssociations(dataCloud, map, errors, associations);
@@ -140,6 +140,23 @@ namespace icp {
 		rigidTransformation.at<float>(2,3) = translation.z; // / 5;
 
 		std::vector<cv::Point3f>::iterator it, end;
+
+
+		// Update translation
+		/* it = map.points.begin();
+		end = map.points.end();
+
+		if (distance(translation, cv::Point3f(0,0,0)) > .04) {
+			while (it < end) {
+				*it += translation;
+				it++;
+			}
+
+			map.center += translation;
+		}
+
+		std::cout << translation << std::endl;
+
 		it = dataCloud.points.begin();
 		end = dataCloud.points.end();
 
@@ -163,18 +180,9 @@ namespace icp {
 			}
 		}
 
-		// Update translation
-		it = map.points.begin();
-		end = map.points.end();
+		*/
 
 		// if (distance(translation, cv::Point3f(0,0,0)) > .04) {
-		while (it < end) {
-			*it += translation;
-			it++;
-		}
-
-		map.center += translation;
-		std::cout << translation << std::endl;
 
 		// }
 
@@ -199,12 +207,6 @@ namespace icp {
 	    for (int i = 0; i < p.points.size(); i++) {
 	    	pointCloudMat.at<cv::Vec3f>(i,0) = p.points[i];
 	    }
-
-	   	/*
-	   	cv::minMaxIdx(pointCloudMat, &min, &max);
-		pointCloudMat.convertTo(adjMap,CV_8UC1, 255 / (max-min), -min);
-		applyColorMap(adjMap, colorMap, cv::COLORMAP_JET);
-		*/
 
 		cv::viz::WCloud cloudWidget(pointCloudMat, color);
 		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, 3);
