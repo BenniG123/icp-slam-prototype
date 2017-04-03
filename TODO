@@ -1,11 +1,16 @@
 You can do it! Don't get left behind
+
+Figure out how to subsample points better - Grid
+
+Weight translation and rotation with distance
+
 To import latest run into LibreOffice, go to Sheet -> Import Sheet from File.  Move that sheet as the first.
 Learn more about mapping techniques
 Look into Point to Plane
 Reject outlier pairs
 
+
 Autogenerate Experiment Results from command line
 Profile image filtering, point cloud generation, nearest neighbor, rotation
-Figure out how to subsample points better - Grid
 Correctly calculate final translation in ICP
 Filter points better

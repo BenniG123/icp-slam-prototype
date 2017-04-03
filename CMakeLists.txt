@@ -18,6 +18,7 @@ set(SOURCE
   icp.cpp
   quaternion.cpp
   pointcloud.cpp
+  map.cpp
   SLAM.cpp
 )
 
@@ -27,6 +28,7 @@ set(HEADERS
    icp.hpp
    quaternion.hpp
    pointcloud.hpp
+   map.hpp
 )
 
 # add_library (quaternion SHARED quaternion.cpp)

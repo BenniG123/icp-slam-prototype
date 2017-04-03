@@ -28,6 +28,8 @@ void initLog();
 
 void logDeltaTime(int logKey, int quantity = 0);
 
+std::string getNextImageFileName(std::ifstream& list_file, std::string path, double& timestamp);
+
 void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name);
 
 void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name);

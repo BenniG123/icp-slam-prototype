@@ -22,8 +22,12 @@ namespace icp {
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
 		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
+		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
+
 		std::vector<float> errors;
 		cv::Mat R;
+
+		cv::Point3f offset;
 
 		PointCloud dataCloud(data);
 
@@ -40,14 +44,19 @@ namespace icp {
 		zeroList.push_back(dataCloud.center);
 		PointCloud zeroCloud = PointCloud(zeroList);
 
+		std::vector<cv::Point3f> mZeroList;
+		mZeroList.push_back(map.center);
+		PointCloud mZeroCloud = PointCloud(mZeroList);
+
 		PointCloud tempDataCloud = PointCloud();
 		PointCloud tempPreviousCloud = PointCloud();
 
 		tempDataCloud.center = dataCloud.center;
 		tempPreviousCloud.center = previousCloud.center;
 
-		cv::Mat a = makeRotationMatrix(1, 0, 0);
-		dataCloud.rotate(a);
+		// cv::Mat a = makeRotationMatrix(rand() % 5, rand() % 5, rand() % 5);
+		// dataCloud.rotate(a);
+		// dataCloud.translate(cv::Point3f(rand() % 2 / 5, rand() % 2 / 5, rand() % 2 / 5));
 		// previousCloud.rotate(rotation);
 
 		findNearestNeighborAssociations(dataCloud, map, errors, associations);
@@ -60,6 +69,7 @@ namespace icp {
 			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
 			showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
 			showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
+			showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
 			depthWindow.spinOnce(1, true);
 
@@ -69,7 +79,6 @@ namespace icp {
 			tempPreviousCloud.points.clear();
 
 			// Reassociate the points inside the pointclouds
-			std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
 			it1 = associations.begin();
 			end1 = associations.end();
 
@@ -117,6 +126,11 @@ namespace icp {
 
 			map.rotate(R);
 
+			offset = calculateOffset(associations);
+
+			// Update translation
+			map.translate(offset);
+
 			logDeltaTime( LOG_ROTATE );
 
 			// Find nearest neighber associations
@@ -128,34 +142,26 @@ namespace icp {
 		// Log MSE
 		std::cout << meanSquareError(errors);
 
+		// Update translation
+		// offset = calculateOffset(associations);
+		// map.translate(offset);
+
+		rigidTransformation.at<float>(0,3) = offset.x;
+		rigidTransformation.at<float>(1,3) = offset.y;
+		// TODO - zScale this to m
+		rigidTransformation.at<float>(2,3) = offset.z; // / 5;
+
+
+		std::cout << offset << std::endl;
+
 		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
 		showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
+		zeroCloud.points[0] = dataCloud.center;
+		mZeroCloud.points[0] = map.center;
+		showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
+		showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
-		cv::Point3f translation(0,0,0);
-		translation = dataCloud.center - map.center;
-
-		rigidTransformation.at<float>(0,3) = translation.x;
-		rigidTransformation.at<float>(1,3) = translation.y;
-		// TODO - zScale this to m
-		rigidTransformation.at<float>(2,3) = translation.z; // / 5;
-
-		std::vector<cv::Point3f>::iterator it, end;
-
-
-		// Update translation
-		/* it = map.points.begin();
-		end = map.points.end();
-
-		if (distance(translation, cv::Point3f(0,0,0)) > .04) {
-			while (it < end) {
-				*it += translation;
-				it++;
-			}
-
-			map.center += translation;
-		}
-
-		std::cout << translation << std::endl;
+		/* 
 
 		it = dataCloud.points.begin();
 		end = dataCloud.points.end();
@@ -182,10 +188,6 @@ namespace icp {
 
 		*/
 
-		// if (distance(translation, cv::Point3f(0,0,0)) > .04) {
-
-		// }
-
 		// map.points.insert(map.points.end(), dataCloud.points.begin(), dataCloud.points.end());
 
 		// map.center += cv::Point3f(5,5,5);
@@ -193,6 +195,34 @@ namespace icp {
 		// map.center_points();
 		
 		return rigidTransformation;
+	}
+
+	cv::Point3f calculateOffset(std::vector<std::pair<cv::Point3f, cv::Point3f>> associations) {
+		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
+		cv::Point3f offset(0,0,0);
+
+		it1 = associations.begin();
+		end1 = associations.end();
+
+		int offset_count = 0;
+
+		while (it1 != end1) {
+			cv::Point3f a = (*it1).first;
+			cv::Point3f b = (*it1).second;
+
+			// Only factor in translation to points that are close enough
+			if (distance(a, b) < .3) { // } && a.z < 3) {
+				offset += a - b;
+				offset_count++;
+			}
+			it1++;
+		}
+
+		offset.x /= offset_count;
+		offset.y /= offset_count;
+		offset.z /= offset_count;
+
+		return offset;
 	}
 
 	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name, int size) {
@@ -221,25 +251,14 @@ namespace icp {
 		errors.clear();
 		associations.clear();
 
-		// std::cout << previous.points.size() << std::endl;
-
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
-			// std::cout << end - it << std::endl;
-			// std::cout << nearestNeighbor << std::endl;
-			if (distance < .1) {
-				// std::cout << "Pushing back association" << std::endl;
-
+			if (distance < 1.5) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
-
-				// std::cout << "Pushed back association" << std::endl;
 			}
 
-			// else {
-			// 	data.points.erase(it);
-			// }
 			it++;
 		}
 

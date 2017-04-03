@@ -60,9 +60,9 @@ namespace icp {
 			// Add point to point cloud
 			points.push_back(cv::Point3f(p_x,p_y,p_z));
 
-				p_index++; // += SUBSAMPLE_FACTOR;
-				index++;
-				it++; // += SUBSAMPLE_FACTOR;
+			p_index++; // += SUBSAMPLE_FACTOR;
+			index++;
+			it++; // += SUBSAMPLE_FACTOR;
 		}
 
 		/*
@@ -84,8 +84,8 @@ namespace icp {
 		center.y /= index;
 		center.z /= index;
 
-		// std_dev_filter_points();
 		center_points();
+		std_dev_filter_points();
 	}
 
 	void PointCloud::std_dev_filter_points() {
@@ -109,7 +109,7 @@ namespace icp {
 
 		it = points.begin();
 		while ( it != end) {
-			if (icp::distance(center, *it) > stddev) {
+			if (icp::distance(center, *it) > stddev * 1.5) {
 				// std::cout << (*it).z << std::endl;
 				points.erase(it);
 			}
@@ -160,6 +160,8 @@ namespace icp {
 		it = points.begin();
 		end = points.end();
 
+		std::cout << center << std::endl;
+
 		while (it != end) {
 			cv::Point3f p = *it;
 			p.x -= center.x;
@@ -183,16 +185,12 @@ namespace icp {
 	}
 
 
-	void PointCloud::translate(cv::Mat& transformationMatrix) {
-		cv::Mat M = matrix();
-
+	void PointCloud::translate(cv::Point3f offset) {
 		for (int i = 0; i < points.size(); i++) {
-			cv::Mat m = M.col(i) * transformationMatrix;
-
-			points[i].x = m.at<float>(i, 0);
-			points[i].y = m.at<float>(i, 1);
-			points[i].z = m.at<float>(i, 2);
+			points[i] += offset;
 		}
+
+		center += offset;
 	}
 
 	cv::Mat PointCloud::centered_matrix() {

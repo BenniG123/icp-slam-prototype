@@ -33,6 +33,16 @@
 		t1 = 0.000
 		t2 = 0.000
 		offset = -18 mm
+	color:
+		fx = 1054.35
+		fy = 1054.51
+		cx = 956.12
+		cy = 548.99
+		r1 = 0.050
+		r2 = -0.062
+		r3 = -0.002
+		t1 = -0.002
+		t2 = 0.000
 
 	Camera Trajectory is provided at 120 Hz
 	Camera Depth Catpures are provided at 30 Hz
@@ -97,10 +107,17 @@ int main( int argc, const char** argv )
 	cv::moveWindow( "Filtered" , 0 , 700 );
 	cv::namedWindow( "Normals" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Normals" , 550 , 700 );
+	// cv::namedWindow( "RGB" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	// cv::moveWindow( "RGB" , 1100 , 700 );
+	cv::namedWindow( "Features" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	cv::moveWindow( "Features" , 900 , 0 );
+
 
 	cv::viz::Viz3d depthWindow("Depth Frame");
 
 	cv::Mat image;
+	cv::Mat rgbImage;
+	cv::Mat keypointsImage;
 	cv::Mat filtered;
 	cv::Mat colorDepth;
 	cv::Mat colorFiltered;
@@ -122,13 +139,16 @@ int main( int argc, const char** argv )
 
 	std::string line;
 	std::string depth_list_file_name(path);
+	std::string rgb_list_file_name(path);
 	std::string ground_truth_file_name(path);
 
 	double timestamp;
 
 	depth_list_file_name.append("depth.txt");
 	ground_truth_file_name.append("groundtruth.txt");
+	rgb_list_file_name.append("rgb.txt");
 
+	std::ifstream rgb_list_file(rgb_list_file_name.c_str());
 	std::ifstream depth_list_file(depth_list_file_name.c_str());
 	std::ifstream ground_truth_file(ground_truth_file_name.c_str());
 
@@ -145,7 +165,7 @@ int main( int argc, const char** argv )
 	cv::Vec3f currentPosition;
 	cv::Vec3f deltaPosition;
 
-	// Init profiling znames
+	// Init profiling names
 	myLog[LOG_NEAREST_NEIGHBOR].name = "Nearest Neighbor";
 	myLog[LOG_UI].name = "UI";
 	myLog[LOG_LOAD_IMAGE].name = "Load Image";
@@ -160,42 +180,24 @@ int main( int argc, const char** argv )
 	start = std::chrono::high_resolution_clock::now();
 	t2 = std::chrono::high_resolution_clock::now();
 
-	if (depth_list_file.is_open()) {
+	if (depth_list_file.is_open() && rgb_list_file.is_open()) {
 		if (ground_truth_file.is_open()) {
-			while ( getline (depth_list_file, line) ) {
+			// While their is still something to parse
+			while (!depth_list_file.eof() && !rgb_list_file.eof()) {
 
-				// Skip comments
-				while (line[0] == '#') {
-					getline (depth_list_file, line);
-				}
-
-				// Get Filename
-				std::stringstream ss;
-				ss.str(line);
-
-				std::string depth_frame_file_name(path);
-				std::string file;
-				std::string timestamp_string;
-
-				// Parse next timestamp
-				std::getline(ss, timestamp_string, ' ');
-				timestamp = std::stod(timestamp_string);
-
-				std::getline(ss, file, ' ');
-
-				std::replace( file.begin(), file.end(), '\\', '/');
-
-				// Remove whitespace
-			    for (int i = 0; i < file.size(); i++) {
-			    	if (file[i] == ' ' || file[i] == '\n' || file[i] == '\r') {
-			    		file.erase(i, 1);
-			    	}
-			    }
-
-			    depth_frame_file_name.append(file.c_str());
+				std::string depth_frame_file_name = getNextImageFileName(depth_list_file, path, timestamp);
+				std::string rgb_frame_file_name = getNextImageFileName(rgb_list_file, path, timestamp);
 
 			    // Read next depth frame
-			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_ANYDEPTH);   // Read the fileW
+			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_ANYDEPTH);   // Read the file
+
+			    // Read the next color frame
+			    rgbImage = cv::imread(rgb_frame_file_name, CV_LOAD_IMAGE_GRAYSCALE);
+			    // cv::resize(rgbImage, rgbImage, cv::Size(960,540));
+
+			    // std::vector<cv::KeyPoint> keypoints;
+			    // cv::FAST(rgbImage, keypoints, 40, true, cv::FastFeatureDetector::TYPE_9_16);
+			    // cv::drawKeypoints(rgbImage, keypoints, keypointsImage, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
 			    // CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
 			    // image.convertTo(image, CV_16U);
@@ -217,13 +219,15 @@ int main( int argc, const char** argv )
 			    image = undistortImage;
 
 			    filtered = image.clone();
-    			normals = cv::Mat(image.size(), CV_32FC3);
+
+			    // Filter all points > x * 5000 m away - 25000
+			    filterDepthImage(filtered, 25000);
+
+    			normals = cv::Mat(filtered.size(), CV_32FC3);
 
 			    // Get Image Normals
-			    getNormalMap(image, normals);
+			    getNormalMap(filtered, normals);
 
-			    // Filter all points > x * 5000 m away
-			    filterDepthImage(filtered, 25000);
 			    logDeltaTime( LOG_FILTER_IMAGE );
 
 				// std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
@@ -257,7 +261,7 @@ int main( int argc, const char** argv )
 					showText(depthWindow, "ICP", cv::Point(10,80), "ICP Text");
 					showTransfom(depthWindow, rotation, cv::Point(10,60), "ICP");
 
-					depthWindow.spinOnce(0, true);
+					depthWindow.spinOnce(33, true);
 
 					logDeltaTime(LOG_RETRIEVE_TRANSFORM);
 
@@ -297,6 +301,8 @@ int main( int argc, const char** argv )
 
 			    cv::imshow( "Filtered", colorDepth );
 				cv::imshow("Normals", normals);
+				// cv::imshow("RGB", rgbImage);
+				// cv::imshow("Features", keypointsImage);
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
 			    // cv::imshow( "Color", colorDepth );
@@ -326,12 +332,51 @@ int main( int argc, const char** argv )
 		}
 
 		depth_list_file.close();
+		rgb_list_file.close();
 
 	} else {
 		errorMessage();
 	}
 
 	return 0;
+}
+
+std::string getNextImageFileName(std::ifstream& list_file, std::string path, double& timestamp) {
+
+	std::string line;
+	getline (list_file, line);
+
+	// Skip comments
+	while (line[0] == '#') {
+		getline (list_file, line);
+	}
+
+	// Get Filename
+	std::stringstream ss;
+	ss.str(line);
+
+	std::string frame_file_name(path);
+
+	std::string file;
+	std::string timestamp_string;
+
+	// Parse next timestamp
+	std::getline(ss, timestamp_string, ' ');
+
+	timestamp = std::stod(timestamp_string);
+
+	std::getline(ss, file, ' ');
+	std::replace( file.begin(), file.end(), '\\', '/');
+
+	// Remove whitespace
+    for (int i = 0; i < file.size(); i++) {
+    	if (file[i] == ' ' || file[i] == '\n' || file[i] == '\r') {
+    		file.erase(i, 1);
+    	}
+    }
+
+    frame_file_name.append(file.c_str());
+    return frame_file_name;
 }
 
 void getNormalMap(cv::Mat& image, cv::Mat& normals) {
