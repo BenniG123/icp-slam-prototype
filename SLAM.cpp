@@ -331,6 +331,7 @@ int main( int argc, const char** argv )
 			errorMessage();
 		}
 
+		depthWindow.spin();
 		depth_list_file.close();
 		rgb_list_file.close();
 

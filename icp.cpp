@@ -1,6 +1,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/viz/vizcore.hpp"
+#include "map.hpp"
 #include "SLAM.hpp"
 #include "icp.hpp"
 #include <iostream>
@@ -18,6 +19,8 @@ namespace icp {
 	*/
 
 	PointCloud map;
+	cv::Mat cameraRotation(3, 3, CV_32FC1);
+	cv::Point3f cameraPosition;
 
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
@@ -33,7 +36,17 @@ namespace icp {
 
 		if (map.points.size() == 0) {
 			std::cout << "Map initialized" << std::endl;
+
+			// Starting Rotation
+			cameraRotation = makeRotationMatrix(0,0,0);
+
+			// Starting Position
+			cameraPosition = cv::Point3f(2,2,2);
 			map = PointCloud(previous);
+			map.translate(cameraPosition);
+
+			// Init certainty grid
+			map::init();
 		}
 
 		PointCloud previousCloud(previous);
@@ -55,8 +68,8 @@ namespace icp {
 		tempPreviousCloud.center = previousCloud.center;
 
 		// cv::Mat a = makeRotationMatrix(rand() % 5, rand() % 5, rand() % 5);
-		// dataCloud.rotate(a);
-		// dataCloud.translate(cv::Point3f(rand() % 2 / 5, rand() % 2 / 5, rand() % 2 / 5));
+		dataCloud.rotate(cameraRotation);
+		dataCloud.translate(cameraPosition);
 		// previousCloud.rotate(rotation);
 
 		findNearestNeighborAssociations(dataCloud, map, errors, associations);
@@ -124,15 +137,17 @@ namespace icp {
 				Rp.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 			}
 
-			map.rotate(R);
-			// R = R.inv();
-			//dataCloud.rotate(R);
+			// map.rotate(R);
+			R = R.inv();
+			dataCloud.rotate(R);
+			cameraRotation *= R;
 
 			offset = calculateOffset(associations);
 
 			// Update translation
-			map.translate(offset);
-			// dataCloud.translate(-offset);
+			// map.translate(offset);
+			dataCloud.translate(-offset);
+			cameraPosition -= offset;
 
 			logDeltaTime( LOG_ROTATE );
 
@@ -145,24 +160,12 @@ namespace icp {
 		// Log MSE
 		std::cout << meanSquareError(errors);
 
-		// Update translation
-		// offset = calculateOffset(associations);
-		// map.translate(offset);
-
 		rigidTransformation.at<float>(0,3) = offset.x;
 		rigidTransformation.at<float>(1,3) = offset.y;
-		// TODO - zScale this to m
-		rigidTransformation.at<float>(2,3) = offset.z; // / 5;
-
-
-		std::cout << offset << std::endl;
+		rigidTransformation.at<float>(2,3) = offset.z;
 
 		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
 		showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
-		zeroCloud.points[0] = dataCloud.center;
-		mZeroCloud.points[0] = map.center;
-		showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
-		showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
 		///* 
 
@@ -187,6 +190,12 @@ namespace icp {
 		}
 
 		std::cout << std::endl << map.points.size() << std::endl;
+
+		// Update Certainties and display
+		map::updateMap(dataCloud);
+		map::drawCertaintyMap(depthWindow);
+
+		// http://docs.opencv.org/trunk/d0/da3/classcv_1_1viz_1_1WTrajectory.html
 
 		/* 
 		if (map.points.size() > 4000) {
@@ -241,9 +250,6 @@ namespace icp {
 	}
 
 	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name, int size) {
-		double min;
-		double max;
-
 		cv::Mat adjMap;
 		cv::Mat colorMap;
 
@@ -297,7 +303,6 @@ namespace icp {
 			if (d < shortestDistance) {
 				shortestDistance = d;
 				nearest = *it;
-				// near = it;
 			}
 
 			it++;

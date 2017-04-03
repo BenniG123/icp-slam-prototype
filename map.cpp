@@ -18,21 +18,56 @@ namespace map {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
 				for (int k = 0; k < MAP_HEIGHT; k++) {
 					world[i][j][k] = 0;
+					// mapCloud.points.push_back(cv::Point3f(i * CELL_PHYSICAL_HEIGHT, j * CELL_PHYSICAL_HEIGHT, k * CELL_PHYSICAL_HEIGHT));
 				}
 			}
 		}
 	}
 
-	void updateMap(icp::PointCloud data, cv::Point3f position, cv::Mat rotation) {
-		data.rotate(rotation);
-		data.translate(position);
+	void drawCertaintyMap(cv::viz::Viz3d& depthWindow) {
 
+		for (int i = 0; i < MAP_HEIGHT; i++) {
+			for (int j = 0; j < MAP_HEIGHT; j++) {
+				for (int k = 0; k < MAP_HEIGHT; k++) {
+					if (world[i][j][k] > 0) {
+						cv::viz::WCube cubeWidget(cv::Vec3d(i * CELL_PHYSICAL_HEIGHT, 
+							j * CELL_PHYSICAL_HEIGHT, k * CELL_PHYSICAL_HEIGHT),
+							cv::Vec3d( (i+1) * CELL_PHYSICAL_HEIGHT, (j+1) * CELL_PHYSICAL_HEIGHT,
+							 (k+1) * CELL_PHYSICAL_HEIGHT),
+						 true, cv::viz::Color(cv::Scalar(255, 127, world[i][j][k])));
+
+						depthWindow.showWidget( "Certainty" + std::to_string(i + j * MAP_HEIGHT + k * MAP_HEIGHT * MAP_HEIGHT)
+							, cubeWidget);
+					}
+				}
+			}
+		}
+
+		// const Point3d& min_point, const Point3d& max_point 
+	}
+
+	// Update Map with new scan
+	void updateMap(icp::PointCloud data) {
 		std::vector<cv::Point3f>::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
 
+		double c = float(CELL_PHYSICAL_HEIGHT);
+
 		while (it != end) {
-			rayTrace(*it, position);
+			// rayTrace(*it, position);
+			cv::Point3f point = *it;
+
+			int x = int(point.x / c);
+			int y = int(point.y / c);
+			int z = int(point.z / c);
+
+			if (world[x][y][z] > (255 - DELTA_CONFIDENCE)) {
+				world[x][y][z] = 255;
+			} else {
+				world[x][y][z] += DELTA_CONFIDENCE;
+			}
+
 			it++;
 		}
 	}
