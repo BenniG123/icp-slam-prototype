@@ -105,8 +105,8 @@ int main( int argc, const char** argv )
 
 	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	cv::moveWindow( "Filtered" , 0 , 700 );
-	cv::namedWindow( "Normals" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow( "Normals" , 550 , 700 );
+	// cv::namedWindow( "Normals" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	// cv::moveWindow( "Normals" , 550 , 700 );
 	// cv::namedWindow( "RGB" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	// cv::moveWindow( "RGB" , 1100 , 700 );
 	cv::namedWindow( "Features" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
@@ -223,10 +223,10 @@ int main( int argc, const char** argv )
 			    // Filter all points > x * 5000 m away - 25000
 			    filterDepthImage(filtered, 25000);
 
-    			normals = cv::Mat(filtered.size(), CV_32FC3);
+    			// normals = cv::Mat(filtered.size(), CV_32FC3);
 
 			    // Get Image Normals
-			    getNormalMap(filtered, normals);
+			    // getNormalMap(filtered, normals);
 
 			    logDeltaTime( LOG_FILTER_IMAGE );
 
@@ -274,7 +274,7 @@ int main( int argc, const char** argv )
 					// std::cout << "Ground Truth:" << std::endl << groundTruth << std::endl;
 					// std::cout << "Transformation:" << std::endl << transformation << std::endl;
 
-					int i = 0;
+					// int i = 0;
 					/* for (cv::Mat mat : transformationBuffer) {
 						cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,2) * 125)), mat.at<float>(0,1) * 5 + 5, cv::Scalar(255, i * 5, i * 5), -1);
 						i++;
@@ -300,7 +300,7 @@ int main( int argc, const char** argv )
 				cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
 
 			    cv::imshow( "Filtered", colorDepth );
-				cv::imshow("Normals", normals);
+				// cv::imshow("Normals", normals);
 				// cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", keypointsImage);
 			    // cv::imshow( "Sobel", sobelFilter );
@@ -320,7 +320,7 @@ int main( int argc, const char** argv )
 
 			    // TODO - The whole SLAM thing
 
-			    cv::waitKey(33);
+			    cv::waitKey(1);
 
 			    logDeltaTime(LOG_UI);
 			}

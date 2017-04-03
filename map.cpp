@@ -115,9 +115,13 @@ namespace map {
 		float tMaxX, tMaxY, tMaxZ;
 
 		// TODO - This is wrong
-		tMaxX = origin.x - CELL_PHYSICAL_HEIGHT - tDeltaX;
-		tMaxY = origin.y - CELL_PHYSICAL_HEIGHT - tDeltaY;
-		tMaxZ = origin.z - CELL_PHYSICAL_HEIGHT - tDeltaZ;
+		// The inter voxel distance between point and voxel edge
+		float interVoxelX = point.x / CELL_PHYSICAL_HEIGHT - ((float) x);
+		float interVoxelT = (1 - interVoxelX) / mx;
+
+		tMaxX = tDeltaX - point.x / CELL_PHYSICAL_HEIGHT - ((float) x);
+		tMaxY = tDeltaY - point.y / CELL_PHYSICAL_HEIGHT - ((float) y);
+		tMaxZ = tDeltaZ - point.z / CELL_PHYSICAL_HEIGHT - ((float) z);
 
 		do {
 			if (tMaxX < tMaxY) {

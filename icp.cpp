@@ -66,12 +66,12 @@ namespace icp {
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 
-			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
-			showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
-			showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
-			showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
+			// showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
+			// showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
+			// showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
+			// showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
-			depthWindow.spinOnce(1, true);
+			// depthWindow.spinOnce(1, true);
 
 			logDeltaTime( LOG_UI );
 
@@ -125,11 +125,14 @@ namespace icp {
 			}
 
 			map.rotate(R);
+			// R = R.inv();
+			//dataCloud.rotate(R);
 
 			offset = calculateOffset(associations);
 
 			// Update translation
 			map.translate(offset);
+			// dataCloud.translate(-offset);
 
 			logDeltaTime( LOG_ROTATE );
 
@@ -161,20 +164,31 @@ namespace icp {
 		showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
 		showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
-		/* 
+		///* 
 
+		/* std::vector<cv::Point3f>::iterator it, end;
 		it = dataCloud.points.begin();
 		end = dataCloud.points.end();
 
-		while (it < end) {
-			if (rand() % 10 == 0) {
-				map.points.push_back(*it);
+		*/
+
+		it1 = associations.begin();
+		end1 = associations.end();
+
+		while (it1 != end1) {
+			cv::Point3f a = (*it1).first;
+			cv::Point3f b = (*it1).second;
+
+			// Only factor in translation to points that are close enough
+			if (distance(a, b) > .15) {
+				map.points.push_back(a);
 			}
-			it++;
+			it1++;
 		}
 
 		std::cout << std::endl << map.points.size() << std::endl;
 
+		/* 
 		if (map.points.size() > 4000) {
 			it = map.points.begin();
 			end = map.points.end();
@@ -185,8 +199,9 @@ namespace icp {
 				it++;
 			}
 		}
-
 		*/
+
+		//*/
 
 		// map.points.insert(map.points.end(), dataCloud.points.begin(), dataCloud.points.end());
 
