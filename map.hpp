@@ -5,8 +5,8 @@
 #include "opencv2/viz/vizcore.hpp"
 #include "pointcloud.hpp"
 
-#define MAP_HEIGHT 50
-#define PHYSICAL_HEIGHT 10.0
+#define MAP_HEIGHT 100
+#define PHYSICAL_HEIGHT 10.0f
 #define DELTA_CONFIDENCE 15
 #define MIN_CONFIDENCE 100
 #define MAX_CONFIDENCE 180

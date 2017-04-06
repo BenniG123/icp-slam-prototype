@@ -94,13 +94,10 @@ namespace map {
 		while (it != end) {
 			// rayTrace(*it, position);
 			cv::Point3f point = *it;
-
-			int x = int(point.x / c);
-			int y = int(point.y / c);
-			int z = int(point.z / c);
+			cv::Point3i voxelPoint = map::getVoxelCoordinates(point);
 
 			// Check for out of bounds
-			if (x < 0 || x >= MAP_HEIGHT) {
+			/* if (x < 0 || x >= MAP_HEIGHT) {
 				it++;
 				continue;
 			} else if (y < 0 || y >= MAP_HEIGHT) {
@@ -110,20 +107,23 @@ namespace map {
 				it++;
 				continue;
 			}
+			*/
 
 			// Populate lookup table
-			if (pointLookupTable[x][y][z] == empty) {
-				std::cout << "Populate " << *it << "->" << x << " " << y << " " << z << std::endl;
-				pointLookupTable[x][y][z] = *it;
+			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) {
+				std::cout << "Populate " << *it << "-> " << voxelPoint << std::endl;
+				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
 			}
 
-			if (world[x][y][z] == 255) {
+			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
+
+			if (*certainty == 255) {
 				it++;
 				continue;
-			} else if (world[x][y][z] > (255 - DELTA_CONFIDENCE)) {
-				world[x][y][z] = 255;
+			} else if (*certainty > (255 - DELTA_CONFIDENCE)) {
+				*certainty = 255;
 			} else {
-				world[x][y][z] += DELTA_CONFIDENCE;
+				*certainty += DELTA_CONFIDENCE;
 			}
 
 			it++;

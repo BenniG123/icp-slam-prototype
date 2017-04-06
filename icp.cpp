@@ -291,7 +291,7 @@ namespace icp {
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestMappedPoint(*it, nearestNeighbor);
-			if (distance < 1.5) {
+			if (distance < MIN_DISTANCE) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}
@@ -299,7 +299,7 @@ namespace icp {
 			it++;
 		}
 
-		logDeltaTime( LOG_NEAREST_NEIGHBOR, associations.size());
+		logDeltaTime(LOG_NEAREST_NEIGHBOR, associations.size());
 
 	}
 
@@ -314,8 +314,36 @@ namespace icp {
 		// Arbitrarily Large Number
 		float shortestDistance = 500;
 
-		while(shortestDistance > 5 && radius < 5) {
+		// TODO - Why is constant division not working?
+		// std::cout << "CELL_PHYSICAL_HEIGHT: " << CELL_PHYSICAL_HEIGHT << std::endl;
+		// std::cout << "MIN_DISTANCE: " << MIN_DISTANCE << std::endl;
+		// std::cout << "Max Radius: " << 1.5 / 0.1 << std::endl;
+
+		int maxRadius = int(float(MIN_DISTANCE) / float(CELL_PHYSICAL_HEIGHT));
+		
+		while(shortestDistance > MIN_DISTANCE && radius < maxRadius) {
+			// radius = 15;
 			// Expanding Radius Search
+			/*
+			    int x,y,dx,dy;
+			    x = y = dx =0;
+			    dy = -1;
+			    int t = std::max(X,Y);
+			    int maxI = t*t;
+			    for(int i =0; i < maxI; i++){
+			        if ((-X/2 <= x) && (x <= X/2) && (-Y/2 <= y) && (y <= Y/2)){
+			            // DO STUFF...
+			        }
+			        if( (x == y) || ((x < 0) && (x == -y)) || ((x > 0) && (x == 1-y))){
+			            t = dx;
+			            dx = -dy;
+			            dy = t;
+			        }
+			        x += dx;
+			        y += dy;
+			    }
+			*/
+
 			std::cout << "Radius: " << radius << std::endl;
 			for (x = voxelPoint.x - radius; x < voxelPoint.x + radius; x++) {
 				for (y = voxelPoint.y - radius; y < voxelPoint.y + radius; y++) {

@@ -3,6 +3,7 @@
 
 #define SUBSAMPLE_FACTOR 12
 #define PI 3.14159265358979
+#define MIN_DISTANCE 1.5f
 
 #include "pointcloud.hpp"
 
