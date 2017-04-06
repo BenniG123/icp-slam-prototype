@@ -192,14 +192,10 @@ int main( int argc, const char** argv )
 			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_ANYDEPTH);   // Read the file
 
 			    // Read the next color frame
-			    rgbImage = cv::imread(rgb_frame_file_name, CV_LOAD_IMAGE_GRAYSCALE);
+			    rgbImage = cv::imread(rgb_frame_file_name); // , CV_LOAD_IMAGE_GRAYSCALE);
 			    // cv::resize(rgbImage, rgbImage, cv::Size(960,540));
 
-			    // std::vector<cv::KeyPoint> keypoints;
-			    // cv::FAST(rgbImage, keypoints, 40, true, cv::FastFeatureDetector::TYPE_9_16);
-			    // cv::drawKeypoints(rgbImage, keypoints, keypointsImage, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-
-			    // CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
+		    	// CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
 			    // image.convertTo(image, CV_16U);
 
 			    if(! image.data ) // Check for invalid input
@@ -223,10 +219,26 @@ int main( int argc, const char** argv )
 			    // Filter all points > x * 5000 m away - 25000
 			    filterDepthImage(filtered, 25000);
 
-    			// normals = cv::Mat(filtered.size(), CV_32FC3);
+			    /*
+    			normals = cv::Mat(filtered.size(), CV_32FC3);
 
 			    // Get Image Normals
-			    // getNormalMap(filtered, normals);
+			    getNormalMap(filtered, normals);
+
+			    cv::Mat normalFeatures;
+			    cv::Mat drawableDepth;
+
+			    normals.convertTo(normalFeatures, CV_8UC3);
+
+			    // filtered.convertTo(drawableDepth, CV_8UC1);
+
+			    filtered.convertTo(drawableDepth, cv::COLOR_GRAY2RGB);
+
+			    std::vector<cv::KeyPoint> keypoints;
+
+			    cv::FAST(normalFeatures, keypoints, 5, true, cv::FastFeatureDetector::TYPE_5_8);
+			    cv::drawKeypoints(drawableDepth, keypoints, drawableDepth, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+				*/
 
 			    logDeltaTime( LOG_FILTER_IMAGE );
 
@@ -239,7 +251,8 @@ int main( int argc, const char** argv )
 
 				if (previous.size().area() > 0) {
 					// std::cout << std::setprecision (15) << timestamp << ",";
-					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 16, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rgbImage, rotation, 16, 0.0001, depthWindow);
+					// cv::Mat transformation(4,4,CV_32FC1);
 					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
 					
@@ -302,7 +315,7 @@ int main( int argc, const char** argv )
 			    cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
 				// cv::imshow("RGB", rgbImage);
-				// cv::imshow("Features", keypointsImage);
+				// cv::imshow("Features", drawableDepth);
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
 			    // cv::imshow( "Color", colorDepth );
@@ -533,7 +546,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		it++;
 	}
 
-	/*
+	// /* 
   	// Using Canny's output as a mask, we display our result
 	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
 	                               cv::Size( 7, 7 ),
@@ -555,9 +568,9 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
  	image.copyTo(maskedImage, detected_edges);
  	image = maskedImage;
 
- 	cv::dilate( image, image, element);
- 	cv::erode( image, image, element);
- 	*/
+	// */
+ 	// cv::dilate( image, image, element);
+ 	// cv::erode( image, image, element);
 
  	/*
  	it = image.begin<uint16_t>();

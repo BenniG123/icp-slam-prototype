@@ -6,10 +6,12 @@
 #include <iostream>
 
 namespace icp {
+
 	// Build 3D point cloud from depth image
-	PointCloud::PointCloud(cv::Mat& data) {
+	PointCloud::PointCloud(cv::Mat& data, cv::Mat colorMat) {
 		center = cv::Point3f(0,0,0);
 		points = std::vector<cv::Point3f>();
+		colors = std::vector<cv::Scalar>();
 
 		cv::MatIterator_<uint16_t> it, end;
 		it = data.begin<uint16_t>();
@@ -33,7 +35,7 @@ namespace icp {
 			}
 
 			// Subsample
-			if (rand() % 80) {
+			if (rand() % 70) {
 				p_index++;
 				it++;
 				continue;
@@ -49,8 +51,38 @@ namespace icp {
 			float p_z = ((float) (*it)) / 5000;
 			float p_x = (x - 250.32) * p_z / 363.58;
 			float p_y = (y - 212.55) * p_z / 363.53;
+	      	cv::Point3f p(p_x, p_y, p_z);
 
-			// std::cout << p_x << " " << p_y << " " << p_z << std::endl;
+			/* 
+	      	cv::Mat colorDepthRotation(3,3,CV_32FC1);
+	      	colorDepthRotation = makeRotationMatrix(0.050, -0.062, -0.002);
+
+	      	float p_prime_data[3][1] = {{p_x}, {p_y}, {p_z}};
+			cv::Mat p_prime(3, 1, CV_32FC1, &p_prime_data);
+			std::cout << p_prime << std::endl;
+
+	      	// P3D' = R.P3D + T
+	      	cv::Mat RM(1,3, CV_32FC1);
+	      	p_prime = colorDepthRotation * p_prime;
+			p_prime.at<float>(0,0) -= 0.02;
+			std::cout << p_prime << std::endl;
+
+	      	cv::Point3f p_c(p_prime.at<float>(0,0), p_prime.at<float>(1,0), p_prime.at<float>(2,0));
+
+	      	cv::Scalar c;
+	      	float colorX = (p_c.x * 1054.35 / p_c.x) + 956.12;
+	      	float colorY = (p_c.y * 1054.51 / p_c.z) + 548.99;
+
+	      	std::cout << colorX << " " << colorY << std::endl;
+
+	      	c = colorMat.at<uchar>(cv::Point(int(colorX) + 1920/2, int(colorY) + 1080/2));
+	      	colors.push_back(c);
+
+	      	*/
+
+			// P3D' = R.P3D + T
+			// P2D_rgb.x = (P3D'.x * fx_rgb / P3D'.z) + cx_rgb
+			// P2D_rgb.y = (P3D'.y * fy_rgb / P3D'.z) + cy_rgb
 
 			// Update Center
 			center.x += p_x;
@@ -58,7 +90,7 @@ namespace icp {
 			center.z += p_z;
 
 			// Add point to point cloud
-			points.push_back(cv::Point3f(p_x,p_y,p_z));
+			points.push_back(p);
 
 			p_index++; // += SUBSAMPLE_FACTOR;
 			index++;

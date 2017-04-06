@@ -10,14 +10,20 @@
 
 namespace map {
 	// 6x6x6 meter space with 2 cm block
-	unsigned char world[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT]; // = {{{100}}};
-	icp::PointCloud mapCloud;
+
+	// We can have up to 2 points stored in any given cell
+	// Lookup real point locations by cell
 	
 	void init() {
+
+		mapCloud = icp::PointCloud();
+		empty = cv::Point3f(-100, -100, -100);
+
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
 				for (int k = 0; k < MAP_HEIGHT; k++) {
 					world[i][j][k] = 0;
+					pointLookupTable[i][j][k] = empty;
 					// mapCloud.points.push_back(cv::Point3f(i * CELL_PHYSICAL_HEIGHT, j * CELL_PHYSICAL_HEIGHT, k * CELL_PHYSICAL_HEIGHT));
 				}
 			}
@@ -46,13 +52,46 @@ namespace map {
 		// const Point3d& min_point, const Point3d& max_point 
 	}
 
+	// Get Voxel Coordinates from a worldspace point
+	cv::Point3i getVoxelCoordinates(cv::Point3f point) {
+		cv::Point3i p;
+
+		float c = float(CELL_PHYSICAL_HEIGHT);
+
+		p.x = int(point.x / c);
+		p.y = int(point.y / c);
+		p.z = int(point.z / c);
+
+		// Check for out of bounds
+		if (p.x < 0) {
+			p.x = 0;
+		}
+		if (p.x >= MAP_HEIGHT) {
+			p.x = MAP_HEIGHT - 1;
+		}
+		if (p.y < 0) {
+			p.y = 0;
+		}
+		if (p.y >= MAP_HEIGHT) {
+			p.y = MAP_HEIGHT - 1;
+		}
+		if (p.z < 0) {
+			p.z = 0;
+		}
+		if (p.z >= MAP_HEIGHT) {
+			p.z = MAP_HEIGHT - 1;
+		}
+
+		return p;
+	}
+
 	// Update Map with new scan
 	void updateMap(icp::PointCloud data) {
 		std::vector<cv::Point3f>::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
 
-		double c = float(CELL_PHYSICAL_HEIGHT);
+		float c = float(CELL_PHYSICAL_HEIGHT);
 
 		while (it != end) {
 			// rayTrace(*it, position);
@@ -62,7 +101,28 @@ namespace map {
 			int y = int(point.y / c);
 			int z = int(point.z / c);
 
-			if (world[x][y][z] > (255 - DELTA_CONFIDENCE)) {
+			// Check for out of bounds
+			if (x < 0 || x >= MAP_HEIGHT) {
+				it++;
+				continue;
+			} else if (y < 0 || y >= MAP_HEIGHT) {
+				it++;
+				continue;
+			} else if (y < 0 || y >= MAP_HEIGHT) {
+				it++;
+				continue;
+			}
+
+			// Populate lookup table
+			if (pointLookupTable[x][y][z] == empty) {
+				std::cout << "Populate " << *it << "->" << x << " " << y << " " << z << std::endl;
+				pointLookupTable[x][y][z] = *it;
+			}
+
+			if (world[x][y][z] == 255) {
+				it++;
+				continue;
+			} else if (world[x][y][z] > (255 - DELTA_CONFIDENCE)) {
 				world[x][y][z] = 255;
 			} else {
 				world[x][y][z] += DELTA_CONFIDENCE;
