@@ -5,8 +5,8 @@
 #include "opencv2/viz/vizcore.hpp"
 #include "pointcloud.hpp"
 
-#define MAP_HEIGHT 300
-#define PHYSICAL_HEIGHT 5.0
+#define MAP_HEIGHT 50
+#define PHYSICAL_HEIGHT 10.0
 #define DELTA_CONFIDENCE 15
 #define MIN_CONFIDENCE 100
 #define MAX_CONFIDENCE 180
@@ -14,7 +14,7 @@
 
 namespace map {
 
-	static cv::Point3f empty;
+	static const cv::Point3f empty = cv::Point3f(-100, -100, -100);
 
 	// The point cloud
 	static icp::PointCloud mapCloud;

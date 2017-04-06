@@ -15,9 +15,7 @@ namespace map {
 	// Lookup real point locations by cell
 	
 	void init() {
-
 		mapCloud = icp::PointCloud();
-		empty = cv::Point3f(-100, -100, -100);
 
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {

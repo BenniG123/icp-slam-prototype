@@ -52,7 +52,8 @@ namespace icp {
 
 			map::updateMap(map::mapCloud);
 			std::cout << "Map initialized" << std::endl;
-
+			map::drawCertaintyMap(depthWindow);
+			depthWindow.spinOnce(0, true);
 		}
 
 		PointCloud previousCloud(previous, color);
@@ -290,10 +291,10 @@ namespace icp {
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestMappedPoint(*it, nearestNeighbor);
-			// if (distance < 1.5) {
-			associations.push_back(std::make_pair(*it, nearestNeighbor));
-			errors.push_back(distance);
-			// }
+			if (distance < 1.5) {
+				associations.push_back(std::make_pair(*it, nearestNeighbor));
+				errors.push_back(distance);
+			}
 
 			it++;
 		}
@@ -313,8 +314,9 @@ namespace icp {
 		// Arbitrarily Large Number
 		float shortestDistance = 500;
 
-		while(shortestDistance > 10) {
+		while(shortestDistance > 5 && radius < 5) {
 			// Expanding Radius Search
+			std::cout << "Radius: " << radius << std::endl;
 			for (x = voxelPoint.x - radius; x < voxelPoint.x + radius; x++) {
 				for (y = voxelPoint.y - radius; y < voxelPoint.y + radius; y++) {
 					for (z = voxelPoint.z - radius; z < voxelPoint.z + radius; z++) {
@@ -329,13 +331,17 @@ namespace icp {
 
 						// If a point exists in this place
 						if (map::pointLookupTable[x][y][z] != map::empty) {
-							std::cout << "Lookup: " << x << y << z << std::endl;
+							// std::cout << "Lookup: " << x << y << z << std::endl;
 							cv::Point3f p = map::pointLookupTable[x][y][z];
 							float d = distance(point, p);
 							if (d < shortestDistance) {
 								shortestDistance = d;
 								nearest = p;
 							}
+						}
+						else {
+							// std::cout << "Empty: " << x << " " << y << " " << z << " ";
+							// std::cout << map::pointLookupTable[x][y][z] << std::endl;
 						}
 
 					}
@@ -346,6 +352,7 @@ namespace icp {
 			diameter += 2;
 		}
 
+		std::cout << "Shortest Distance: " << shortestDistance << std::endl;
 		return shortestDistance;
 	}
 
