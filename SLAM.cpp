@@ -548,7 +548,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 
 	// /* 
   	// Using Canny's output as a mask, we display our result
-	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
+	/* cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
 	                               cv::Size( 7, 7 ),
 	                               cv::Point( 4, 4 ) );
 	cv::Mat image8u;
@@ -567,6 +567,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 	cv::bitwise_not(detected_edges, detected_edges);
  	image.copyTo(maskedImage, detected_edges);
  	image = maskedImage;
+ 	*/
 
 	// */
  	// cv::dilate( image, image, element);

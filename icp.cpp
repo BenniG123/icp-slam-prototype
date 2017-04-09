@@ -22,6 +22,7 @@ namespace icp {
 	cv::Mat lastRotation(3, 3, CV_32FC1);
 	cv::Point3f cameraPosition;
 	cv::Point3f lastTranslation;
+	map::Map map;
 
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat color, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
@@ -36,7 +37,7 @@ namespace icp {
 		PointCloud dataCloud(data, color);
 
 		// Initialize map and variables
-		if (map::mapCloud.points.size() == 0) {
+		if (map.mapCloud.points.size() == 0) {
 			// Starting Rotation
 			cameraRotation = makeRotationMatrix(0,0,0);
 			lastRotation = makeRotationMatrix(0,0,0);
@@ -44,16 +45,19 @@ namespace icp {
 			// Starting Position
 			cameraPosition = cv::Point3f(3,3,3);
 			lastTranslation = cv::Point3f(0,0,0);
-			map::mapCloud = PointCloud(previous, color);
-			map::mapCloud.translate(cameraPosition);
 
 			// Init certainty grid
-			map::init();
+			// map = map::Map();
 
-			map::updateMap(map::mapCloud);
+			map.mapCloud = PointCloud(previous, color);
+
+			map.mapCloud.translate(cameraPosition);
+
+			map.update(map.mapCloud);
+
 			std::cout << "Map initialized" << std::endl;
-			map::drawCertaintyMap(depthWindow);
-			depthWindow.spinOnce(0, true);
+			// Map.drawCertaintyMap(depthWindow);
+			// depthWindow.spinOnce(1, true);
 		}
 
 		PointCloud previousCloud(previous, color);
@@ -79,6 +83,8 @@ namespace icp {
 		// lastTranslation = cv::Point3f(0,0,0);
 		// previousCloud.rotate(rotation);
 
+
+		// findNearestNeighborAssociations(dataCloud, map::mapCloud, errors, associations);
 		findMappedNearestNeighborAssociations(dataCloud, errors, associations);
 		
 		int i = 0;
@@ -144,10 +150,6 @@ namespace icp {
 				Rp.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 			}
 
-			// map.rotate(R)
-
-			// lastRotation *= R;
-
 			R = R.inv();
 			dataCloud.rotate(R);
 			cameraRotation *= R;
@@ -163,6 +165,7 @@ namespace icp {
 			logDeltaTime( LOG_ROTATE );
 
 			// Find nearest neighber associations
+			// findNearestNeighborAssociations(dataCloud, map::mapCloud, errors, associations);
 			findMappedNearestNeighborAssociations(dataCloud, errors, associations);
 
 			i++;
@@ -176,8 +179,8 @@ namespace icp {
 		rigidTransformation.at<float>(2,3) = offset.z;
 
 		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
-		showPointCloud(map::mapCloud, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
-
+		showPointCloud(map.mapCloud, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
+		// map.drawCertaintyMap(depthWindow);
 		///* 
 
 		// std::vector<cv::Point3f>::iterator it, end;
@@ -204,10 +207,11 @@ namespace icp {
 
 		*/
 
-		std::cout << std::endl << map::mapCloud.points.size() << std::endl;
+		std::cout << std::endl << map.mapCloud.points.size() << std::endl;
 
 		// Update Certainties and display
-		map::updateMap(dataCloud);
+		map.update(dataCloud);
+		// depthWindow.spinOnce(1, true);
 		// map::drawCertaintyMap(depthWindow);
 
 		// http://docs.opencv.org/trunk/d0/da3/classcv_1_1viz_1_1WTrajectory.html
@@ -286,7 +290,6 @@ namespace icp {
 		end = data.points.end();
 		errors.clear();
 		associations.clear();
-		std::cout << "Nearest Mapped Neighbors" << std::endl;
 
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
@@ -306,8 +309,8 @@ namespace icp {
 	float getNearestMappedPoint(cv::Point3f point, cv::Point3f& nearest) {
 		// Iterate through image
 		int x, y, z;
-		cv::Point3i voxelPoint = map::getVoxelCoordinates(point);
-		std::cout << "Voxel Point Coordinates: " << voxelPoint << std::endl;
+		cv::Point3i voxelPoint = map.getVoxelCoordinates(point);
+		// std::cout << "Voxel Point Coordinates: " << voxelPoint << std::endl;
 		int radius = 0;
 		int diameter = 0;
 
@@ -320,13 +323,14 @@ namespace icp {
 		// std::cout << "Max Radius: " << 1.5 / 0.1 << std::endl;
 
 		int maxRadius = int(float(MIN_DISTANCE) / float(CELL_PHYSICAL_HEIGHT));
-		
+		maxRadius = 3;
+
 		while(shortestDistance > MIN_DISTANCE && radius < maxRadius) {
-			// radius = 15;
+			radius = 3;
 			// Expanding Radius Search
 			/*
-			    int x,y,dx,dy;
-			    x = y = dx =0;
+			    int x,y,z, dx,dy,dz;
+			    x = y = z = dz = dx =0;
 			    dy = -1;
 			    int t = std::max(X,Y);
 			    int maxI = t*t;
@@ -344,7 +348,7 @@ namespace icp {
 			    }
 			*/
 
-			std::cout << "Radius: " << radius << std::endl;
+			// std::cout << "Radius: " << radius << std::endl;
 			for (x = voxelPoint.x - radius; x < voxelPoint.x + radius; x++) {
 				for (y = voxelPoint.y - radius; y < voxelPoint.y + radius; y++) {
 					for (z = voxelPoint.z - radius; z < voxelPoint.z + radius; z++) {
@@ -358,9 +362,11 @@ namespace icp {
 						}
 
 						// If a point exists in this place
-						if (map::pointLookupTable[x][y][z] != map::empty) {
+						if (map.pointLookupTable[x][y][z] != map.empty) {
+							// std::cout << "Found match" << std::endl;
+							// std::cout << map.pointLookupTable[x][y][z] << std::endl;
 							// std::cout << "Lookup: " << x << y << z << std::endl;
-							cv::Point3f p = map::pointLookupTable[x][y][z];
+							cv::Point3f p = map.pointLookupTable[x][y][z];
 							float d = distance(point, p);
 							if (d < shortestDistance) {
 								shortestDistance = d;
@@ -380,7 +386,8 @@ namespace icp {
 			diameter += 2;
 		}
 
-		std::cout << "Shortest Distance: " << shortestDistance << std::endl;
+		// std::cout << "Shortest Distance: " << shortestDistance << std::endl;
+		// std::cout << point << " -> " << nearest << std::endl;
 		return shortestDistance;
 	}
 

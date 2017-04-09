@@ -14,22 +14,21 @@ namespace map {
 	// We can have up to 2 points stored in any given cell
 	// Lookup real point locations by cell
 	
-	void init() {
+	Map::Map() {
 		mapCloud = icp::PointCloud();
+		empty = cv::Point3f(-100,-100,-100);
 
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
 				for (int k = 0; k < MAP_HEIGHT; k++) {
 					world[i][j][k] = 0;
 					pointLookupTable[i][j][k] = empty;
-					// mapCloud.points.push_back(cv::Point3f(i * CELL_PHYSICAL_HEIGHT, j * CELL_PHYSICAL_HEIGHT, k * CELL_PHYSICAL_HEIGHT));
 				}
 			}
 		}
 	}
 
-	void drawCertaintyMap(cv::viz::Viz3d& depthWindow) {
-
+	void Map::drawCertaintyMap(cv::viz::Viz3d& depthWindow) {
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
 				for (int k = 0; k < MAP_HEIGHT; k++) {
@@ -51,7 +50,7 @@ namespace map {
 	}
 
 	// Get Voxel Coordinates from a worldspace point
-	cv::Point3i getVoxelCoordinates(cv::Point3f point) {
+	cv::Point3i Map::getVoxelCoordinates(cv::Point3f point) {
 		cv::Point3i p;
 
 		float c = float(CELL_PHYSICAL_HEIGHT);
@@ -84,7 +83,7 @@ namespace map {
 	}
 
 	// Update Map with new scan
-	void updateMap(icp::PointCloud data) {
+	void Map::update(icp::PointCloud data) {
 		std::vector<cv::Point3f>::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
@@ -94,7 +93,7 @@ namespace map {
 		while (it != end) {
 			// rayTrace(*it, position);
 			cv::Point3f point = *it;
-			cv::Point3i voxelPoint = map::getVoxelCoordinates(point);
+			cv::Point3i voxelPoint = getVoxelCoordinates(point);
 
 			// Check for out of bounds
 			/* if (x < 0 || x >= MAP_HEIGHT) {
@@ -109,21 +108,20 @@ namespace map {
 			}
 			*/
 
-			// Populate lookup table
-			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) {
-				std::cout << "Populate " << *it << "-> " << voxelPoint << std::endl;
-				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
-			}
-
 			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
 
-			if (*certainty == 255) {
-				it++;
-				continue;
-			} else if (*certainty > (255 - DELTA_CONFIDENCE)) {
+			// Update certainty
+			if (*certainty > (255 - DELTA_CONFIDENCE)) {
 				*certainty = 255;
 			} else {
 				*certainty += DELTA_CONFIDENCE;
+			}
+
+			// Populate lookup table if we are certain about this point
+			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty && *certainty > MAX_CONFIDENCE) {
+				std::cout << "Populate " << *it << "-> " << voxelPoint << std::endl;
+				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
+				mapCloud.points.push_back(*it);
 			}
 
 			it++;
@@ -131,7 +129,7 @@ namespace map {
 	}
 
 	// Algorithm from "A Fast Voxel Traversal Algorithm for Ray Tracing"
-	void rayTrace(cv::Point3f point, cv::Point3f origin) {
+	void Map::rayTrace(cv::Point3f point, cv::Point3f origin) {
 		// Point Voxel Coordinates
 		int x, y, z;
 
@@ -264,11 +262,5 @@ namespace map {
 
 		} while (x != ox && y != oy && z != oz);
 
-	}
-
-	void getPoints(cv::Mat& depthMap, cv::Point3i& position, cv::Mat& rotation) {
-		// Foreach space between camera and raycast, increase value.
-
-		// Foreach space behind raycast, decrease value.
 	}
 }

@@ -13,23 +13,19 @@
 #define CELL_PHYSICAL_HEIGHT PHYSICAL_HEIGHT / ((float) MAP_HEIGHT)
 
 namespace map {
+	class Map {
+		public:
+			cv::Point3f empty; // = cv::Point3f(-100,-100,-100);
+			icp::PointCloud mapCloud;
+			cv::Point3f pointLookupTable[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT];
+			unsigned char world[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT];
 
-	static const cv::Point3f empty = cv::Point3f(-100, -100, -100);
-
-	// The point cloud
-	static icp::PointCloud mapCloud;
-
-	// The point cloud lookup table
-	static cv::Point3f pointLookupTable[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT];
-
-	// The certainty grid
-	static unsigned char world[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT];
-
-	void init();
-	void updateMap(icp::PointCloud data);
-	void rayTrace(cv::Point3f point, cv::Point3f position);
-	void drawCertaintyMap(cv::viz::Viz3d& depthWindow);
-	cv::Point3i getVoxelCoordinates(cv::Point3f);
+			Map();
+			void update(icp::PointCloud data);
+			void rayTrace(cv::Point3f point, cv::Point3f position);
+			void drawCertaintyMap(cv::viz::Viz3d& depthWindow);
+			cv::Point3i getVoxelCoordinates(cv::Point3f);
+	};
 }
 
 #endif
