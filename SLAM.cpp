@@ -126,11 +126,14 @@ int main( int argc, const char** argv )
 
 	cv::Vec3f initialPosition;
 
-	// Camera Calibration Matrix
+	// Depth Camera Calibration Matrix
 	float data[3][3] = {{363.58,0,250.32}, {0,363.53,212.55}, {0,0,1}}; 
 
+	// Color Camera Calibration Matrix
+	float color_data[3][3] = {{1054.35,0,956.12}, {0,1054.51,548.99}, {0,0,1}}; 
 	// Correct depth frame
 	cv::Mat cameraMatrix(3, 3, CV_32FC1, &data);
+	cv::Mat colorCameraMatrix(3, 3, CV_32FC1, &color_data);
 	cv::Mat distortionMatrix;
 	cv::Mat translationPlot(500, 500, CV_8UC(3));
 	cv::Mat rotation = icp::makeRotationMatrix(0,0,0);
@@ -210,9 +213,12 @@ int main( int argc, const char** argv )
 			    double min;
 				double max;
 
-			    cv::Mat undistortImage = image.clone();
+			    /* cv::Mat undistortImage = image.clone();
 			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
 			    image = undistortImage;
+			    cv::undistort(rgbImage, undistortImage, colorCameraMatrix, distortionMatrix);
+			    rgbImage = undistortImage;
+			    */
 
 			    filtered = image.clone();
 
@@ -242,6 +248,14 @@ int main( int argc, const char** argv )
 
 			    logDeltaTime( LOG_FILTER_IMAGE );
 
+				// cv::bitwise_not(filtered, filtered);
+				cv::minMaxIdx(filtered, &min, &max);
+				cv::Mat adjMap;
+
+				// expand your range to 0..255. Similar to histEq();
+				filtered.convertTo(adjMap, CV_8UC1, 255 / (max-min), -min); 
+				cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+
 				// std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
 
 				// Draw rois
@@ -250,8 +264,7 @@ int main( int argc, const char** argv )
 				// }
 
 				if (previous.size().area() > 0) {
-					// std::cout << std::setprecision (15) << timestamp << ",";
-					cv::Mat transformation = icp::getTransformation(filtered, previous, rgbImage, rotation, 16, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(filtered, previous, colorDepth, rotation, 16, 0.0001, depthWindow);
 					// cv::Mat transformation(4,4,CV_32FC1);
 					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
@@ -304,17 +317,10 @@ int main( int argc, const char** argv )
 					std::cout << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
 				}
 
-				// cv::bitwise_not(filtered, filtered);
-				cv::minMaxIdx(filtered, &min, &max);
-				cv::Mat adjMap;
-
-				// expand your range to 0..255. Similar to histEq();
-				filtered.convertTo(adjMap, CV_8UC1, 255 / (max-min), -min); 
-				cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
-
 			    cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
-				// cv::imshow("RGB", rgbImage);
+				// cv::resize(rgbImage, rgbImage, cv::Size(960,540));
+				cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", drawableDepth);
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
@@ -546,9 +552,9 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		it++;
 	}
 
-	// /* 
+	/*
   	// Using Canny's output as a mask, we display our result
-	/* cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
+	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
 	                               cv::Size( 7, 7 ),
 	                               cv::Point( 4, 4 ) );
 	cv::Mat image8u;
@@ -567,9 +573,8 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 	cv::bitwise_not(detected_edges, detected_edges);
  	image.copyTo(maskedImage, detected_edges);
  	image = maskedImage;
- 	*/
-
-	// */
+	*/
+	
  	// cv::dilate( image, image, element);
  	// cv::erode( image, image, element);
 

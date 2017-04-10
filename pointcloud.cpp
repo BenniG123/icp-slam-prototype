@@ -11,11 +11,15 @@ namespace icp {
 	PointCloud::PointCloud(cv::Mat& data, cv::Mat colorMat) {
 		center = cv::Point3f(0,0,0);
 		points = std::vector<cv::Point3f>();
-		colors = std::vector<cv::Scalar>();
+		colors = std::vector<cv::Vec3b>();
 
 		cv::MatIterator_<uint16_t> it, end;
 		it = data.begin<uint16_t>();
 		end = data.end<uint16_t>();
+
+		cv::MatIterator_<cv::Vec3b> color_it, color_end;
+		color_it = colorMat.begin<cv::Vec3b>();
+		color_end = colorMat.end<cv::Vec3b>();
 
 		int p_index = 0;
 		int index = 0;
@@ -30,13 +34,15 @@ namespace icp {
 			if ((*it) == 0) 
 			{
 				p_index++;
+				color_it++;
 				it++;
 				continue;
 			}
 
 			// Subsample
-			if (rand() % 40) {
+			if (rand() % 10) {
 				p_index++;
+				color_it++;
 				it++;
 				continue;
 			}
@@ -49,36 +55,42 @@ namespace icp {
 			float x = (float) (p_index % width);
 			float y = (float) (p_index / width);
 			float p_z = ((float) (*it)) / 5000;
-			float p_x = (x - 250.32) * p_z / 363.58;
-			float p_y = (y - 212.55) * p_z / 363.53;
+			float p_x = (x - CX) * p_z / FX;
+			float p_y = (y - CX) * p_z / FX;
 	      	cv::Point3f p(p_x, p_y, p_z);
 
-			/* 
+	      	/*
 	      	cv::Mat colorDepthRotation(3,3,CV_32FC1);
-	      	colorDepthRotation = makeRotationMatrix(0.050, -0.062, -0.002);
+	      	colorDepthRotation = makeRotationMatrix(0.050 * 180.0/PI, -0.062 * 180.0/PI, -0.002 * 180/PI);
 
-	      	float p_prime_data[3][1] = {{p_x}, {p_y}, {p_z}};
-			cv::Mat p_prime(3, 1, CV_32FC1, &p_prime_data);
-			std::cout << p_prime << std::endl;
+			cv::Mat p3d(p);
+	      	p3d = colorDepthRotation * p3d;
+			p3d.at<float>(0,0) -= 0.02;
 
-	      	// P3D' = R.P3D + T
-	      	cv::Mat RM(1,3, CV_32FC1);
-	      	p_prime = colorDepthRotation * p_prime;
-			p_prime.at<float>(0,0) -= 0.02;
-			std::cout << p_prime << std::endl;
+	      	cv::Point3f p_c(p3d.at<float>(0,0), p3d.at<float>(1,0), p3d.at<float>(2,0));
+			*/
 
-	      	cv::Point3f p_c(p_prime.at<float>(0,0), p_prime.at<float>(1,0), p_prime.at<float>(2,0));
+	      	/* 
+	      	int colorX = (int) std::round((p.x * FX / p.z) + CX);
+	      	int colorY = (int) std::round((p.y * FY / p.z) + CY);
 
-	      	cv::Scalar c;
-	      	float colorX = (p_c.x * 1054.35 / p_c.x) + 956.12;
-	      	float colorY = (p_c.y * 1054.51 / p_c.z) + 548.99;
-
-	      	std::cout << colorX << " " << colorY << std::endl;
-
-	      	c = colorMat.at<uchar>(cv::Point(int(colorX) + 1920/2, int(colorY) + 1080/2));
-	      	colors.push_back(c);
-
+	      	// std::cout << colorX << " " << colorY << std::endl;
+	      	if (colorX > 640 || colorX < 0 || colorY > 480 || colorY < 0) {
+				p_index++;
+				it++;
+	      		continue;
+	      	}
 	      	*/
+
+	      	// cv::Vec3b c = *color_it;
+	      	// std::cout << x << " " << y << std::endl;
+	      	cv::Vec3b c = *color_it; // colorMat.at<cv::Vec3b>((int(y)), int(x));
+	      	/* if (int(x) % 2) {
+	      		c = cv::Vec3b(255,75,75);
+	      	}
+	      	else {
+	      		c = cv::Vec3b(100,255,75);
+	      	}*/
 
 			// P3D' = R.P3D + T
 			// P2D_rgb.x = (P3D'.x * fx_rgb / P3D'.z) + cx_rgb
@@ -91,11 +103,16 @@ namespace icp {
 
 			// Add point to point cloud
 			points.push_back(p);
+			colors.push_back(c);
 
 			p_index++; // += SUBSAMPLE_FACTOR;
 			index++;
+			color_it++;
 			it++; // += SUBSAMPLE_FACTOR;
 		}
+
+		// std::cout << points.size() << std::endl;
+		// std::cout << colors.size() << std::endl;
 
 		/*
 		std::vector<cv::Point3f>::iterator itp, endp;
@@ -118,6 +135,22 @@ namespace icp {
 
 		center_points();
 		std_dev_filter_points();
+	}
+
+	cv::Vec2i depthToRGB(cv::Point3f point) {
+		cv::Mat p3d(point);
+		// p3d = extRotation * p3d + extTranslation;
+
+		float x = p3d.at<float>(0,0);
+		float y = p3d.at<float>(1,0);
+		float z = p3d.at<float>(2,0);
+
+		cv::Vec2i result;
+		// result[0] = (int) std::round( (x * rgbFX / z) + rgbCX);
+		result[0] = (int) std::round( (x * 1054.35 / z) + 956.12);
+		// result[1] = (int) std::round( (y * rgbFY / z) + rgbCY);
+		result[1] = (int) std::round( (y * 1054.51 / z) + 548.99);
+		return result;
 	}
 
 	void PointCloud::std_dev_filter_points() {
@@ -192,7 +225,7 @@ namespace icp {
 		it = points.begin();
 		end = points.end();
 
-		std::cout << center << std::endl;
+		// std::cout << center << std::endl;
 
 		while (it != end) {
 			cv::Point3f p = *it;

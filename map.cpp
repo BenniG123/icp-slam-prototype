@@ -21,7 +21,7 @@ namespace map {
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
 				for (int k = 0; k < MAP_HEIGHT; k++) {
-					world[i][j][k] = MAX_CONFIDENCE - DELTA_CONFIDENCE;
+					world[i][j][k] = 0; //MAX_CONFIDENCE - DELTA_CONFIDENCE;
 					pointLookupTable[i][j][k] = empty;
 				}
 			}
@@ -83,14 +83,18 @@ namespace map {
 	}
 
 	// Update Map with new scan
-	void Map::update(icp::PointCloud data) {
+	void Map::update(icp::PointCloud data, int delta_confidence) {
 		std::vector<cv::Point3f>::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
 
+		std::vector<cv::Vec3b>::iterator color_it, color_end;
+		color_it = data.colors.begin();
+		color_end = data.colors.end();
+
 		float c = float(CELL_PHYSICAL_HEIGHT);
 
-		while (it != end) {
+		while (it != end && color_it != color_end) {
 			// rayTrace(*it, position);
 			cv::Point3f point = *it;
 			cv::Point3i voxelPoint = getVoxelCoordinates(point);
@@ -111,20 +115,21 @@ namespace map {
 			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
 
 			// Update certainty
-			if (*certainty > (255 - DELTA_CONFIDENCE)) {
+			if (*certainty > (255 - delta_confidence)) {
 				*certainty = 255;
 			} else {
-				*certainty += DELTA_CONFIDENCE;
+				*certainty += delta_confidence;
 			}
 
 			// Populate lookup table if we are certain about this point
 			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty && *certainty > MAX_CONFIDENCE) {
-				// std::cout << "Populate " << *it << "-> " << voxelPoint << std::endl;
 				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
 				mapCloud.points.push_back(*it);
+				mapCloud.colors.push_back(*color_it);
 			}
 
 			it++;
+			color_it++;
 		}
 	}
 

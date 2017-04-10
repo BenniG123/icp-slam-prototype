@@ -53,11 +53,7 @@ namespace icp {
 
 			map.mapCloud.translate(cameraPosition);
 
-			map.update(map.mapCloud);
-
-			std::cout << "Map initialized" << std::endl;
-			// Map.drawCertaintyMap(depthWindow);
-			// depthWindow.spinOnce(1, true);
+			map.update(map.mapCloud, MAX_CONFIDENCE);
 		}
 
 		PointCloud previousCloud(previous, color);
@@ -65,10 +61,10 @@ namespace icp {
 		logDeltaTime(LOG_GEN_POINT_CLOUD);
 
 		PointCloud tempDataCloud = PointCloud();
-		PointCloud tempPreviousCloud = PointCloud();
+		PointCloud tempMapCloud = PointCloud();
 
 		tempDataCloud.center = dataCloud.center;
-		tempPreviousCloud.center = previousCloud.center;
+		tempMapCloud.center = previousCloud.center;
 
 		// cv::Mat a = makeRotationMatrix(rand() % 5, rand() % 5, rand() % 5);
 		dataCloud.rotate(cameraRotation);
@@ -83,8 +79,7 @@ namespace icp {
 		// lastTranslation = cv::Point3f(0,0,0);
 		// previousCloud.rotate(rotation);
 
-
-		// findNearestNeighborAssociations(dataCloud, map::mapCloud, errors, associations);
+		// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 		findMappedNearestNeighborAssociations(dataCloud, errors, associations);
 		
 		int i = 0;
@@ -93,7 +88,7 @@ namespace icp {
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 
 			// showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
-			// showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
+			// showPointCloud(map.mapCloud, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
 			// showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
 			// showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
@@ -102,7 +97,7 @@ namespace icp {
 			logDeltaTime( LOG_UI );
 
 			tempDataCloud.points.clear();
-			tempPreviousCloud.points.clear();
+			tempMapCloud.points.clear();
 
 			// Reassociate the points inside the pointclouds
 			it1 = associations.begin();
@@ -110,12 +105,12 @@ namespace icp {
 
 			while (it1 != end1) {
 				tempDataCloud.points.push_back((*it1).first);
-				tempPreviousCloud.points.push_back((*it1).second);
+				tempMapCloud.points.push_back((*it1).second);
 				it1++;
 			}
 
 			cv::Mat dataMat = tempDataCloud.centered_matrix();
-			cv::Mat previousMat = tempPreviousCloud.centered_matrix();
+			cv::Mat previousMat = tempMapCloud.centered_matrix();
 
 			// Make sure the data is the same size - proper alignment
 			if (dataMat.size().area() > previousMat.size().area()) {
@@ -158,18 +153,23 @@ namespace icp {
 
 			// Update translation
 			// map.translate(offset);
+			// std::cout << offset << std::endl;
 			dataCloud.translate(-offset);
 			cameraPosition -= offset;
-			// lastTranslation = offset;
+			// lastTranslation = -offset;
+			// lastRotation = -offset;
 
 			logDeltaTime( LOG_ROTATE );
 
 			// Find nearest neighber associations
-			// findNearestNeighborAssociations(dataCloud, map::mapCloud, errors, associations);
+			// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 			findMappedNearestNeighborAssociations(dataCloud, errors, associations);
 
 			i++;
 		}
+
+		// lastTranslation = -offset;
+		// lastRotation = R;
 
 		// Log MSE
 		std::cout << meanSquareError(errors);
@@ -178,7 +178,7 @@ namespace icp {
 		rigidTransformation.at<float>(1,3) = offset.y;
 		rigidTransformation.at<float>(2,3) = offset.z;
 
-		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
+		// showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
 		showPointCloud(map.mapCloud, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
 		// map.drawCertaintyMap(depthWindow);
 		///* 
@@ -210,7 +210,7 @@ namespace icp {
 		std::cout << std::endl << map.mapCloud.points.size() << std::endl;
 
 		// Update Certainties and display
-		map.update(dataCloud);
+		map.update(dataCloud, DELTA_CONFIDENCE);
 		// depthWindow.spinOnce(1, true);
 		// map::drawCertaintyMap(depthWindow);
 
@@ -269,16 +269,15 @@ namespace icp {
 	}
 
 	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name, int size) {
-		cv::Mat adjMap;
-		cv::Mat colorMap;
-
 	    cv::Mat pointCloudMat(p.points.size(), 1, CV_32FC3);
+	    cv::Mat colorMap(p.points.size(), 1, CV_8UC3);
 
 	    for (int i = 0; i < p.points.size(); i++) {
 	    	pointCloudMat.at<cv::Vec3f>(i,0) = p.points[i];
+	    	colorMap.at<cv::Vec3b>(i,0) = p.colors[i];
 	    }
 
-		cv::viz::WCloud cloudWidget(pointCloudMat, color);
+		cv::viz::WCloud cloudWidget(pointCloudMat, colorMap);
 		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, size);
 		depthWindow.showWidget( name , cloudWidget);
 	}
@@ -310,17 +309,10 @@ namespace icp {
 		// Iterate through image
 		int x, y, z;
 		cv::Point3i voxelPoint = map.getVoxelCoordinates(point);
-		// std::cout << "Voxel Point Coordinates: " << voxelPoint << std::endl;
 		int radius = 1;
 
 		// Arbitrarily Large Number
 		float shortestDistance = MAX_NN_DISTANCE;
-
-		// TODO - Why is constant division not working?
-		// std::cout << "CELL_PHYSICAL_HEIGHT: " << CELL_PHYSICAL_HEIGHT << std::endl;
-		// std::cout << "MAX_NN_DISTANCE: " << MAX_NN_DISTANCE << std::endl;
-		// std::cout << "Max Radius: " << 1.5 / 0.1 << std::endl;
-
 		int maxRadius = int(float(MAX_NN_DISTANCE) / float(CELL_PHYSICAL_HEIGHT));
 
 		// Edge case - center voxel is already occupied
