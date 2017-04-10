@@ -3,12 +3,13 @@
 
 #define SUBSAMPLE_FACTOR 12
 #define PI 3.14159265358979
-#define MIN_DISTANCE 1.5f
+#define MAX_NN_DISTANCE 1.5f
 
 #include "pointcloud.hpp"
 
 namespace icp {
 	cv::Mat makeRotationMatrix(float x, float y, float z);
+	void processVoxel(cv::Point3f point, cv::Point3f& nearest, float& shortestDistance, int x, int y, int z);
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat color, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow);
 	float getNearestPoint(cv::Point3f point, cv::Point3f& nearest, PointCloud& cloud);
 	float meanSquareError(std::vector<float> errors);

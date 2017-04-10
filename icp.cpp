@@ -294,7 +294,7 @@ namespace icp {
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestMappedPoint(*it, nearestNeighbor);
-			if (distance < MIN_DISTANCE) {
+			if (distance < MAX_NN_DISTANCE) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}
@@ -311,84 +311,109 @@ namespace icp {
 		int x, y, z;
 		cv::Point3i voxelPoint = map.getVoxelCoordinates(point);
 		// std::cout << "Voxel Point Coordinates: " << voxelPoint << std::endl;
-		int radius = 0;
-		int diameter = 0;
+		int radius = 1;
 
 		// Arbitrarily Large Number
-		float shortestDistance = 500;
+		float shortestDistance = MAX_NN_DISTANCE;
 
 		// TODO - Why is constant division not working?
 		// std::cout << "CELL_PHYSICAL_HEIGHT: " << CELL_PHYSICAL_HEIGHT << std::endl;
-		// std::cout << "MIN_DISTANCE: " << MIN_DISTANCE << std::endl;
+		// std::cout << "MAX_NN_DISTANCE: " << MAX_NN_DISTANCE << std::endl;
 		// std::cout << "Max Radius: " << 1.5 / 0.1 << std::endl;
 
-		int maxRadius = int(float(MIN_DISTANCE) / float(CELL_PHYSICAL_HEIGHT));
-		maxRadius = 3;
+		int maxRadius = int(float(MAX_NN_DISTANCE) / float(CELL_PHYSICAL_HEIGHT));
 
-		while(shortestDistance > MIN_DISTANCE && radius < maxRadius) {
-			radius = 3;
-			// Expanding Radius Search
-			/*
-			    int x,y,z, dx,dy,dz;
-			    x = y = z = dz = dx =0;
-			    dy = -1;
-			    int t = std::max(X,Y);
-			    int maxI = t*t;
-			    for(int i =0; i < maxI; i++){
-			        if ((-X/2 <= x) && (x <= X/2) && (-Y/2 <= y) && (y <= Y/2)){
-			            // DO STUFF...
-			        }
-			        if( (x == y) || ((x < 0) && (x == -y)) || ((x > 0) && (x == 1-y))){
-			            t = dx;
-			            dx = -dy;
-			            dy = t;
-			        }
-			        x += dx;
-			        y += dy;
-			    }
-			*/
+		// Edge case - center voxel is already occupied
+		processVoxel(point, nearest, shortestDistance, voxelPoint.x, voxelPoint.y, voxelPoint.z);
+		if (shortestDistance < MAX_NN_DISTANCE) {
+			return shortestDistance;
+		}
 
-			// std::cout << "Radius: " << radius << std::endl;
-			for (x = voxelPoint.x - radius; x < voxelPoint.x + radius; x++) {
-				for (y = voxelPoint.y - radius; y < voxelPoint.y + radius; y++) {
-					for (z = voxelPoint.z - radius; z < voxelPoint.z + radius; z++) {
-						// Check for out of bounds
-						if (x < 0 || x >= MAP_HEIGHT) {
-							continue;
-						} else if (y < 0 || y >= MAP_HEIGHT) {
-							continue;
-						} else if (y < 0 || y >= MAP_HEIGHT) {
-							continue;
-						}
-
-						// If a point exists in this place
-						if (map.pointLookupTable[x][y][z] != map.empty) {
-							// std::cout << "Found match" << std::endl;
-							// std::cout << map.pointLookupTable[x][y][z] << std::endl;
-							// std::cout << "Lookup: " << x << y << z << std::endl;
-							cv::Point3f p = map.pointLookupTable[x][y][z];
-							float d = distance(point, p);
-							if (d < shortestDistance) {
-								shortestDistance = d;
-								nearest = p;
-							}
-						}
-						else {
-							// std::cout << "Empty: " << x << " " << y << " " << z << " ";
-							// std::cout << map::pointLookupTable[x][y][z] << std::endl;
-						}
-
+		// Expanding Voxel Cube Search
+		// While we don't have a matching point which satisifies the distance
+		// criteria, search all voxels exactly N blocks away from the center
+		while(shortestDistance >= MAX_NN_DISTANCE && radius < maxRadius) {
+			
+			// Check leftmost and rightmost planes
+			for (y = voxelPoint.y - radius; y < voxelPoint.y + radius; y++) {
+				for (z = voxelPoint.z - radius; z < voxelPoint.z + radius; z++) {
+					// Check for out of bounds
+					if (voxelPoint.x - radius < 0 || voxelPoint.x - radius >= MAP_HEIGHT) {
+						continue;
+					} else if (voxelPoint.x + radius < 0 || voxelPoint.x + radius >= MAP_HEIGHT) {
+						continue;
+					} else if (y < 0 || y >= MAP_HEIGHT) {
+						continue;
+					} else if (y < 0 || y >= MAP_HEIGHT) {
+						continue;
 					}
+
+					// Check left plane
+					processVoxel(point, nearest, shortestDistance, voxelPoint.x - radius, y, z);
+
+					// Check right plane
+					processVoxel(point, nearest, shortestDistance, voxelPoint.x + radius, y, z);
+				}
+			}
+
+			// Check inner lines
+			for (x = voxelPoint.x - radius + 1; x < voxelPoint.x + radius - 1; x++) {
+				for (z = voxelPoint.z - radius; z < voxelPoint.z + radius; z++) {
+					if (x < 0 || x >= MAP_HEIGHT) {
+						continue;
+					} else if (z < 0 || z >= MAP_HEIGHT) {
+						continue;
+					} else if (voxelPoint.y - radius < 0 || voxelPoint.y - radius >= MAP_HEIGHT) {
+						continue;
+					} else if (voxelPoint.y + radius < 0 || voxelPoint.y + radius >= MAP_HEIGHT) {
+						continue;
+					}
+					// Check top line
+					processVoxel(point, nearest, shortestDistance, x, voxelPoint.y - radius, z);
+
+					// Check bottom line
+					processVoxel(point, nearest, shortestDistance, x, voxelPoint.y + radius, z);
+				}
+			}
+
+			// Check inner front and back plane
+			for (x = voxelPoint.x - radius + 1; x < voxelPoint.x + radius - 1; x++) {
+				for (y = voxelPoint.y - radius + 1; y < voxelPoint.y + radius - 1; y++) {
+					if (x < 0 || x >= MAP_HEIGHT) {
+						continue;
+					} else if (y < 0 || y >= MAP_HEIGHT) {
+						continue;
+					} else if (voxelPoint.z - radius < 0 || voxelPoint.z - radius >= MAP_HEIGHT) {
+						continue;
+					} else if (voxelPoint.z + radius < 0 || voxelPoint.z + radius >= MAP_HEIGHT) {
+						continue;
+					}
+
+					// Check front plane
+					processVoxel(point, nearest, shortestDistance, x, y, voxelPoint.z - radius);
+
+					// Check back plane
+					processVoxel(point, nearest, shortestDistance, x, y, voxelPoint.z + radius);
 				}
 			}
 
 			radius++;
-			diameter += 2;
 		}
 
 		// std::cout << "Shortest Distance: " << shortestDistance << std::endl;
 		// std::cout << point << " -> " << nearest << std::endl;
 		return shortestDistance;
+	}
+
+	void processVoxel(cv::Point3f point, cv::Point3f& nearest, float& shortestDistance, int x, int y, int z) {
+		if (map.pointLookupTable[x][y][z] != map.empty) {
+			cv::Point3f p = map.pointLookupTable[x][y][z];
+			float d = distance(point, p);
+			if (d < shortestDistance) {
+				shortestDistance = d;
+				nearest = p;
+			}
+		}
 	}
 
 	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>>& associations) {
@@ -402,7 +427,7 @@ namespace icp {
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
-			if (distance < 1.5) {
+			if (distance < MAX_NN_DISTANCE) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}

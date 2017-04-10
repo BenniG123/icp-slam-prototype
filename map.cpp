@@ -21,7 +21,7 @@ namespace map {
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
 				for (int k = 0; k < MAP_HEIGHT; k++) {
-					world[i][j][k] = 0;
+					world[i][j][k] = MAX_CONFIDENCE - DELTA_CONFIDENCE;
 					pointLookupTable[i][j][k] = empty;
 				}
 			}
@@ -119,7 +119,7 @@ namespace map {
 
 			// Populate lookup table if we are certain about this point
 			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty && *certainty > MAX_CONFIDENCE) {
-				std::cout << "Populate " << *it << "-> " << voxelPoint << std::endl;
+				// std::cout << "Populate " << *it << "-> " << voxelPoint << std::endl;
 				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
 				mapCloud.points.push_back(*it);
 			}
