@@ -109,8 +109,8 @@ int main( int argc, const char** argv )
 	// cv::moveWindow( "Normals" , 550 , 700 );
 	// cv::namedWindow( "RGB" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	// cv::moveWindow( "RGB" , 1100 , 700 );
-	cv::namedWindow( "Features" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow( "Features" , 900 , 0 );
+	// cv::namedWindow( "Features" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
+	// cv::moveWindow( "Features" , 900 , 0 );
 
 
 	cv::viz::Viz3d depthWindow("Depth Frame");
@@ -195,7 +195,7 @@ int main( int argc, const char** argv )
 			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_ANYDEPTH);   // Read the file
 
 			    // Read the next color frame
-			    rgbImage = cv::imread(rgb_frame_file_name); // , CV_LOAD_IMAGE_GRAYSCALE);
+			    rgbImage = cv::imread(rgb_frame_file_name); // "checkerboard.jpg"
 			    // cv::resize(rgbImage, rgbImage, cv::Size(960,540));
 
 		    	// CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
@@ -264,7 +264,7 @@ int main( int argc, const char** argv )
 				// }
 
 				if (previous.size().area() > 0) {
-					cv::Mat transformation = icp::getTransformation(filtered, previous, colorDepth, rotation, 16, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rgbImage, rotation, 16, 0.0001, depthWindow);
 					// cv::Mat transformation(4,4,CV_32FC1);
 					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
@@ -317,10 +317,10 @@ int main( int argc, const char** argv )
 					std::cout << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
 				}
 
-			    cv::imshow( "Filtered", colorDepth );
+			    // cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
 				// cv::resize(rgbImage, rgbImage, cv::Size(960,540));
-				cv::imshow("RGB", rgbImage);
+				// cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", drawableDepth);
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );

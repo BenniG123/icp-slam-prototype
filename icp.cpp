@@ -35,6 +35,10 @@ namespace icp {
 		cv::Point3f offset;
 
 		PointCloud dataCloud(data, color);
+		PointCloud previousCloud(previous, color);
+
+		dataCloud.rotate(cameraRotation);
+		dataCloud.translate(cameraPosition);
 
 		// Initialize map and variables
 		if (map.mapCloud.points.size() == 0) {
@@ -48,15 +52,13 @@ namespace icp {
 
 			// Init certainty grid
 			// map = map::Map();
+			previousCloud.rotate(cameraRotation);
+			previousCloud.translate(cameraPosition);
 
-			map.mapCloud = PointCloud(previous, color);
+			// map.mapCloud.translate(cameraPosition);
 
-			map.mapCloud.translate(cameraPosition);
-
-			map.update(map.mapCloud, MAX_CONFIDENCE);
+			map.update(previousCloud, MAX_CONFIDENCE);
 		}
-
-		PointCloud previousCloud(previous, color);
 
 		logDeltaTime(LOG_GEN_POINT_CLOUD);
 
@@ -67,8 +69,6 @@ namespace icp {
 		tempMapCloud.center = previousCloud.center;
 
 		// cv::Mat a = makeRotationMatrix(rand() % 5, rand() % 5, rand() % 5);
-		dataCloud.rotate(cameraRotation);
-		dataCloud.translate(cameraPosition);
 
 		// Optimization - let's assume the camera will generally preserve its momementum between
 		// frames
@@ -87,12 +87,12 @@ namespace icp {
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 
-			// showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
+			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
 			// showPointCloud(map.mapCloud, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
 			// showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
 			// showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
-			// depthWindow.spinOnce(1, true);
+			depthWindow.spinOnce(1, true);
 
 			logDeltaTime( LOG_UI );
 
@@ -178,64 +178,16 @@ namespace icp {
 		rigidTransformation.at<float>(1,3) = offset.y;
 		rigidTransformation.at<float>(2,3) = offset.z;
 
-		// showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
+		map.update(dataCloud, DELTA_CONFIDENCE);
+
+		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
 		showPointCloud(map.mapCloud, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
 		// map.drawCertaintyMap(depthWindow);
-		///* 
-
-		// std::vector<cv::Point3f>::iterator it, end;
-		// it = map.points.begin();
-		// end = map.points.end();
-
-		/* 
-		it1 = associations.begin();
-		end1 = associations.end();
-
-		while (it1 != end1) {
-			cv::Point3f a = (*it1).first;
-			cv::Point3f b = (*it1).second;
-
-			// Only factor in translation to points that are close enough
-			if (distance(a, b) > .15) {
-				map::mapCloud.points.push_back(a);
-			}
-			// else {
-			// 	std::replace(it, end, b, a);
-			// }
-			it1++;
-		}
-
-		*/
 
 		std::cout << std::endl << map.mapCloud.points.size() << std::endl;
 
 		// Update Certainties and display
-		map.update(dataCloud, DELTA_CONFIDENCE);
-		// depthWindow.spinOnce(1, true);
-		// map::drawCertaintyMap(depthWindow);
-
-		// http://docs.opencv.org/trunk/d0/da3/classcv_1_1viz_1_1WTrajectory.html
-
-		/* 
-		if (map.points.size() > 4000) {
-			it = map.points.begin();
-			end = map.points.end();
-			while (it < end) {
-				if (rand() % 10 == 0) {
-					map.points.erase(it);
-				}
-				it++;
-			}
-		}
-		*/
-
-		//*/
-
-		// map.points.insert(map.points.end(), dataCloud.points.begin(), dataCloud.points.end());
-
-		// map.center += cv::Point3f(5,5,5);
-		// std::cout << map.center << std::endl;
-		// map.center_points();
+		depthWindow.spinOnce(1, true);
 		
 		return rigidTransformation;
 	}

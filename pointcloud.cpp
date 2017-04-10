@@ -40,12 +40,12 @@ namespace icp {
 			}
 
 			// Subsample
-			if (rand() % 10) {
+			/* if (rand() % 10) {
 				p_index++;
 				color_it++;
 				it++;
 				continue;
-			}
+			} */
 
 			// TODO - Worldspace from cameraspace
 			// http://nicolas.burrus.name/index.php/Research/KinectCalibration#tocLink7
@@ -69,22 +69,24 @@ namespace icp {
 
 	      	cv::Point3f p_c(p3d.at<float>(0,0), p3d.at<float>(1,0), p3d.at<float>(2,0));
 			*/
-
-	      	/* 
+	      	
+	      	/*
 	      	int colorX = (int) std::round((p.x * FX / p.z) + CX);
 	      	int colorY = (int) std::round((p.y * FY / p.z) + CY);
 
+	      	
 	      	// std::cout << colorX << " " << colorY << std::endl;
 	      	if (colorX > 640 || colorX < 0 || colorY > 480 || colorY < 0) {
 				p_index++;
 				it++;
 	      		continue;
 	      	}
+	      	
 	      	*/
 
 	      	// cv::Vec3b c = *color_it;
 	      	// std::cout << x << " " << y << std::endl;
-	      	cv::Vec3b c = *color_it; // colorMat.at<cv::Vec3b>((int(y)), int(x));
+	      	cv::Vec3b c = *color_it; // colorMat.at<cv::Vec3b>(colorY, colorX);
 	      	/* if (int(x) % 2) {
 	      		c = cv::Vec3b(255,75,75);
 	      	}

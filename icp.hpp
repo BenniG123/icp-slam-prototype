@@ -3,7 +3,7 @@
 
 #define SUBSAMPLE_FACTOR 12
 #define PI 3.14159265358979
-#define MAX_NN_DISTANCE 0.75f
+#define MAX_NN_DISTANCE 1.0f
 
 #include "pointcloud.hpp"
 
