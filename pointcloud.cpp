@@ -13,122 +13,43 @@ namespace icp {
 		points = std::vector<cv::Point3f>();
 		colors = std::vector<cv::Vec3b>();
 
-		cv::MatIterator_<uint16_t> it, end;
-		it = data.begin<uint16_t>();
-		end = data.end<uint16_t>();
-
-		cv::MatIterator_<cv::Vec3b> color_it, color_end;
-		color_it = colorMat.begin<cv::Vec3b>();
-		color_end = colorMat.end<cv::Vec3b>();
-
-		int p_index = 0;
 		int index = 0;
-
-		int width = data.size().width;
-
-		float y_prev = 0;
 		
-		while ( it != end) {
-			// Blank cells aren't relevant
-			// < 4500
-			if ((*it) == 0) 
-			{
-				p_index++;
-				color_it++;
-				it++;
-				continue;
+		for (int y = 0; y < data.rows; y++) {
+			for (int x = 0; x < data.cols; x++) {
+
+				if (data.at<uint16_t>(y,x) == 0) 
+				{
+					continue;
+				}
+
+				// Random Subsample
+				if (rand() % 40) {
+					continue;
+				}
+
+				// TODO - Worldspace from cameraspace
+				// http://nicolas.burrus.name/index.php/Research/KinectCalibration#tocLink7
+				// P3D.x = (x_d - cx_d (250.32)) * depth(x_d,y_d) / fx_d (363.58)
+				// P3D.y = (y_d - cy_d (212.55)) * depth(x_d,y_d) / fy_d (363.53)
+				// P3D.z = depth(x_d,y_d)
+				float p_z = ((float) data.at<uint16_t>(y,x)) / 5000;
+				float p_x = (x - CX) * p_z / FX;
+				float p_y = (y - CX) * p_z / FX;
+		      	cv::Point3f p(p_x, p_y, p_z);
+
+		      	// Update Center
+				center.x += p_x;
+				center.y += p_y;
+				center.z += p_z;
+
+				// Add point to point cloud
+				points.push_back(p);
+				colors.push_back(colorMat.at<cv::Vec3b>(y,x));
+
+				index++;
 			}
-
-			// Subsample
-			/* if (rand() % 10) {
-				p_index++;
-				color_it++;
-				it++;
-				continue;
-			} */
-
-			// TODO - Worldspace from cameraspace
-			// http://nicolas.burrus.name/index.php/Research/KinectCalibration#tocLink7
-			// P3D.x = (x_d - cx_d (250.32)) * depth(x_d,y_d) / fx_d (363.58)
-			// P3D.y = (y_d - cy_d (212.55)) * depth(x_d,y_d) / fy_d (363.53)
-			// P3D.z = depth(x_d,y_d)
-			float x = (float) (p_index % width);
-			float y = (float) (p_index / width);
-			float p_z = ((float) (*it)) / 5000;
-			float p_x = (x - CX) * p_z / FX;
-			float p_y = (y - CX) * p_z / FX;
-	      	cv::Point3f p(p_x, p_y, p_z);
-
-	      	/*
-	      	cv::Mat colorDepthRotation(3,3,CV_32FC1);
-	      	colorDepthRotation = makeRotationMatrix(0.050 * 180.0/PI, -0.062 * 180.0/PI, -0.002 * 180/PI);
-
-			cv::Mat p3d(p);
-	      	p3d = colorDepthRotation * p3d;
-			p3d.at<float>(0,0) -= 0.02;
-
-	      	cv::Point3f p_c(p3d.at<float>(0,0), p3d.at<float>(1,0), p3d.at<float>(2,0));
-			*/
-	      	
-	      	/*
-	      	int colorX = (int) std::round((p.x * FX / p.z) + CX);
-	      	int colorY = (int) std::round((p.y * FY / p.z) + CY);
-
-	      	
-	      	// std::cout << colorX << " " << colorY << std::endl;
-	      	if (colorX > 640 || colorX < 0 || colorY > 480 || colorY < 0) {
-				p_index++;
-				it++;
-	      		continue;
-	      	}
-	      	
-	      	*/
-
-	      	// cv::Vec3b c = *color_it;
-	      	// std::cout << x << " " << y << std::endl;
-	      	cv::Vec3b c = *color_it; // colorMat.at<cv::Vec3b>(colorY, colorX);
-	      	/* if (int(x) % 2) {
-	      		c = cv::Vec3b(255,75,75);
-	      	}
-	      	else {
-	      		c = cv::Vec3b(100,255,75);
-	      	}*/
-
-			// P3D' = R.P3D + T
-			// P2D_rgb.x = (P3D'.x * fx_rgb / P3D'.z) + cx_rgb
-			// P2D_rgb.y = (P3D'.y * fy_rgb / P3D'.z) + cy_rgb
-
-			// Update Center
-			center.x += p_x;
-			center.y += p_y;
-			center.z += p_z;
-
-			// Add point to point cloud
-			points.push_back(p);
-			colors.push_back(c);
-
-			p_index++; // += SUBSAMPLE_FACTOR;
-			index++;
-			color_it++;
-			it++; // += SUBSAMPLE_FACTOR;
 		}
-
-		// std::cout << points.size() << std::endl;
-		// std::cout << colors.size() << std::endl;
-
-		/*
-		std::vector<cv::Point3f>::iterator itp, endp;
-		itp = points.begin();
-		endp = points.end();
-
-		while ( itp != endp ) {
-			if (rand() % 8) {
-				points.erase(itp);
-			}
-			itp++;
-		}
-		*/
-		
 
 		// Average Center
 		center.x /= index;
@@ -136,7 +57,34 @@ namespace icp {
 		center.z /= index;
 
 		center_points();
-		std_dev_filter_points();
+
+		// This breaks color as points + colors aren't coupled.  That is bad design
+		// TODO - Pair points and colors
+		// std_dev_filter_points();
+	}
+
+	// Display PointCloud with colorMap in Viz Window
+	void PointCloud::display(cv::viz::Viz3d& depthWindow, std::string name, int size) {
+	    cv::Mat pointCloudMat(points.size(), 1, CV_32FC3);
+	    cv::Mat colorMap(points.size(), 1, CV_8UC3);
+
+	    for (int i = 0; i < points.size(); i++) {
+	    	pointCloudMat.at<cv::Vec3f>(i,0) = points[i];
+	    	colorMap.at<cv::Vec3b>(i,0) = colors[i];
+	    }
+
+		cv::viz::WCloud cloudWidget(pointCloudMat, colorMap);
+		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, size);
+		depthWindow.showWidget( name , cloudWidget);
+	}
+
+	// Display without colorMap
+	void PointCloud::display(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color color) {
+		cv::Mat pointCloudMat(points.size(), 1, CV_32FC3);
+
+		cv::viz::WCloud cloudWidget(pointCloudMat, color);
+		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, size);
+		depthWindow.showWidget( name , cloudWidget);
 	}
 
 	cv::Vec2i depthToRGB(cv::Point3f point) {

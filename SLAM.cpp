@@ -195,7 +195,7 @@ int main( int argc, const char** argv )
 			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_ANYDEPTH);   // Read the file
 
 			    // Read the next color frame
-			    rgbImage = cv::imread(rgb_frame_file_name); // "checkerboard.jpg"
+			    rgbImage = cv::imread(rgb_frame_file_name); // "red_blue.png" rgb_frame_file_name "checkerboard.jpg"
 			    // cv::resize(rgbImage, rgbImage, cv::Size(960,540));
 
 		    	// CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
@@ -317,10 +317,10 @@ int main( int argc, const char** argv )
 					std::cout << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
 				}
 
-			    // cv::imshow( "Filtered", colorDepth );
+			    cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
 				// cv::resize(rgbImage, rgbImage, cv::Size(960,540));
-				// cv::imshow("RGB", rgbImage);
+				cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", drawableDepth);
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );

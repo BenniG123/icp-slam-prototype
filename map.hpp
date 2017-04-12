@@ -5,9 +5,9 @@
 #include "opencv2/viz/vizcore.hpp"
 #include "pointcloud.hpp"
 
-#define MAP_HEIGHT 300
+#define MAP_HEIGHT 85
 #define PHYSICAL_HEIGHT 10.0f
-#define DELTA_CONFIDENCE 180
+#define DELTA_CONFIDENCE 90
 #define MIN_CONFIDENCE 100
 #define MAX_CONFIDENCE 180
 #define CELL_PHYSICAL_HEIGHT PHYSICAL_HEIGHT / ((float) MAP_HEIGHT)

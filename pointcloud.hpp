@@ -21,6 +21,8 @@ namespace icp {
 	      cv::Mat matrix();
 	      cv::Mat centered_matrix();
 	      void center_points();
+	      void display(cv::viz::Viz3d& depthWindow, std::string name, int size);
+	      void display(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color color);
 	    private:
 		  void std_dev_filter_points();
 		  cv::Vec2i depthToRGB(cv::Point3f point);

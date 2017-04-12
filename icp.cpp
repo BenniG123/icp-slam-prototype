@@ -87,12 +87,12 @@ namespace icp {
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 
-			showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
+			// showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
 			// showPointCloud(map.mapCloud, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
 			// showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
 			// showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
-			depthWindow.spinOnce(1, true);
+			// depthWindow.spinOnce(1, true);
 
 			logDeltaTime( LOG_UI );
 
@@ -180,8 +180,8 @@ namespace icp {
 
 		map.update(dataCloud, DELTA_CONFIDENCE);
 
-		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
-		showPointCloud(map.mapCloud, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
+		dataCloud.display(depthWindow, "Data", 3);
+		map.mapCloud.display(depthWindow, "Previous", 3);
 		// map.drawCertaintyMap(depthWindow);
 
 		std::cout << std::endl << map.mapCloud.points.size() << std::endl;
@@ -218,20 +218,6 @@ namespace icp {
 		offset.z /= offset_count;
 
 		return offset;
-	}
-
-	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name, int size) {
-	    cv::Mat pointCloudMat(p.points.size(), 1, CV_32FC3);
-	    cv::Mat colorMap(p.points.size(), 1, CV_8UC3);
-
-	    for (int i = 0; i < p.points.size(); i++) {
-	    	pointCloudMat.at<cv::Vec3f>(i,0) = p.points[i];
-	    	colorMap.at<cv::Vec3b>(i,0) = p.colors[i];
-	    }
-
-		cv::viz::WCloud cloudWidget(pointCloudMat, colorMap);
-		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, size);
-		depthWindow.showWidget( name , cloudWidget);
 	}
 
 	// Use the certainty map lookup to find cached nearest neighbors quickly
