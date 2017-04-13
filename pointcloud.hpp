@@ -7,12 +7,30 @@
 #define CX 318.27f
 #define CY 243.99f
 
+struct color_point_t {
+	cv::Point3f point;
+	cv::Vec3b color;
+
+	inline bool operator==(const color_point_t  &c) const {return point == c.point && color == c.color;}
+	inline bool operator!=(const color_point_t  &c) const {return point != c.point || color != c.color;}
+
+	// bool operator==(const color_point_t &) const;
+	// bool color_point_t::operator== (const color_point_t  &c) const {return point == c.point && color == c.color;}
+	// bool color_point_t::operator!=(const color_point_t  &c) const {return point != c.point || color != c.color;}
+	// bool operator!=(const color_point_t &) const;
+};
+
+// inline bool color_point_t::operator==(const color_point_t  &c) const {return point == c.point && color == c.color;}
+// inline bool color_point_t::operator!=(const color_point_t  &c) const {return point != c.point || color != c.color;}
+
+typedef std::vector<color_point_t> point_list_t;
+
 namespace icp {
+
 	class PointCloud {
 		public:
 	      cv::Point3f center;
-	      std::vector<cv::Point3f> points;
-	      std::vector<cv::Vec3b> colors;
+	      point_list_t points;
 	      PointCloud(cv::Mat& data, cv::Mat color);
 	      PointCloud(std::vector<cv::Point3f> data);
 	      PointCloud();

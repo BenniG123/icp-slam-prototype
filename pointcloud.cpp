@@ -10,8 +10,7 @@ namespace icp {
 	// Build 3D point cloud from depth image
 	PointCloud::PointCloud(cv::Mat& data, cv::Mat colorMat) {
 		center = cv::Point3f(0,0,0);
-		points = std::vector<cv::Point3f>();
-		colors = std::vector<cv::Vec3b>();
+		points = point_list_t();
 
 		int index = 0;
 		
@@ -43,9 +42,14 @@ namespace icp {
 				center.y += p_y;
 				center.z += p_z;
 
+				cv::Vec3b c = colorMat.at<cv::Vec3b>(y,x);
+
+				color_point_t clr_pt;
+				clr_pt.point = p;
+				clr_pt.color = c;
+
 				// Add point to point cloud
-				points.push_back(p);
-				colors.push_back(colorMat.at<cv::Vec3b>(y,x));
+				points.push_back(clr_pt);
 
 				index++;
 			}
@@ -59,7 +63,6 @@ namespace icp {
 		center_points();
 
 		// This breaks color as points + colors aren't coupled.  That is bad design
-		// TODO - Pair points and colors
 		// std_dev_filter_points();
 	}
 
@@ -69,8 +72,8 @@ namespace icp {
 	    cv::Mat colorMap(points.size(), 1, CV_8UC3);
 
 	    for (int i = 0; i < points.size(); i++) {
-	    	pointCloudMat.at<cv::Vec3f>(i,0) = points[i];
-	    	colorMap.at<cv::Vec3b>(i,0) = colors[i];
+	    	pointCloudMat.at<cv::Vec3f>(i,0) = points[i].point;
+	    	colorMap.at<cv::Vec3b>(i,0) = points[i].color;
 	    }
 
 		cv::viz::WCloud cloudWidget(pointCloudMat, colorMap);
@@ -81,6 +84,10 @@ namespace icp {
 	// Display without colorMap
 	void PointCloud::display(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color color) {
 		cv::Mat pointCloudMat(points.size(), 1, CV_32FC3);
+
+		for (int i = 0; i < points.size(); i++) {
+	    	pointCloudMat.at<cv::Vec3f>(i,0) = points[i].point;
+	    }
 
 		cv::viz::WCloud cloudWidget(pointCloudMat, color);
 		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, size);
@@ -104,7 +111,7 @@ namespace icp {
 	}
 
 	void PointCloud::std_dev_filter_points() {
-		std::vector<cv::Point3f>::iterator it, end;
+		point_list_t::iterator it, end;
 		it = points.begin();
 		end = points.end();
 
@@ -112,9 +119,9 @@ namespace icp {
 		float sum = 0;
 
 		while ( it != end) {
-			sum += pow(center.x - (*it).x, 2);
-			sum += pow(center.y - (*it).y, 2);
-			sum += pow(center.z - (*it).z, 2);
+			sum += pow(center.x - (*it).point.x, 2);
+			sum += pow(center.y - (*it).point.y, 2);
+			sum += pow(center.z - (*it).point.z, 2);
 			it++;
 		}
 
@@ -124,7 +131,7 @@ namespace icp {
 
 		it = points.begin();
 		while ( it != end) {
-			if (icp::distance(center, *it) > stddev * 1.5) {
+			if (icp::distance(center, (*it).point) > stddev * 1.5) {
 				// std::cout << (*it).z << std::endl;
 				points.erase(it);
 			}
@@ -136,7 +143,7 @@ namespace icp {
 	// Build a point cloud from a vector
 	PointCloud::PointCloud(std::vector<cv::Point3f> data) {
 		center = cv::Point3f(0,0,0);
-		points = std::vector<cv::Point3f>();
+		points = point_list_t();
 
 		std::vector<cv::Point3f>::iterator it, end;
 		it = data.begin();
@@ -145,7 +152,10 @@ namespace icp {
 		int index = 0;
 
 		while ( it != end) {
-			points.push_back(*it);
+			color_point_t clr_pt;
+			clr_pt.point = *it;
+
+			points.push_back(clr_pt);
 
 			// Update Center
 			center.x += (*it).x;
@@ -167,18 +177,16 @@ namespace icp {
 	// Initialize an empty point cloud
 	PointCloud::PointCloud() {
 		center = cv::Point3f(0,0,0);
-		points = std::vector<cv::Point3f>();
+		points = point_list_t();
 	}
 
 	void PointCloud::center_points() {
-		std::vector<cv::Point3f>::iterator it, end;
+		point_list_t::iterator it, end;
 		it = points.begin();
 		end = points.end();
 
-		// std::cout << center << std::endl;
-
 		while (it != end) {
-			cv::Point3f p = *it;
+			cv::Point3f p = (*it).point;
 			p.x -= center.x;
 			p.y -= center.y;
 			p.z -= center.z;
@@ -193,16 +201,16 @@ namespace icp {
 		cv::Mat RMT = RM.t();
 		
 		for (int i = 0; i < points.size(); i++) {
-			points[i].x = RMT.at<float>(i, 0);
-			points[i].y = RMT.at<float>(i, 1);
-			points[i].z = RMT.at<float>(i, 2);
+			points[i].point.x = RMT.at<float>(i, 0);
+			points[i].point.y = RMT.at<float>(i, 1);
+			points[i].point.z = RMT.at<float>(i, 2);
 		}
 	}
 
 
 	void PointCloud::translate(cv::Point3f offset) {
 		for (int i = 0; i < points.size(); i++) {
-			points[i] += offset;
+			points[i].point += offset;
 		}
 
 		center += offset;
@@ -212,9 +220,9 @@ namespace icp {
 		cv::Mat M(points.size(), 3, CV_32FC1);
 
 		for (int i = 0; i < points.size(); i++) {
-			M.at<float>(i, 0) = points[i].x;
-			M.at<float>(i, 1) = points[i].y;
-			M.at<float>(i, 2) = points[i].z;
+			M.at<float>(i, 0) = points[i].point.x;
+			M.at<float>(i, 1) = points[i].point.y;
+			M.at<float>(i, 2) = points[i].point.z;
 		}
 
 		return M;
@@ -224,9 +232,9 @@ namespace icp {
 		cv::Mat M(points.size(), 3, CV_32FC1);
 
 		for (int i = 0; i < points.size(); i++) {
-			M.at<float>(i, 0) = points[i].x + center.x;
-			M.at<float>(i, 1) = points[i].y + center.y;
-			M.at<float>(i, 2) = points[i].z + center.z;
+			M.at<float>(i, 0) = points[i].point.x + center.x;
+			M.at<float>(i, 1) = points[i].point.y + center.y;
+			M.at<float>(i, 2) = points[i].point.z + center.z;
 		}
 
 		return M;

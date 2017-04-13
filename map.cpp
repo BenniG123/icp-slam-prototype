@@ -16,7 +16,9 @@ namespace map {
 	
 	Map::Map() {
 		mapCloud = icp::PointCloud();
-		empty = cv::Point3f(-100,-100,-100);
+		
+		empty.point = cv::Point3f(-100,-100,-100);
+		empty.color = cv::Vec3b();
 
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
@@ -84,20 +86,16 @@ namespace map {
 
 	// Update Map with new scan
 	void Map::update(icp::PointCloud data, int delta_confidence) {
-		std::vector<cv::Point3f>::iterator it, end;
+		point_list_t::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
 
-		std::vector<cv::Vec3b>::iterator color_it, color_end;
-		color_it = data.colors.begin();
-		color_end = data.colors.end();
-
 		float c = float(CELL_PHYSICAL_HEIGHT);
 
-		while (it != end && color_it != color_end) {
+		while (it != end) {
 			// rayTrace(*it, position);
-			cv::Point3f point = *it;
-			cv::Point3i voxelPoint = getVoxelCoordinates(point);
+			color_point_t c_point = *it;
+			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
 
 			// Check for out of bounds
 			/* if (x < 0 || x >= MAP_HEIGHT) {
@@ -125,11 +123,9 @@ namespace map {
 			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty && *certainty > MAX_CONFIDENCE) {
 				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
 				mapCloud.points.push_back(*it);
-				mapCloud.colors.push_back(*color_it);
 			}
 
 			it++;
-			color_it++;
 		}
 	}
 

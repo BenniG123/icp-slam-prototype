@@ -4,8 +4,9 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/viz/vizcore.hpp"
 #include "pointcloud.hpp"
+#include "icp.hpp"
 
-#define MAP_HEIGHT 85
+#define MAP_HEIGHT 75
 #define PHYSICAL_HEIGHT 10.0f
 #define DELTA_CONFIDENCE 90
 #define MIN_CONFIDENCE 100
@@ -15,15 +16,14 @@
 namespace map {
 	class Map {
 		public:
-			cv::Point3f empty;
+			color_point_t empty;
 			icp::PointCloud mapCloud;
-			cv::Point3f pointLookupTable[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT];
-			cv::Vec3b colorLookupTable[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT];
+			color_point_t pointLookupTable[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT];
 			unsigned char world[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT];
 
 			Map();
 			void update(icp::PointCloud data, int delta_confidencec);
-			void update(std::vector<std::pair<cv::Point3f, cv::Point3f>> associations, int delta_confidencec);
+			void update(associations_t associations, int delta_confidencec);
 			void rayTrace(cv::Point3f point, cv::Point3f position);
 			void drawCertaintyMap(cv::viz::Viz3d& depthWindow);
 			cv::Point3i getVoxelCoordinates(cv::Point3f);

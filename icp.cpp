@@ -26,8 +26,8 @@ namespace icp {
 
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat color, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
-		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
-		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
+		associations_t associations;
+		associations_t::iterator it1, end1;
 
 		std::vector<float> errors;
 		cv::Mat R;
@@ -192,8 +192,8 @@ namespace icp {
 		return rigidTransformation;
 	}
 
-	cv::Point3f calculateOffset(std::vector<std::pair<cv::Point3f, cv::Point3f>> associations) {
-		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
+	cv::Point3f calculateOffset(associations_t associations) {
+		associations_t::iterator it1, end1;
 		cv::Point3f offset(0,0,0);
 
 		it1 = associations.begin();
@@ -202,8 +202,9 @@ namespace icp {
 		int offset_count = 0;
 
 		while (it1 != end1) {
-			cv::Point3f a = (*it1).first;
-			cv::Point3f b = (*it1).second;
+			// Lol at this syntax
+			cv::Point3f a = (*it1).first.point;
+			cv::Point3f b = (*it1).second.point;
 
 			// Only factor in translation to points that are close enough
 			if (distance(a, b) < .3) { // } && a.z < 3) {
@@ -221,17 +222,18 @@ namespace icp {
 	}
 
 	// Use the certainty map lookup to find cached nearest neighbors quickly
-	void findMappedNearestNeighborAssociations(PointCloud& data, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>>& associations) {
-		std::vector<cv::Point3f>::iterator it, end;
+	void findMappedNearestNeighborAssociations(PointCloud& data, std::vector<float>& errors, associations_t& associations) {
+		point_list_t::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
+
 		errors.clear();
 		associations.clear();
 
 		while (it != end) {
-			cv::Point3f nearestNeighbor;
+			color_point_t nearestNeighbor;
 			float distance = getNearestMappedPoint(*it, nearestNeighbor);
-			if (distance < MAX_NN_DISTANCE) {
+			if (distance < MAX_NN_COLOR_DISTANCE) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}
@@ -243,26 +245,27 @@ namespace icp {
 
 	}
 
-	float getNearestMappedPoint(cv::Point3f point, cv::Point3f& nearest) {
+	float getNearestMappedPoint(color_point_t c_point, color_point_t &c_nearest) {
 		// Iterate through image
 		int x, y, z;
-		cv::Point3i voxelPoint = map.getVoxelCoordinates(point);
+		cv::Point3i voxelPoint = map.getVoxelCoordinates(c_point.point);
 		int radius = 1;
 
 		// Arbitrarily Large Number
-		float shortestDistance = MAX_NN_DISTANCE;
-		int maxRadius = int(float(MAX_NN_DISTANCE) / float(CELL_PHYSICAL_HEIGHT));
+		float shortestDistance = MAX_NN_COLOR_DISTANCE;
+		int maxRadius = int(float(MAX_NN_COLOR_DISTANCE) / float(CELL_PHYSICAL_HEIGHT));
 
 		// Edge case - center voxel is already occupied
-		processVoxel(point, nearest, shortestDistance, voxelPoint.x, voxelPoint.y, voxelPoint.z);
-		if (shortestDistance < MAX_NN_DISTANCE) {
+		processVoxel(c_point, c_nearest, shortestDistance, voxelPoint.x, voxelPoint.y, voxelPoint.z);
+
+		if (shortestDistance < MAX_NN_COLOR_DISTANCE) {
 			return shortestDistance;
 		}
 
 		// Expanding Voxel Cube Search
 		// While we don't have a matching point which satisifies the distance
 		// criteria, search all voxels exactly N blocks away from the center
-		while(shortestDistance >= MAX_NN_DISTANCE && radius < maxRadius) {
+		while(shortestDistance >= MAX_NN_COLOR_DISTANCE && radius < maxRadius) {
 			
 			// Check leftmost and rightmost planes
 			for (y = voxelPoint.y - radius; y < voxelPoint.y + radius; y++) {
@@ -279,10 +282,10 @@ namespace icp {
 					}
 
 					// Check left plane
-					processVoxel(point, nearest, shortestDistance, voxelPoint.x - radius, y, z);
+					processVoxel(c_point, c_nearest, shortestDistance, voxelPoint.x - radius, y, z);
 
 					// Check right plane
-					processVoxel(point, nearest, shortestDistance, voxelPoint.x + radius, y, z);
+					processVoxel(c_point, c_nearest, shortestDistance, voxelPoint.x + radius, y, z);
 				}
 			}
 
@@ -299,10 +302,10 @@ namespace icp {
 						continue;
 					}
 					// Check top line
-					processVoxel(point, nearest, shortestDistance, x, voxelPoint.y - radius, z);
+					processVoxel(c_point, c_nearest, shortestDistance, x, voxelPoint.y - radius, z);
 
 					// Check bottom line
-					processVoxel(point, nearest, shortestDistance, x, voxelPoint.y + radius, z);
+					processVoxel(c_point, c_nearest, shortestDistance, x, voxelPoint.y + radius, z);
 				}
 			}
 
@@ -320,10 +323,10 @@ namespace icp {
 					}
 
 					// Check front plane
-					processVoxel(point, nearest, shortestDistance, x, y, voxelPoint.z - radius);
+					processVoxel(c_point, c_nearest, shortestDistance, x, y, voxelPoint.z - radius);
 
 					// Check back plane
-					processVoxel(point, nearest, shortestDistance, x, y, voxelPoint.z + radius);
+					processVoxel(c_point, c_nearest, shortestDistance, x, y, voxelPoint.z + radius);
 				}
 			}
 
@@ -335,29 +338,32 @@ namespace icp {
 		return shortestDistance;
 	}
 
-	void processVoxel(cv::Point3f point, cv::Point3f& nearest, float& shortestDistance, int x, int y, int z) {
+	// Helper function for findNearestMappedPoint
+	void processVoxel(color_point_t c_point, color_point_t& c_nearest, float& shortestDistance, int x, int y, int z) {
 		if (map.pointLookupTable[x][y][z] != map.empty) {
-			cv::Point3f p = map.pointLookupTable[x][y][z];
-			float d = distance(point, p);
+			color_point_t p = map.pointLookupTable[x][y][z];
+			float d = distance(c_point, p);
+			std::cout << d << std::endl;
 			if (d < shortestDistance) {
 				shortestDistance = d;
-				nearest = p;
+				c_nearest = p;
 			}
 		}
 	}
 
-	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>>& associations) {
+	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, associations_t& associations) {
 		// Iterate through pointcloud
-		std::vector<cv::Point3f>::iterator it, end;
+		point_list_t::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
+
 		errors.clear();
 		associations.clear();
 
 		while (it != end) {
-			cv::Point3f nearestNeighbor;
+			color_point_t nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
-			if (distance < MAX_NN_DISTANCE) {
+			if (distance < MAX_NN_COLOR_DISTANCE) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}
@@ -370,9 +376,9 @@ namespace icp {
 	}
 
 	// Bottlenecking function - Hardware acceleration candidate
-	float getNearestPoint(cv::Point3f point, cv::Point3f& nearest, PointCloud& cloud) {
+	float getNearestPoint(color_point_t point, color_point_t nearest, PointCloud& cloud) {
 		// Iterate through image
-		std::vector<cv::Point3f>::iterator it, end; //, near;
+		point_list_t::iterator it, end; //, near;
 		it = cloud.points.begin();
 		end = cloud.points.end();
 
@@ -406,6 +412,23 @@ namespace icp {
 		// std::cout << a << ", " << b << std::endl;
 		// cv::waitKey(0);
 		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+	}
+
+	// Factor color into distance calc.  Every SQRT Op is a huge hit in performance
+	float distance(color_point_t a, color_point_t b) {
+		float x = a.point.x - b.point.x;
+		float y = a.point.y - b.point.y;
+		float z = a.point.z - b.point.z;
+
+		float xyz = pow(x, 2) + pow(y, 2) + pow(z, 2);
+
+		float red = a.color[0] - b.color[0];
+		float green = a.color[1] - b.color[1];
+		float blue = a.color[2] - b.color[2];
+
+		float rgb = pow(red, 2) + pow(blue, 2) + pow(green, 2);
+
+		return xyz + rgb;
 	}
 
 	float meanSquareError(std::vector<float> errors) {

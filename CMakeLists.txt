@@ -15,11 +15,11 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(SOURCE
   ${SOURCE}
+  SLAM.cpp
   icp.cpp
   quaternion.cpp
   pointcloud.cpp
   map.cpp
-  SLAM.cpp
 )
 
 set(HEADERS
