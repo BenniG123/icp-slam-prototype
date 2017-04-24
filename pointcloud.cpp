@@ -23,8 +23,8 @@ namespace icp {
 				}
 
 				// Random Subsample
-				if (rand() % 40) {
-					continue;
+				if (rand() % 60) {
+				 	continue;
 				}
 
 				// TODO - Worldspace from cameraspace
@@ -62,7 +62,6 @@ namespace icp {
 
 		center_points();
 
-		// This breaks color as points + colors aren't coupled.  That is bad design
 		// std_dev_filter_points();
 	}
 

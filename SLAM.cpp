@@ -195,11 +195,9 @@ int main( int argc, const char** argv )
 			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_ANYDEPTH);   // Read the file
 
 			    // Read the next color frame
-			    rgbImage = cv::imread(rgb_frame_file_name); // "red_blue.png" rgb_frame_file_name "checkerboard.jpg"
+			    rgbImage = cv::imread(rgb_frame_file_name, CV_LOAD_IMAGE_COLOR); // "red_blue.png" rgb_frame_file_name "checkerboard.jpg"
+			   	// std::cout << "RGB Type: " << rgbImage.type() << std::endl;
 			    // cv::resize(rgbImage, rgbImage, cv::Size(960,540));
-
-		    	// CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
-			    // image.convertTo(image, CV_16U);
 
 			    if(! image.data ) // Check for invalid input
 			    {
@@ -223,7 +221,7 @@ int main( int argc, const char** argv )
 			    filtered = image.clone();
 
 			    // Filter all points > x * 5000 m away - 25000
-			    filterDepthImage(filtered, 25000);
+			    filterDepthImage(filtered, rgbImage, MAX_16_CHANNEL_DISTANCE);
 
 			    /*
     			normals = cv::Mat(filtered.size(), CV_32FC3);
@@ -320,7 +318,7 @@ int main( int argc, const char** argv )
 			    cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
 				// cv::resize(rgbImage, rgbImage, cv::Size(960,540));
-				cv::imshow("RGB", rgbImage);
+				// cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", drawableDepth);
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
@@ -540,68 +538,57 @@ void errorMessage() {
 // Notes 
 // Sensor accuracy increases quadratically with distance
 // Sensor is noisy near depth discontinuities - Mask edges
-void filterDepthImage(cv::Mat &image, int maxDistance) {
+void filterDepthImage(cv::Mat &image, cv::Mat &rgbImage, int maxDistance) {
 	cv::MatIterator_<uint16_t> it, end;
 	it = image.begin<uint16_t>();
 	end = image.end<uint16_t>();
 
 	while (it != end) {
 		if ((*it) > maxDistance) {
-			(*it) = 0;
+			(*it) = 0 ;
 		}
 		it++;
 	}
 
-	/*
+ 	// cv::dilate( image, image, element);
+ 	// cv::erode( image, image, element);
+	
   	// Using Canny's output as a mask, we display our result
-	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
-	                               cv::Size( 7, 7 ),
-	                               cv::Point( 4, 4 ) );
-	cv::Mat image8u;
+	/* cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
+	                               cv::Size( 5, 5 ),
+	                               cv::Point( 3, 3 ) );
+	cv::Mat rgbGrayScale;
 	cv::Mat detected_edges;
 	cv::Mat maskedImage;
 
 	cv::Mat detected_edges_16u;
-	image.convertTo(image8u, CV_8U);
+	cv::cvtColor(rgbImage, rgbGrayScale, CV_BGR2GRAY);
+
+  	// cv::dilate( rgbGrayScale, rgbGrayScale, element );
+  	// cv::blur( rgbGrayScale, rgbGrayScale, cv::Size(7,7) );
+  	// cv::blur( rgbGrayScale, rgbGrayScale, cv::Size(7,7) );
+  	// cv::blur( rgbGrayScale, rgbGrayScale, cv::Size(7,7) );
+  	// cv::blur( image8u, image8u, cv::Size(7,7) );
+  	// cv::blur( image8u, image8u, cv::Size(7,7) );
 
 	// Canny detector for edges
-  	cv::Canny( image8u, detected_edges, 1.0, 5.0, 5 );
+  	cv::Canny( rgbGrayScale, detected_edges, 1.0, 10.0, 7 );
+
+  	// cv::imshow("Edges", detected_edges);
 
   	// Subtract edges  from the image
 	cv::dilate( detected_edges, detected_edges, element);
+	cv::erode( detected_edges, detected_edges, element);
 	detected_edges.convertTo(detected_edges_16u, CV_16U);
-	cv::bitwise_not(detected_edges, detected_edges);
+	// cv::bitwise_not(detected_edges, detected_edges);
  	image.copyTo(maskedImage, detected_edges);
- 	image = maskedImage;
-	*/
-	
- 	// cv::dilate( image, image, element);
- 	// cv::erode( image, image, element);
+ 	// image = maskedImage;
 
- 	/*
- 	it = image.begin<uint16_t>();
-	end = image.end<uint16_t>();
+ 	// std::cout << cv::countNonZero(maskedImage != image) << std::endl;
 
-	it++;
-
-	while (it != end) {
-		if ((*it) - (*(it - 1)) > 5000) {
-			(*it) = 0;
-		}
-		it++;
-	}
-
-	/*
-		it++;
-	while (it != end) {
-		if ((*it) - (*it2) > 100) {
-			(*it2) = 0;
-		}
-		it++;
-		it2++;
-	}
-	*/
- 	// cv::dilate( image, image, element);
+	cv::imshow("Edges", detected_edges);
+ 	// cv::waitKey(0);
+ 	*/
 }
 
 void toEulerianAngle(Quaternion q, float& x, float& y, float& z)

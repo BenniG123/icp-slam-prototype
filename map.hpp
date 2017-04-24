@@ -6,11 +6,12 @@
 #include "pointcloud.hpp"
 #include "icp.hpp"
 
-#define MAP_HEIGHT 75
+#define MAP_HEIGHT 150
 #define PHYSICAL_HEIGHT 10.0f
-#define DELTA_CONFIDENCE 90
+#define DELTA_CONFIDENCE 45
 #define MIN_CONFIDENCE 100
 #define MAX_CONFIDENCE 180
+#define MAX_POINT_DISTANCE 0.15f
 #define CELL_PHYSICAL_HEIGHT PHYSICAL_HEIGHT / ((float) MAP_HEIGHT)
 
 namespace map {
@@ -22,11 +23,12 @@ namespace map {
 			unsigned char world[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT];
 
 			Map();
-			void update(icp::PointCloud data, int delta_confidencec);
+			void update(icp::PointCloud data, int delta_confidence, cv::viz::Viz3d& depthWindow);
 			void update(associations_t associations, int delta_confidencec);
-			void rayTrace(cv::Point3f point, cv::Point3f position);
+			void rayTrace(cv::Point3i point, cv::Point3i origin, cv::viz::Viz3d& depthWindow);
 			void drawCertaintyMap(cv::viz::Viz3d& depthWindow);
 			cv::Point3i getVoxelCoordinates(cv::Point3f);
+			bool isOccupied(cv::Point3f);
 	};
 }
 

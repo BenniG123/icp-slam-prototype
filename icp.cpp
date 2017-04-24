@@ -37,6 +37,8 @@ namespace icp {
 		PointCloud dataCloud(data, color);
 		PointCloud previousCloud(previous, color);
 
+		// cv::Mat m = makeRotationMatrix(20, 0, 0);
+		// dataCloud.rotate(m);
 		dataCloud.rotate(cameraRotation);
 		dataCloud.translate(cameraPosition);
 
@@ -47,7 +49,7 @@ namespace icp {
 			lastRotation = makeRotationMatrix(0,0,0);
 
 			// Starting Position
-			cameraPosition = cv::Point3f(3,3,3);
+			cameraPosition = cv::Point3f(5,5,5);
 			lastTranslation = cv::Point3f(0,0,0);
 
 			// Init certainty grid
@@ -57,7 +59,7 @@ namespace icp {
 
 			// map.mapCloud.translate(cameraPosition);
 
-			map.update(previousCloud, MAX_CONFIDENCE);
+			map.update(previousCloud, MAX_CONFIDENCE, depthWindow);
 		}
 
 		logDeltaTime(LOG_GEN_POINT_CLOUD);
@@ -86,9 +88,10 @@ namespace icp {
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
+			// std::cout << i << std::endl;
 
-			// showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
-			// showPointCloud(map.mapCloud, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
+			// dataCloud.display(depthWindow, "Data", 3);
+			// map.mapCloud.display(depthWindow, "Previous", 3);
 			// showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
 			// showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
@@ -178,8 +181,10 @@ namespace icp {
 		rigidTransformation.at<float>(1,3) = offset.y;
 		rigidTransformation.at<float>(2,3) = offset.z;
 
-		map.update(dataCloud, DELTA_CONFIDENCE);
+		// map.update(dataCloud, DELTA_CONFIDENCE, depthWindow);
+		map.update(associations, DELTA_CONFIDENCE);
 
+		showAssocations(associations, errors, depthWindow);
 		dataCloud.display(depthWindow, "Data", 3);
 		map.mapCloud.display(depthWindow, "Previous", 3);
 		// map.drawCertaintyMap(depthWindow);
@@ -192,6 +197,28 @@ namespace icp {
 		return rigidTransformation;
 	}
 
+	// Only add points if they are greater than 1.5f away from each other
+	void showAssocations(associations_t associations, std::vector<float> errors, cv::viz::Viz3d& depthWindow) {
+		associations_t::iterator it1, end1;
+		it1 = associations.begin();
+		end1 = associations.end();
+
+		int i = 0;
+
+		while (it1 != end1) {
+
+			if (errors[i] > MIN_ASSOCIATION_DRAW_DISTANCE) {
+				cv::viz::WLine line((*it1).first.point, (*it1).second.point, cv::viz::Color().red());
+				depthWindow.showWidget( "Association" + std::to_string(it1 - end1) , line);
+			}
+
+			i++;
+			it1++;
+		}
+	}
+
+
+	// Don't factor in associations which are actually new points
 	cv::Point3f calculateOffset(associations_t associations) {
 		associations_t::iterator it1, end1;
 		cv::Point3f offset(0,0,0);
@@ -207,7 +234,8 @@ namespace icp {
 			cv::Point3f b = (*it1).second.point;
 
 			// Only factor in translation to points that are close enough
-			if (distance(a, b) < .3) { // } && a.z < 3) {
+			// distance(a, cameraPosition) < MAX_TRANSLATION_DISTANCE 
+			if (map.isOccupied(a) && distance(a, b) < MAX_TRANSLATION_NN_DISTANCE) { // } && a.z < 3) {
 				offset += a - b;
 				offset_count++;
 			}
@@ -232,6 +260,7 @@ namespace icp {
 
 		while (it != end) {
 			color_point_t nearestNeighbor;
+			// std::cout << *it << std::endl;
 			float distance = getNearestMappedPoint(*it, nearestNeighbor);
 			if (distance < MAX_NN_COLOR_DISTANCE) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
@@ -253,7 +282,9 @@ namespace icp {
 
 		// Arbitrarily Large Number
 		float shortestDistance = MAX_NN_COLOR_DISTANCE;
-		int maxRadius = int(float(MAX_NN_COLOR_DISTANCE) / float(CELL_PHYSICAL_HEIGHT));
+
+		// TODO - Change this metric for color-weighted distance
+		int maxRadius = int(float(MAX_NN_POINT_DISTANCE) / float(CELL_PHYSICAL_HEIGHT));
 
 		// Edge case - center voxel is already occupied
 		processVoxel(c_point, c_nearest, shortestDistance, voxelPoint.x, voxelPoint.y, voxelPoint.z);
@@ -265,8 +296,8 @@ namespace icp {
 		// Expanding Voxel Cube Search
 		// While we don't have a matching point which satisifies the distance
 		// criteria, search all voxels exactly N blocks away from the center
-		while(shortestDistance >= MAX_NN_COLOR_DISTANCE && radius < maxRadius) {
-			
+		while(shortestDistance >= MIN_NN_COLOR_DISTANCE && radius < maxRadius) {
+
 			// Check leftmost and rightmost planes
 			for (y = voxelPoint.y - radius; y < voxelPoint.y + radius; y++) {
 				for (z = voxelPoint.z - radius; z < voxelPoint.z + radius; z++) {
@@ -343,7 +374,7 @@ namespace icp {
 		if (map.pointLookupTable[x][y][z] != map.empty) {
 			color_point_t p = map.pointLookupTable[x][y][z];
 			float d = distance(c_point, p);
-			std::cout << d << std::endl;
+			// std::cout << d << std::endl;
 			if (d < shortestDistance) {
 				shortestDistance = d;
 				c_nearest = p;
@@ -376,7 +407,7 @@ namespace icp {
 	}
 
 	// Bottlenecking function - Hardware acceleration candidate
-	float getNearestPoint(color_point_t point, color_point_t nearest, PointCloud& cloud) {
+	float getNearestPoint(color_point_t point, color_point_t& nearest, PointCloud& cloud) {
 		// Iterate through image
 		point_list_t::iterator it, end; //, near;
 		it = cloud.points.begin();
@@ -415,6 +446,7 @@ namespace icp {
 	}
 
 	// Factor color into distance calc.  Every SQRT Op is a huge hit in performance
+	// TODO - Weight color and distance
 	float distance(color_point_t a, color_point_t b) {
 		float x = a.point.x - b.point.x;
 		float y = a.point.y - b.point.y;
@@ -428,7 +460,7 @@ namespace icp {
 
 		float rgb = pow(red, 2) + pow(blue, 2) + pow(green, 2);
 
-		return xyz + rgb;
+		return sqrt(xyz * DISTANCE_WEIGHT + rgb  * COLOR_WEIGHT);
 	}
 
 	float meanSquareError(std::vector<float> errors) {

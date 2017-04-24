@@ -1,6 +1,8 @@
 #ifndef POINTCLOUD_HPP
 #define POINTCLOUD_HPP
 
+#include <iostream>
+
 // Preregistered data values
 #define FX 468.60f
 #define FY 468.61f
@@ -11,17 +13,11 @@ struct color_point_t {
 	cv::Point3f point;
 	cv::Vec3b color;
 
-	inline bool operator==(const color_point_t  &c) const {return point == c.point && color == c.color;}
-	inline bool operator!=(const color_point_t  &c) const {return point != c.point || color != c.color;}
-
-	// bool operator==(const color_point_t &) const;
-	// bool color_point_t::operator== (const color_point_t  &c) const {return point == c.point && color == c.color;}
-	// bool color_point_t::operator!=(const color_point_t  &c) const {return point != c.point || color != c.color;}
-	// bool operator!=(const color_point_t &) const;
+	inline bool operator == (const color_point_t &c) const {return point == c.point && color == c.color;}
+	inline bool operator != (const color_point_t &c) const {return point != c.point || color != c.color;}
 };
 
-// inline bool color_point_t::operator==(const color_point_t  &c) const {return point == c.point && color == c.color;}
-// inline bool color_point_t::operator!=(const color_point_t  &c) const {return point != c.point || color != c.color;}
+inline std::ostream& operator << (std::ostream& os, color_point_t  &c) {return os << c.point << ',' << c.color;}
 
 typedef std::vector<color_point_t> point_list_t;
 

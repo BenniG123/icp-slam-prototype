@@ -83,19 +83,57 @@ namespace map {
 
 		return p;
 	}
+	// Update Map with new scan
+	void Map::update(associations_t associations, int delta_confidence) {
+		associations_t::iterator it, begin, end;
+		begin, it = associations.begin();
+		end = associations.end();
+
+		std::cout << "Associations: " << associations.size() << std::endl;
+
+		float c = float(CELL_PHYSICAL_HEIGHT);
+		// cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(3,3,3));
+
+		while (it != end) {
+			color_point_t c_point = (*it).first;
+			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
+			// rayTrace(voxelPoint, cameraVoxelPoint);
+
+			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
+
+			// Update certainty
+			if (*certainty > (255 - delta_confidence)) {
+				*certainty = 255;
+				// Populate lookup table if we are certain about this point
+				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+					pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = (*it).first;
+					mapCloud.points.push_back((*it).first);
+				}
+			} else {
+				*certainty += delta_confidence;
+			}
+
+			// std::cout << (*it).first << std::endl;
+
+
+
+			it++;
+		}
+	}
 
 	// Update Map with new scan
-	void Map::update(icp::PointCloud data, int delta_confidence) {
+	void Map::update(icp::PointCloud data, int delta_confidence, cv::viz::Viz3d& depthWindow) {
 		point_list_t::iterator it, end;
 		it = data.points.begin();
 		end = data.points.end();
 
 		float c = float(CELL_PHYSICAL_HEIGHT);
+		// cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(3,3,3));
 
 		while (it != end) {
-			// rayTrace(*it, position);
 			color_point_t c_point = *it;
 			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
+			// rayTrace(voxelPoint, cameraVoxelPoint, depthWindow);
 
 			// Check for out of bounds
 			/* if (x < 0 || x >= MAP_HEIGHT) {
@@ -124,38 +162,39 @@ namespace map {
 				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
 				mapCloud.points.push_back(*it);
 			}
+			/* else if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] != empty) {
+				// mapCloud.points.erase();
+				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
+				// mapCloud.points.push_back(*it);
+			}
+			*/
 
 			it++;
 		}
 	}
 
 	// Algorithm from "A Fast Voxel Traversal Algorithm for Ray Tracing"
-	void Map::rayTrace(cv::Point3f point, cv::Point3f origin) {
+	void Map::rayTrace(cv::Point3i point, cv::Point3i origin, cv::viz::Viz3d& depthWindow) {
 		// Point Voxel Coordinates
 		int x, y, z;
 
-		x = point.x / CELL_PHYSICAL_HEIGHT;
-		y = point.y / CELL_PHYSICAL_HEIGHT;
-		z = point.z / CELL_PHYSICAL_HEIGHT;
-
-		world[x][y][z] += DELTA_CONFIDENCE;
-		if (world[x][y][z] > 255) {
-			world[x][y][z] = 255;
-		}
+		x = point.x;
+		y = point.y;
+		z = point.z;
 
 		// Origin Voxel Coordinates
 		int ox, oy, oz;
 
-		ox = origin.x / CELL_PHYSICAL_HEIGHT;
-		oy = origin.y / CELL_PHYSICAL_HEIGHT;
-		oz = origin.z / CELL_PHYSICAL_HEIGHT;
+		ox = origin.x;
+		oy = origin.y;
+		oz = origin.z;
 
 		// Slope of voxel travel
 		float mx, my, mz;
 
-		mx = origin.x - point.x;
-		my = origin.y - point.y;
-		mz = origin.z - point.z;
+		mx = (float) ox - x;
+		my = (float) oy - y;
+		mz = (float) oz - z;
 
 		// Normalize slope
 		float magnitude = sqrt(pow(mx, 2) + pow(my, 2) + pow(mz, 2));
@@ -261,7 +300,19 @@ namespace map {
 				}
 			}
 
+			cv::viz::WCube cubeWidget(cv::Vec3d(x, y, z), cv::Vec3d(x+1, y+1, z+1), 
+				true, cv::viz::Color(cv::Scalar(255, 127, world[x][y][z])));
+
+			depthWindow.showWidget( "rayTrace"  + std::to_string(x + y * MAP_HEIGHT + z * MAP_HEIGHT * MAP_HEIGHT), cubeWidget);
+
 		} while (x != ox && y != oy && z != oz);
 
+		depthWindow.spinOnce(100);
 	}
+
+	bool Map::isOccupied(cv::Point3f p) {
+		cv::Point3i v = getVoxelCoordinates(p);
+		return world[v.x][v.y][v.z] >= MAX_CONFIDENCE;
+	}
+
 }
