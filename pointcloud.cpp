@@ -23,7 +23,7 @@ namespace icp {
 				}
 
 				// Random Subsample
-				if (rand() % 60) {
+				if (rand() % SUBSAMPLE_FACTOR) {
 				 	continue;
 				}
 

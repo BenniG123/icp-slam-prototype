@@ -29,6 +29,7 @@ namespace map {
 			void drawCertaintyMap(cv::viz::Viz3d& depthWindow);
 			cv::Point3i getVoxelCoordinates(cv::Point3f);
 			bool isOccupied(cv::Point3f);
+			int bound(int t, int ds);
 	};
 }
 
