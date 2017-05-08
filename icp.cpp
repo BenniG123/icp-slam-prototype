@@ -187,7 +187,7 @@ namespace icp {
 		// map.update(dataCloud, DELTA_CONFIDENCE, depthWindow);
 		map.update(associations, DELTA_CONFIDENCE);
 
-		showAssocations(associations, errors, depthWindow);
+		// showAssocations(associations, errors, depthWindow);
 		dataCloud.display(depthWindow, "Data", 3);
 		map.mapCloud.display(depthWindow, "Map", 3);
 		// map.drawCertaintyMap(depthWindow);
