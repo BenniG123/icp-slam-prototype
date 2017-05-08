@@ -17,8 +17,8 @@ namespace map {
 	Map::Map() {
 		mapCloud = icp::PointCloud();
 		
-		empty.point = cv::Point3f(-100,-100,-100);
-		empty.color = cv::Vec3b();
+		// empty.point = cv::Point3f(-100,-100,-100);
+		// empty.color = cv::Vec3b();
 
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
@@ -158,7 +158,7 @@ namespace map {
 			}
 
 			// Populate lookup table if we are certain about this point
-			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty && *certainty > MAX_CONFIDENCE) {
+			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty && *certainty >= MAX_CONFIDENCE) { // pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty &&
 				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
 				mapCloud.points.push_back(*it);
 			}

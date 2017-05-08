@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <vector>
 #include <iterator>
-#include <boost/circular_buffer.hpp>
+// #include <boost/circular_buffer.hpp>
 #include <ctime>
 #include <ratio>
 #include <chrono>
@@ -55,6 +55,8 @@ logEntry myLog[10];
 int main( int argc, const char** argv )
 {
 	std::string path;
+
+	// std::cout << "Test" << std::endl;
 
 	// Abbreviation for program options
 	/* namespace po = boost::program_options;
@@ -127,10 +129,10 @@ int main( int argc, const char** argv )
 	cv::Vec3f initialPosition;
 
 	// Depth Camera Calibration Matrix
-	float data[3][3] = {{363.58,0,250.32}, {0,363.53,212.55}, {0,0,1}}; 
+	float data[3][3] = {{363.58f,0.0f,250.32f}, {0.0f,363.53f,212.55f}, {0.0f,0.0f,1.0f}}; 
 
 	// Color Camera Calibration Matrix
-	float color_data[3][3] = {{1054.35,0,956.12}, {0,1054.51,548.99}, {0,0,1}}; 
+	float color_data[3][3] = {{1054.35f,0.0f,956.12f}, {0.0f,1054.51f,548.99f}, {0.0f,0.0f,1.0f}}; 
 	// Correct depth frame
 	cv::Mat cameraMatrix(3, 3, CV_32FC1, &data);
 	cv::Mat colorCameraMatrix(3, 3, CV_32FC1, &color_data);
@@ -138,7 +140,7 @@ int main( int argc, const char** argv )
 	cv::Mat translationPlot(500, 500, CV_8UC(3));
 	cv::Mat rotation = icp::makeRotationMatrix(0,0,0);
 
-	boost::circular_buffer<cv::Mat> transformationBuffer{33};
+	// boost::circular_buffer<cv::Mat> transformationBuffer{33};
 
 	std::string line;
 	std::string depth_list_file_name(path);
@@ -262,7 +264,7 @@ int main( int argc, const char** argv )
 				// }
 
 				if (previous.size().area() > 0) {
-					cv::Mat transformation = icp::getTransformation(filtered, previous, rgbImage, rotation, 16, 0.0001, depthWindow);
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rgbImage, rotation, 16, 0.0001f, depthWindow);
 					// cv::Mat transformation(4,4,CV_32FC1);
 					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
@@ -285,7 +287,7 @@ int main( int argc, const char** argv )
 					showText(depthWindow, "ICP", cv::Point(10,80), "ICP Text");
 					showTransfom(depthWindow, rotation, cv::Point(10,60), "ICP");
 
-					depthWindow.spinOnce(33, true);
+					// depthWindow.spinOnce(0, true);
 
 					logDeltaTime(LOG_RETRIEVE_TRANSFORM);
 
@@ -326,8 +328,7 @@ int main( int argc, const char** argv )
 			    // cv::imshow( "Color Filtered", colorFiltered );
 			    // cv::imshow( "Translation", translationPlot );
 
-
-			    // depthWindow.spinOnce(33, true);
+			    // depthWindow.spinOnce(1, true);
 
 		    	if (paused) {
 					cv::waitKey(0);
@@ -406,8 +407,8 @@ void getNormalMap(cv::Mat& image, cv::Mat& normals) {
 	    for(int y = 1; y < image32FC1.cols; y++)
 	    {
 
-	        float dzdx = (image32FC1.at<float>(x+1, y) - image32FC1.at<float>(x-1, y)) / 2.0;
-	        float dzdy = (image32FC1.at<float>(x, y+1) - image32FC1.at<float>(x, y-1)) / 2.0;
+	        float dzdx = (image32FC1.at<float>(x+1, y) - image32FC1.at<float>(x-1, y)) / 2.0f;
+	        float dzdy = (image32FC1.at<float>(x, y+1) - image32FC1.at<float>(x, y-1)) / 2.0f;
 
 	        cv::Vec3f d(-dzdx, -dzdy, 1.0f);
 	        cv::Vec3f n = cv::normalize(d);
@@ -596,24 +597,24 @@ void toEulerianAngle(Quaternion q, float& x, float& y, float& z)
 	float ysqr = q.y * q.y;
 
 	// roll (x-axis rotation)
-	float t0 = 2.0 * (q.w * q.x + q.y * q.z);
-	float t1 = 1.0 - 2.0 * (q.x * q.x + ysqr);
+	float t0 = 2.0f * (q.w * q.x + q.y * q.z);
+	float t1 = 1.0f - 2.0f * (q.x * q.x + ysqr);
 	x = (float) std::atan2(t0, t1);
 
 	// pitch (y-axis rotation)
-	float t2 = +2.0 * (q.w * q.y - q.z * q.x);
-	t2 = t2 > 1.0 ? 1.0 : t2;
-	t2 = t2 < -1.0 ? -1.0 : t2;
+	float t2 = +2.0f * (q.w * q.y - q.z * q.x);
+	t2 = t2 > 1.0f ? 1.0f : t2;
+	t2 = t2 < -1.0f ? -1.0f : t2;
 	y = (float) std::asin(t2);
 
 	// yaw (z-axis rotation)
-	float t3 = +2.0 * (q.w * q.z + q.x * q.y);
-	float t4 = +1.0 - 2.0 * (ysqr + q.z * q.z);  
+	float t3 = +2.0f * (q.w * q.z + q.x * q.y);
+	float t4 = +1.0f - 2.0f * (ysqr + q.z * q.z);  
 	z = (float) std::atan2(t3, t4);
 
-	x = x * 180 / PI;
-	y = y * 180 / PI;
-	z = z * 180 / PI;
+	x = x * 180.0f / PI;
+	y = y * 180.0f / PI;
+	z = z * 180.0f / PI;
 }
 
 void transformationMatToEulerianAngle(cv::Mat t, float& x, float& y, float& z) {
@@ -659,7 +660,7 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 				std::vector<int>::iterator min_element = std::min_element(curvature_list.begin(), curvature_list.end());
 
 				if (*min_element < c) {
-					int index = std::distance(curvature_list.begin(), min_element);
+					int index = (int) std::distance(curvature_list.begin(), min_element);
 					roi_list.erase(roi_list.begin() + index);
 					curvature_list.erase(curvature_list.begin() + index);
 
@@ -690,7 +691,7 @@ int curvature(cv::Mat roi) {
 
 
 	// Step 2 - Estimate Curvature
-	return cv::sum(roi)[0];
+	return (int) cv::sum(roi)[0];
 
 
 	/* int minDistance = roi.at<cv::Vec3b>(0, 0)[0];

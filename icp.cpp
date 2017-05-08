@@ -13,7 +13,7 @@ namespace icp {
 		Start from initial guess
 		while not within threshold:
 			For each point on M, find closest point on P
-			Find best transform for this 
+			Find best transform for this
 			correspondance
 			Transform M
 	*/
@@ -39,18 +39,16 @@ namespace icp {
 
 		// cv::Mat m = makeRotationMatrix(20, 0, 0);
 		// dataCloud.rotate(m);
-		dataCloud.rotate(cameraRotation);
-		dataCloud.translate(cameraPosition);
 
 		// Initialize map and variables
 		if (map.mapCloud.points.size() == 0) {
 			// Starting Rotation
-			cameraRotation = makeRotationMatrix(0,0,0);
-			lastRotation = makeRotationMatrix(0,0,0);
+			cameraRotation = makeRotationMatrix(0, 0, 0);
+			lastRotation = makeRotationMatrix(0, 0, 0);
 
 			// Starting Position
-			cameraPosition = cv::Point3f(5,5,5);
-			lastTranslation = cv::Point3f(0,0,0);
+			cameraPosition = cv::Point3f(5, 5, 5);
+			lastTranslation = cv::Point3f(0, 0, 0);
 
 			// Init certainty grid
 			// map = map::Map();
@@ -61,6 +59,11 @@ namespace icp {
 
 			map.update(previousCloud, MAX_CONFIDENCE, depthWindow);
 		}
+		// else {
+		dataCloud.rotate(cameraRotation);
+		dataCloud.translate(cameraPosition);
+		// }
+
 
 		logDeltaTime(LOG_GEN_POINT_CLOUD);
 
@@ -83,7 +86,7 @@ namespace icp {
 
 		// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 		findMappedNearestNeighborAssociations(dataCloud, errors, associations);
-		
+
 		int i = 0;
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
@@ -95,9 +98,9 @@ namespace icp {
 			// showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
 			// showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
-			// depthWindow.spinOnce(1, true);
+			// depthWindow.spinOnce(0, true);
 
-			logDeltaTime( LOG_UI );
+			logDeltaTime(LOG_UI);
 
 			tempDataCloud.points.clear();
 			tempMapCloud.points.clear();
@@ -123,7 +126,7 @@ namespace icp {
 				previousMat = previousMat(cv::Rect(0, 0, dataMat.cols, dataMat.rows));
 			}
 
-			logDeltaTime( LOG_RECONSTRUCT_POINT_CLOUDS );
+			logDeltaTime(LOG_RECONSTRUCT_POINT_CLOUDS);
 
 			cv::Mat M = previousMat.t() * dataMat;
 
@@ -131,15 +134,15 @@ namespace icp {
 			cv::SVD svd(M);
 
 			// Rotational Matrix
-			cv::Mat R =  svd.vt.t() * svd.u.t();
+			cv::Mat R = svd.vt.t() * svd.u.t();
 
 			if (cv::determinant(R) < 0) {
 				// std::cout << "Reflection Detected" << std::endl;
 				R.col(2) *= -1;
 			}
 
-			logDeltaTime( LOG_SVD );
-			
+			logDeltaTime(LOG_SVD);
+
 			if (i == 0) {
 				R.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 			}
@@ -162,7 +165,7 @@ namespace icp {
 			// lastTranslation = -offset;
 			// lastRotation = -offset;
 
-			logDeltaTime( LOG_ROTATE );
+			logDeltaTime(LOG_ROTATE);
 
 			// Find nearest neighber associations
 			// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
@@ -177,23 +180,23 @@ namespace icp {
 		// Log MSE
 		std::cout << meanSquareError(errors);
 
-		rigidTransformation.at<float>(0,3) = offset.x;
-		rigidTransformation.at<float>(1,3) = offset.y;
-		rigidTransformation.at<float>(2,3) = offset.z;
+		rigidTransformation.at<float>(0, 3) = offset.x;
+		rigidTransformation.at<float>(1, 3) = offset.y;
+		rigidTransformation.at<float>(2, 3) = offset.z;
 
 		// map.update(dataCloud, DELTA_CONFIDENCE, depthWindow);
 		map.update(associations, DELTA_CONFIDENCE);
 
 		showAssocations(associations, errors, depthWindow);
 		dataCloud.display(depthWindow, "Data", 3);
-		map.mapCloud.display(depthWindow, "Previous", 3);
+		map.mapCloud.display(depthWindow, "Map", 3);
 		// map.drawCertaintyMap(depthWindow);
 
 		std::cout << std::endl << map.mapCloud.points.size() << std::endl;
 
 		// Update Certainties and display
 		depthWindow.spinOnce(1, true);
-		
+
 		return rigidTransformation;
 	}
 
@@ -209,7 +212,7 @@ namespace icp {
 
 			if (errors[i] > MIN_ASSOCIATION_DRAW_DISTANCE) {
 				cv::viz::WLine line((*it1).first.point, (*it1).second.point, cv::viz::Color().red());
-				depthWindow.showWidget( "Association" + std::to_string(it1 - end1) , line);
+				depthWindow.showWidget("Association" + std::to_string(it1 - end1), line);
 			}
 
 			i++;
@@ -221,7 +224,7 @@ namespace icp {
 	// Don't factor in associations which are actually new points
 	cv::Point3f calculateOffset(associations_t associations) {
 		associations_t::iterator it1, end1;
-		cv::Point3f offset(0,0,0);
+		cv::Point3f offset(0, 0, 0);
 
 		it1 = associations.begin();
 		end1 = associations.end();
@@ -270,7 +273,7 @@ namespace icp {
 			it++;
 		}
 
-		logDeltaTime(LOG_NEAREST_NEIGHBOR, associations.size());
+		logDeltaTime(LOG_NEAREST_NEIGHBOR, (int)associations.size());
 
 	}
 
@@ -296,7 +299,7 @@ namespace icp {
 		// Expanding Voxel Cube Search
 		// While we don't have a matching point which satisifies the distance
 		// criteria, search all voxels exactly N blocks away from the center
-		while(shortestDistance >= MIN_NN_COLOR_DISTANCE && radius < maxRadius) {
+		while (shortestDistance >= MIN_NN_COLOR_DISTANCE && radius < maxRadius) {
 
 			// Check leftmost and rightmost planes
 			for (y = voxelPoint.y - radius; y < voxelPoint.y + radius; y++) {
@@ -304,11 +307,14 @@ namespace icp {
 					// Check for out of bounds
 					if (voxelPoint.x - radius < 0 || voxelPoint.x - radius >= MAP_HEIGHT) {
 						continue;
-					} else if (voxelPoint.x + radius < 0 || voxelPoint.x + radius >= MAP_HEIGHT) {
+					}
+					else if (voxelPoint.x + radius < 0 || voxelPoint.x + radius >= MAP_HEIGHT) {
 						continue;
-					} else if (y < 0 || y >= MAP_HEIGHT) {
+					}
+					else if (y < 0 || y >= MAP_HEIGHT) {
 						continue;
-					} else if (y < 0 || y >= MAP_HEIGHT) {
+					}
+					else if (y < 0 || y >= MAP_HEIGHT) {
 						continue;
 					}
 
@@ -325,11 +331,14 @@ namespace icp {
 				for (z = voxelPoint.z - radius; z < voxelPoint.z + radius; z++) {
 					if (x < 0 || x >= MAP_HEIGHT) {
 						continue;
-					} else if (z < 0 || z >= MAP_HEIGHT) {
+					}
+					else if (z < 0 || z >= MAP_HEIGHT) {
 						continue;
-					} else if (voxelPoint.y - radius < 0 || voxelPoint.y - radius >= MAP_HEIGHT) {
+					}
+					else if (voxelPoint.y - radius < 0 || voxelPoint.y - radius >= MAP_HEIGHT) {
 						continue;
-					} else if (voxelPoint.y + radius < 0 || voxelPoint.y + radius >= MAP_HEIGHT) {
+					}
+					else if (voxelPoint.y + radius < 0 || voxelPoint.y + radius >= MAP_HEIGHT) {
 						continue;
 					}
 					// Check top line
@@ -345,11 +354,14 @@ namespace icp {
 				for (y = voxelPoint.y - radius + 1; y < voxelPoint.y + radius - 1; y++) {
 					if (x < 0 || x >= MAP_HEIGHT) {
 						continue;
-					} else if (y < 0 || y >= MAP_HEIGHT) {
+					}
+					else if (y < 0 || y >= MAP_HEIGHT) {
 						continue;
-					} else if (voxelPoint.z - radius < 0 || voxelPoint.z - radius >= MAP_HEIGHT) {
+					}
+					else if (voxelPoint.z - radius < 0 || voxelPoint.z - radius >= MAP_HEIGHT) {
 						continue;
-					} else if (voxelPoint.z + radius < 0 || voxelPoint.z + radius >= MAP_HEIGHT) {
+					}
+					else if (voxelPoint.z + radius < 0 || voxelPoint.z + radius >= MAP_HEIGHT) {
 						continue;
 					}
 
@@ -371,7 +383,7 @@ namespace icp {
 
 	// Helper function for findNearestMappedPoint
 	void processVoxel(color_point_t c_point, color_point_t& c_nearest, float& shortestDistance, int x, int y, int z) {
-		if (map.pointLookupTable[x][y][z] != map.empty) {
+		if (map.pointLookupTable[x][y][z].color[0] != -1) {
 			color_point_t p = map.pointLookupTable[x][y][z];
 			float d = distance(c_point, p);
 			// std::cout << d << std::endl;
@@ -402,7 +414,7 @@ namespace icp {
 			it++;
 		}
 
-		logDeltaTime( LOG_NEAREST_NEIGHBOR, associations.size());
+		logDeltaTime(LOG_NEAREST_NEIGHBOR, associations.size());
 
 	}
 
@@ -466,14 +478,14 @@ namespace icp {
 	float meanSquareError(std::vector<float> errors) {
 		// Return the MSE between source and data
 		float error_sum = 0;
-		for(int i = 0; i < errors.size(); i++){
+		for (int i = 0; i < errors.size(); i++) {
 			error_sum += errors[i];
-   		}
+		}
 
-   		error_sum /= errors.size();
-   		error_sum = pow(error_sum, 2);
+		error_sum /= errors.size();
+		error_sum = pow(error_sum, 2);
 
-   		// std::cout << "MSE: " << error_sum << std::endl;
+		// std::cout << "MSE: " << error_sum << std::endl;
 
 		logDeltaTime(LOG_MSE, errors.size());
 
@@ -485,9 +497,9 @@ namespace icp {
 		double rotY = y * PI / 180;
 		double rotZ = z * PI / 180;
 
-		float d[3][3] = {{1, 0, 0}, {0, (float) cos(rotX), (float) sin(rotX)}, {0, (float) -sin(rotX),(float) cos(rotX)}};
-		float f[3][3] = {{(float) cos(rotY), 0, (float) -sin(rotY)}, {0, 1, 0}, {(float) sin(rotY), 0,(float) cos(rotY)}};
-		float g[3][3] = {{(float) cos(rotZ), (float) sin(rotZ), 0}, {(float) -sin(rotZ), (float) cos(rotZ), 0}, {0, 0, 1}};
+		float d[3][3] = { {1, 0, 0}, {0, (float)cos(rotX), (float)sin(rotX)}, {0, (float)-sin(rotX),(float)cos(rotX)} };
+		float f[3][3] = { {(float)cos(rotY), 0, (float)-sin(rotY)}, {0, 1, 0}, {(float)sin(rotY), 0,(float)cos(rotY)} };
+		float g[3][3] = { {(float)cos(rotZ), (float)sin(rotZ), 0}, {(float)-sin(rotZ), (float)cos(rotZ), 0}, {0, 0, 1} };
 		cv::Mat a(3, 3, CV_32FC1, &d);
 		cv::Mat b(3, 3, CV_32FC1, &f);
 		cv::Mat c(3, 3, CV_32FC1, &g);

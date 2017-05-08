@@ -2,11 +2,11 @@
 #define ICP_HPP
 
 #define SUBSAMPLE_FACTOR 12
-#define PI 3.14159265358979
+#define PI 3.14159265358979f
 #define MAX_NN_POINT_DISTANCE 1.5f
-#define COLOR_WEIGHT 0.05f
+#define COLOR_WEIGHT 0.0f
 #define DISTANCE_WEIGHT 1.0f - COLOR_WEIGHT
-#define MAX_NN_COLOR_DISTANCE 1.5f
+#define MAX_NN_COLOR_DISTANCE 0.75f
 #define MIN_NN_COLOR_DISTANCE 0.2f
 #define MIN_ASSOCIATION_DRAW_DISTANCE 0.3f
 // The longest point association distance that can be factored into translation

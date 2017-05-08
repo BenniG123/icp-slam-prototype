@@ -23,7 +23,7 @@ namespace icp {
 				}
 
 				// Random Subsample
-				if (rand() % 60) {
+				if (rand() % 100) {
 				 	continue;
 				}
 
@@ -32,7 +32,7 @@ namespace icp {
 				// P3D.x = (x_d - cx_d (250.32)) * depth(x_d,y_d) / fx_d (363.58)
 				// P3D.y = (y_d - cy_d (212.55)) * depth(x_d,y_d) / fy_d (363.53)
 				// P3D.z = depth(x_d,y_d)
-				float p_z = ((float) data.at<uint16_t>(y,x)) / 5000;
+				float p_z = ((float) data.at<uint16_t>(y,x)) / 5000.0f;
 				float p_x = (x - CX) * p_z / FX;
 				float p_y = (y - CX) * p_z / FX;
 		      	cv::Point3f p(p_x, p_y, p_z);

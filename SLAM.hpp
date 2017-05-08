@@ -26,8 +26,6 @@ struct logEntry {
 
 void errorMessage();
 
-void initLog();
-
 void logDeltaTime(int logKey, int quantity = 0);
 
 std::string getNextImageFileName(std::ifstream& list_file, std::string path, double& timestamp);
