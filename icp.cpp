@@ -37,6 +37,8 @@ namespace icp {
 		PointCloud dataCloud(data, color, keypoints);
 		PointCloud previousCloud(previous, color, keypoints);
 
+		// depthWindow.removeAllWidgets();
+
 		// cv::Mat m = makeRotationMatrix(20, 0, 0);
 		// dataCloud.rotate(m);
 
@@ -93,12 +95,13 @@ namespace icp {
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 			// std::cout << i << std::endl;
 
-			// dataCloud.display(depthWindow, "Data", 3);
+			dataCloud.displayKeyPoints(depthWindow, "Data", 3, cv::viz::Color::red());
+			map.mapCloud.displayKeyPoints(depthWindow, "Map", 3, cv::viz::Color::green());
 			// map.mapCloud.display(depthWindow, "Previous", 3);
 			// showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
 			// showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
 
-			// depthWindow.spinOnce(0, true);
+			depthWindow.spinOnce(0, true);
 
 			logDeltaTime(LOG_UI);
 
@@ -186,10 +189,12 @@ namespace icp {
 		rigidTransformation.at<float>(2, 3) = offset.z;
 
 		// map.update(dataCloud, DELTA_CONFIDENCE, depthWindow);
-		map.update(associations, DELTA_CONFIDENCE);
+		map.update(associations, errors, dataCloud, DELTA_CONFIDENCE);
 
 		showAssocations(associations, errors, depthWindow);
-		dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
+		// dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
+		dataCloud.displayKeyPoints(depthWindow, "Data", 3, cv::viz::Color::red());
+		map.mapCloud.displayKeyPoints(depthWindow, "Map", 3, cv::viz::Color::green());
 		// map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::red());
 		// map.drawCertaintyMap(depthWindow);
 
@@ -203,7 +208,12 @@ namespace icp {
 
 	// Only add points if they are greater than 1.5f away from each other
 	void showAssocations(associations_t associations, std::vector<float> errors, cv::viz::Viz3d& depthWindow) {
+
+		if (associations.size() == 0)
+			return;
+
 		associations_t::iterator it1, end1;
+
 		it1 = associations.begin();
 		end1 = associations.end();
 

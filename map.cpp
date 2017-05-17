@@ -83,13 +83,12 @@ namespace map {
 
 		return p;
 	}
+
 	// Update Map with new scan
 	void Map::update(associations_t associations, int delta_confidence) {
 		associations_t::iterator it, begin, end;
 		begin, it = associations.begin();
 		end = associations.end();
-
-		std::cout << "Associations: " << associations.size() << std::endl;
 
 		float c = float(CELL_PHYSICAL_HEIGHT);
 		// cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(3,3,3));
@@ -115,10 +114,79 @@ namespace map {
 
 			// std::cout << (*it).first << std::endl;
 
-
-
 			it++;
 		}
+	}
+
+	// Update Map with KeyPoints and Cloud data
+	void Map::update(associations_t keyPointAssociations, std::vector<float> errors, icp::PointCloud& dataCloud, int delta_confidence) {
+
+		if (keyPointAssociations.size() == 0) {
+			mapCloud.keypoints = dataCloud.keypoints;
+			return;
+		}
+
+		float c = float(CELL_PHYSICAL_HEIGHT);
+		// cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(3,3,3));
+
+		for (int i = 0; i < keyPointAssociations.size(); i++) {
+
+			color_point_t c_point = keyPointAssociations[i].first;
+
+			if (errors[i] > MAX_POINT_DISTANCE) {
+				mapCloud.keypoints.push_back(c_point);
+			}
+
+			/* cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
+
+			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
+
+			// Update certainty
+			if (*certainty > (255 - delta_confidence)) {
+				*certainty = 255;
+				// Populate lookup table if we are certain about this point
+				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+					pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = (*it).first;
+					mapCloud.keypoints.push_back((*it).first);
+				}
+			}
+			else {
+				*certainty += delta_confidence;
+			}
+			*/
+		}
+
+		/*
+		associations_t::iterator it, begin, end;
+		begin, it = keyPointAssociations.begin();
+		end = keyPointAssociations.end();
+		*/
+
+
+		/* while (it != end) {
+			color_point_t c_point = (*it).first;
+			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
+			// rayTrace(voxelPoint, cameraVoxelPoint);
+
+			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
+
+			// Update certainty
+			if (*certainty > (255 - delta_confidence)) {
+				*certainty = 255;
+				// Populate lookup table if we are certain about this point
+				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+					pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = (*it).first;
+					mapCloud.points.push_back((*it).first);
+				}
+			}
+			else {
+				*certainty += delta_confidence;
+			}
+
+			// std::cout << (*it).first << std::endl;
+
+		}
+		*/
 	}
 
 	// Find the smallest positive t such that s + t * ds is an integer
