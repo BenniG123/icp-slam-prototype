@@ -314,6 +314,9 @@ namespace icp {
 		}
 
 		// Rotate Keypoints
+		if (keypoints.size() == 0)
+			return;
+
 		M = centered_keypoint_matrix().t();
 		RM = rotationMatrix * M;
 		RMT = RM.t();

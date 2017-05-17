@@ -59,6 +59,7 @@ namespace icp {
 
 			// map.mapCloud.translate(cameraPosition);
 			map.update(previousCloud, MAX_CONFIDENCE, depthWindow);
+			map.mapCloud.keypoints = previousCloud.keypoints;
 		}
 		// else {
 		dataCloud.rotate(cameraRotation);
@@ -95,10 +96,18 @@ namespace icp {
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 			// std::cout << i << std::endl;
 
-			dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
-			map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::green());
+			if (associations.size() == 18) {
+				// dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
+				// map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::green());
 
-			depthWindow.spinOnce(0, true);
+				// depthWindow.spinOnce(0, true);
+
+				// depthWindow.removeAllWidgets();
+				// showAssocations(associations, errors, depthWindow);
+				// depthWindow.spinOnce(0, true);
+
+				// std::cout << "Assocations: " << associations.size() << std::endl;
+			}
 
 			logDeltaTime(LOG_UI);
 
@@ -155,6 +164,7 @@ namespace icp {
 			dataCloud.rotate(R);
 			cameraRotation *= R;
 
+			// TODO - OFFSET IS RETURNING -NAN
 			offset = calculateOffset(associations);
 
 			// Update translation
@@ -246,10 +256,10 @@ namespace icp {
 
 			// Only factor in translation to points that are close enough
 			// distance(a, cameraPosition) < MAX_TRANSLATION_DISTANCE 
-			if (map.isOccupied(a) && distance(a, b) < MAX_TRANSLATION_NN_DISTANCE) { // } && a.z < 3) {
+			// if (map.isOccupied(a) && distance(a, b) < MAX_TRANSLATION_NN_DISTANCE) { // } && a.z < 3) {
 				offset += a - b;
 				offset_count++;
-			}
+			// }
 			it1++;
 		}
 

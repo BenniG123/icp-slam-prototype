@@ -122,7 +122,6 @@ namespace map {
 	void Map::update(associations_t keyPointAssociations, std::vector<float> errors, icp::PointCloud& dataCloud, int delta_confidence) {
 
 		if (keyPointAssociations.size() == 0) {
-			mapCloud.keypoints = dataCloud.keypoints;
 			return;
 		}
 
@@ -133,11 +132,16 @@ namespace map {
 
 			color_point_t c_point = keyPointAssociations[i].first;
 
-			if (errors[i] > MAX_KEYPOINT_ADD_DISTANCE) {
+			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
+
+			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = c_point;
 				mapCloud.keypoints.push_back(c_point);
 			}
 
-			/* cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
+			/*if (errors[i] > MAX_KEYPOINT_ADD_DISTANCE) {
+				mapCloud.keypoints.push_back(c_point);
+			}
 
 			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
 
@@ -154,7 +158,22 @@ namespace map {
 				*certainty += delta_confidence;
 			}
 			*/
+			
 		}
+
+		for (int i = 0; i < dataCloud.keypoints.size(); i++) {
+
+			color_point_t c_point = dataCloud.keypoints[i];
+
+			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
+
+			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = c_point;
+				mapCloud.keypoints.push_back(c_point);
+			}
+
+		}
+
 
 		/*
 		associations_t::iterator it, begin, end;

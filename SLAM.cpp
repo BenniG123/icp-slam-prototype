@@ -119,13 +119,14 @@ int main( int argc, const char** argv )
 
 	cv::Mat image;
 	cv::Mat rgbImage;
-	cv::Mat keypointsImage;
+	cv::Mat keyPointsImage;
 	cv::Mat filtered;
 	cv::Mat colorDepth;
 	cv::Mat colorFiltered;
 	cv::Mat previous;
 	cv::Mat normals;
 	cv::Mat rgbKeyPoints;
+	cv::Mat depthKeyPoints;
 	cv::Mat grayscale;
 
 	cv::Vec3f initialPosition;
@@ -227,6 +228,8 @@ int main( int argc, const char** argv )
 			    // Filter all points > x * 5000 m away - 25000
 			    filterDepthImage(filtered, rgbImage, MAX_16_CHANNEL_DISTANCE, MIN_16_CHANNEL_DISTANCE);
 
+				// filtered.convertTo(depthKeyPoints, CV_8UC1, 0.005);
+				// depthKeyPoints.convertTo(keyPointsImage, CV_8UC3);
 
 				/*
     			normals = cv::Mat(filtered.size(), CV_32FC3);
@@ -242,12 +245,16 @@ int main( int argc, const char** argv )
 				// filtered.convertTo(drawableDepth, CV_8UC1);
 				*/
 
-				cv::cvtColor(rgbImage, grayscale, CV_BGR2GRAY);
-				// cv::blur(grayscale, grayscale, cv::Size(3,3));
-
 				std::vector<cv::KeyPoint> keypoints;
-				cv::FAST(grayscale, keypoints, 100, true, cv::FastFeatureDetector::TYPE_9_16);
-				cv::drawKeypoints(rgbImage, keypoints, rgbKeyPoints, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+
+				keyPointsImage = rgbImage.clone();
+
+				// cv::FAST(depthKeyPoints, keypoints, 30, true, cv::FastFeatureDetector::TYPE_9_16);
+				// cv::drawKeypoints(keyPointsImage, keypoints, keyPointsImage, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+
+				cv::cvtColor(rgbImage, grayscale, CV_BGR2GRAY);
+				cv::FAST(grayscale, keypoints, 120, true, cv::FastFeatureDetector::TYPE_9_16);
+				cv::drawKeypoints(rgbImage, keypoints, keyPointsImage, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
 			    logDeltaTime( LOG_FILTER_IMAGE );
 
@@ -324,7 +331,8 @@ int main( int argc, const char** argv )
 				// cv::imshow("Normals", normals);
 				// cv::resize(rgbImage, rgbImage, cv::Size(960,540));
 				// cv::imshow("RGB", rgbImage);
-				cv::imshow("rgbKeyPoints", rgbKeyPoints);
+				// cv::imshow("rgbKeyPoints", rgbKeyPoints);
+				cv::imshow("KeyPoints", keyPointsImage);
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
 			    // cv::imshow( "Color", colorDepth );
@@ -556,6 +564,10 @@ void filterDepthImage(cv::Mat &image, cv::Mat &rgbImage, int maxDistance, int mi
 		}
 		it++;
 	}
+
+	cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT,
+		cv::Size(5, 5),
+		cv::Point(3, 3));
 
  	// cv::dilate( image, image, element);
  	// cv::erode( image, image, element);
