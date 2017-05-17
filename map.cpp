@@ -133,7 +133,7 @@ namespace map {
 
 			color_point_t c_point = keyPointAssociations[i].first;
 
-			if (errors[i] > MAX_POINT_DISTANCE) {
+			if (errors[i] > MAX_KEYPOINT_ADD_DISTANCE) {
 				mapCloud.keypoints.push_back(c_point);
 			}
 

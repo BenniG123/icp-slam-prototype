@@ -95,11 +95,8 @@ namespace icp {
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 			// std::cout << i << std::endl;
 
-			dataCloud.displayKeyPoints(depthWindow, "Data", 3, cv::viz::Color::red());
-			map.mapCloud.displayKeyPoints(depthWindow, "Map", 3, cv::viz::Color::green());
-			// map.mapCloud.display(depthWindow, "Previous", 3);
-			// showPointCloud(zeroCloud, depthWindow, cv::viz::Color().red(), "Zero", 6);
-			// showPointCloud(mZeroCloud, depthWindow, cv::viz::Color().white(), "MZero", 6);
+			dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
+			map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::green());
 
 			depthWindow.spinOnce(0, true);
 
@@ -192,10 +189,10 @@ namespace icp {
 		map.update(associations, errors, dataCloud, DELTA_CONFIDENCE);
 
 		showAssocations(associations, errors, depthWindow);
-		// dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
-		dataCloud.displayKeyPoints(depthWindow, "Data", 3, cv::viz::Color::red());
-		map.mapCloud.displayKeyPoints(depthWindow, "Map", 3, cv::viz::Color::green());
-		// map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::red());
+		dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
+		// dataCloud.displayKeyPoints(depthWindow, "Data", 3, cv::viz::Color::red());
+		// map.mapCloud.displayKeyPoints(depthWindow, "Map", 3, cv::viz::Color::green());
+		map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::green());
 		// map.drawCertaintyMap(depthWindow);
 
 		std::cout << std::endl << map.mapCloud.points.size() << std::endl;

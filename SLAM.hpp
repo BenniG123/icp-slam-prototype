@@ -12,7 +12,8 @@
 #define LOG_RETRIEVE_TRANSFORM 7
 #define LOG_MSE 8
 
-#define MAX_16_CHANNEL_DISTANCE 25000
+#define MAX_16_CHANNEL_DISTANCE 15000
+#define MIN_16_CHANNEL_DISTANCE 3000
 
 #include "quaternion.hpp"
 #include "opencv2/viz/vizcore.hpp"
@@ -40,7 +41,7 @@ void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z);
 
 void toEulerianAngle(Quaternion q, float& x, float& y, float& z);
 
-void filterDepthImage(cv::Mat &image, cv::Mat &rgbImage, int maxDistance);
+void filterDepthImage(cv::Mat &image, cv::Mat &rgbImage, int maxDistance, int minDistance);
 
 int curvature(cv::Mat roi);
 

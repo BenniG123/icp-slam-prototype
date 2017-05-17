@@ -57,12 +57,17 @@ namespace icp {
 			}
 		}
 
-		std::vector<cv::KeyPoint>::iterator begin, end;
-		begin = keypointsList.begin();
+		std::vector<cv::KeyPoint>::iterator it, end;
+		it = keypointsList.begin();
 		end = keypointsList.end();
 
-		while (begin != end) {
-			cv::Point2i coordinates = (*begin).pt;
+		while (it != end) {
+			cv::Point2i coordinates = (*it).pt;
+
+			if (data.at<uint16_t>(coordinates.y, coordinates.x) == 0) {
+				it++;
+				continue;
+			}
 
 			float p_z = ((float)data.at<uint16_t>(coordinates.y, coordinates.x)) / 5000.0f;
 			float p_x = (coordinates.x - CX) * p_z / FX;
@@ -75,8 +80,7 @@ namespace icp {
 			clr_pt.color = c;
 
 			keypoints.push_back(clr_pt);
-
-			begin++;
+			it++;
 		}
 
 		// Average Center

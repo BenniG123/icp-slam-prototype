@@ -225,7 +225,8 @@ int main( int argc, const char** argv )
 			    filtered = image.clone();
 
 			    // Filter all points > x * 5000 m away - 25000
-			    filterDepthImage(filtered, rgbImage, MAX_16_CHANNEL_DISTANCE);
+			    filterDepthImage(filtered, rgbImage, MAX_16_CHANNEL_DISTANCE, MIN_16_CHANNEL_DISTANCE);
+
 
 				/*
     			normals = cv::Mat(filtered.size(), CV_32FC3);
@@ -541,7 +542,7 @@ void errorMessage() {
 // Notes 
 // Sensor accuracy increases quadratically with distance
 // Sensor is noisy near depth discontinuities - Mask edges
-void filterDepthImage(cv::Mat &image, cv::Mat &rgbImage, int maxDistance) {
+void filterDepthImage(cv::Mat &image, cv::Mat &rgbImage, int maxDistance, int minDistance) {
 	cv::MatIterator_<uint16_t> it, end;
 	it = image.begin<uint16_t>();
 	end = image.end<uint16_t>();
@@ -549,6 +550,9 @@ void filterDepthImage(cv::Mat &image, cv::Mat &rgbImage, int maxDistance) {
 	while (it != end) {
 		if ((*it) > maxDistance) {
 			(*it) = 0 ;
+		}
+		else if ((*it) < minDistance) {
+			(*it) = 0;
 		}
 		it++;
 	}
