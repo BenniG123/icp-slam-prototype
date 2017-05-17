@@ -6,7 +6,7 @@
 #include "pointcloud.hpp"
 #include "icp.hpp"
 
-#define MAP_HEIGHT 150
+#define MAP_HEIGHT 300
 #define PHYSICAL_HEIGHT 10.0f
 #define DELTA_CONFIDENCE 45
 #define MIN_CONFIDENCE 100

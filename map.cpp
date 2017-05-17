@@ -105,7 +105,7 @@ namespace map {
 			if (*certainty > (255 - delta_confidence)) {
 				*certainty = 255;
 				// Populate lookup table if we are certain about this point
-				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
 					pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = (*it).first;
 					mapCloud.points.push_back((*it).first);
 				}
@@ -139,12 +139,12 @@ namespace map {
 		end = data.points.end();
 
 		float c = float(CELL_PHYSICAL_HEIGHT);
-		cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(5,5,5));
+		cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f( 5 * CELL_PHYSICAL_HEIGHT, 5 * CELL_PHYSICAL_HEIGHT, 5 * CELL_PHYSICAL_HEIGHT));
 
 		while (it != end) {
 			color_point_t c_point = *it;
 			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
-			rayTrace(voxelPoint, cameraVoxelPoint, depthWindow);
+			// rayTrace(voxelPoint, cameraVoxelPoint, depthWindow);
 
 			// Check for out of bounds
 			/* if (x < 0 || x >= MAP_HEIGHT) {
@@ -196,8 +196,8 @@ namespace map {
 		// depthWindow.removeWidget("destination");
 		// depthWindow.removeWidget("origin");
 
-		cv::viz::WSphere destionationWidget(cv::Vec3d(x, y, z), 1.0, 10, cv::viz::Color::green());
-		depthWindow.showWidget( "destination", destionationWidget);
+		// cv::viz::WSphere destionationWidget(cv::Vec3d(x * CELL_PHYSICAL_HEIGHT, y * CELL_PHYSICAL_HEIGHT, z * CELL_PHYSICAL_HEIGHT), 0.5, 10, cv::viz::Color::green());
+		// depthWindow.showWidget( "destination", destionationWidget);
 
 		// Origin Voxel Coordinates
 		int ox, oy, oz;
@@ -206,7 +206,7 @@ namespace map {
 		oy = origin.y;
 		oz = origin.z;
 
-		cv::viz::WSphere originWidget(cv::Vec3d(ox, oy, oz), 1.0, 10, cv::viz::Color::yellow());
+		cv::viz::WSphere originWidget(cv::Vec3d(ox, oy, oz), 0.1, 10, cv::viz::Color::yellow());
 		depthWindow.showWidget( "origin", originWidget);
 
 		// Slope of voxel travel
@@ -268,9 +268,9 @@ namespace map {
 		tMaxY = 1 / my;
 		tMaxZ = 1 / mz;
 
-		std::cout << "tMaxX: " << tMaxX << std::endl;
-		std::cout << "tMaxY: " << tMaxY << std::endl;
-		std::cout << "tMaxZ: " << tMaxZ << std::endl;
+		// std::cout << "tMaxX: " << tMaxX << std::endl;
+		// std::cout << "tMaxY: " << tMaxY << std::endl;
+		// std::cout << "tMaxZ: " << tMaxZ << std::endl;
 
 		// tMaxX = bound(ox, mx);
 		// tMaxY = bound(oy, my);
@@ -343,14 +343,15 @@ namespace map {
 				}
 			}
 
-			cv::viz::WCube cubeWidget(cv::Vec3d(x, y, z), cv::Vec3d(x+1, y+1, z+1), 
-				true, cv::viz::Color(cv::Scalar(255, 127, world[x][y][z])));
+			// cv::viz::WCube cubeWidget(cv::Vec3d(x, y, z), cv::Vec3d(x+1, y+1, z+1), 
+			//	true, cv::viz::Color(cv::Scalar(255, 127, world[x][y][z])));
 
-			depthWindow.showWidget( "rayTrace"  + std::to_string(x + y * MAP_HEIGHT + z * MAP_HEIGHT * MAP_HEIGHT), cubeWidget);
+			// depthWindow.showWidget( "rayTrace"  + std::to_string(x + y * MAP_HEIGHT + z * MAP_HEIGHT * MAP_HEIGHT), cubeWidget);
 
-		} while (x != dx && y != dy && z != dz);
+		} while (x != dx || y != dy || z != dz);
 
-		depthWindow.spinOnce(1);
+		// depthWindow.spinOnce(1);
+		// depthWindow.removeAllWidgets();
 	}
 
 	bool Map::isOccupied(cv::Point3f p) {

@@ -7,6 +7,87 @@
 
 namespace icp {
 
+	// Build PointCloud with KeyPoints Vector, taken from OpenCV Feature Generators
+	PointCloud::PointCloud(cv::Mat & data, cv::Mat colorMat, std::vector<cv::KeyPoint> keypointsList)
+	{
+		center = cv::Point3f(0, 0, 0);
+		points = point_list_t();
+		keypoints = point_list_t();
+
+		int index = 0;
+
+		for (int y = 0; y < data.rows; y++) {
+			for (int x = 0; x < data.cols; x++) {
+
+				if (data.at<uint16_t>(y, x) == 0)
+				{
+					continue;
+				}
+
+				// Random Subsample - 1 in every SUBSAMPLE_FACTOR points is selected
+				if (rand() % SUBSAMPLE_FACTOR) {
+					continue;
+				}
+
+				// TODO - Worldspace from cameraspace
+				// http://nicolas.burrus.name/index.php/Research/KinectCalibration#tocLink7
+				// P3D.x = (x_d - cx_d (250.32)) * depth(x_d,y_d) / fx_d (363.58)
+				// P3D.y = (y_d - cy_d (212.55)) * depth(x_d,y_d) / fy_d (363.53)
+				// P3D.z = depth(x_d,y_d)
+				float p_z = ((float)data.at<uint16_t>(y, x)) / 5000.0f;
+				float p_x = (x - CX) * p_z / FX;
+				float p_y = (y - CX) * p_z / FX;
+				cv::Point3f p(p_x, p_y, p_z);
+
+				// Update Center
+				center.x += p_x;
+				center.y += p_y;
+				center.z += p_z;
+
+				cv::Vec3b c = colorMat.at<cv::Vec3b>(y, x);
+
+				color_point_t clr_pt;
+				clr_pt.point = p;
+				clr_pt.color = c;
+
+				// Add point to point cloud
+				points.push_back(clr_pt);
+
+				index++;
+			}
+		}
+
+		std::vector<cv::KeyPoint>::iterator begin, end;
+		begin = keypointsList.begin();
+		end = keypointsList.end();
+
+		while (begin != end) {
+			cv::Point2i coordinates = (*begin).pt;
+
+			float p_z = ((float)data.at<uint16_t>(coordinates.y, coordinates.x)) / 5000.0f;
+			float p_x = (coordinates.x - CX) * p_z / FX;
+			float p_y = (coordinates.y - CX) * p_z / FX;
+			cv::Point3f p(p_x, p_y, p_z);
+
+			cv::Vec3b c = colorMat.at<cv::Vec3b>(coordinates.y, coordinates.x);
+			color_point_t clr_pt;
+			clr_pt.point = p;
+			clr_pt.color = c;
+
+			keypoints.push_back(clr_pt);
+
+			begin++;
+		}
+
+		// Average Center
+		center.x /= index;
+		center.y /= index;
+		center.z /= index;
+
+		center_points();
+		// std_dev_filter_points();
+	}
+
 	// Build 3D point cloud from depth image
 	PointCloud::PointCloud(cv::Mat& data, cv::Mat colorMat) {
 		center = cv::Point3f(0,0,0);
@@ -67,9 +148,9 @@ namespace icp {
 	}
 
 	// Display PointCloud with colorMap in Viz Window
-	void PointCloud::display(cv::viz::Viz3d& depthWindow, std::string name, int size) {
-	    cv::Mat pointCloudMat(points.size(), 1, CV_32FC3);
-	    cv::Mat colorMap(points.size(), 1, CV_8UC3);
+	void PointCloud::displayColorPoints(cv::viz::Viz3d& depthWindow, std::string name, int size) {
+	    cv::Mat pointCloudMat((int) points.size(), 1, CV_32FC3);
+	    cv::Mat colorMap((int) points.size(), 1, CV_8UC3);
 
 	    for (int i = 0; i < points.size(); i++) {
 	    	pointCloudMat.at<cv::Vec3f>(i,0) = points[i].point;
@@ -81,17 +162,27 @@ namespace icp {
 		depthWindow.showWidget( name , cloudWidget);
 	}
 
+	// Display KeyPoints in Viz Window
+	void PointCloud::displayKeyPoints(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color color) {
+
+		if (keypoints.size() == 0)
+			return;
+
+		cv::Mat keyPointMat((int)keypoints.size(), 1, CV_32FC3);
+
+		for (int i = 0; i < keypoints.size(); i++) {
+			keyPointMat.at<cv::Vec3f>(i, 0) = keypoints[i].point;
+		}
+
+		cv::viz::WCloud cloudWidget(keyPointMat, color);
+		cloudWidget.setRenderingProperty(cv::viz::POINT_SIZE, size);
+		depthWindow.showWidget(name, cloudWidget);
+	}
+
 	// Display without colorMap
-	void PointCloud::display(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color color) {
-		cv::Mat pointCloudMat(points.size(), 1, CV_32FC3);
-
-		for (int i = 0; i < points.size(); i++) {
-	    	pointCloudMat.at<cv::Vec3f>(i,0) = points[i].point;
-	    }
-
-		cv::viz::WCloud cloudWidget(pointCloudMat, color);
-		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, size);
-		depthWindow.showWidget( name , cloudWidget);
+	void PointCloud::displayAll(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color keyPointColor) {
+		displayColorPoints(depthWindow, name + "_points", size);
+		displayKeyPoints(depthWindow, name + "_keyPoints", size, keyPointColor);
 	}
 
 	cv::Vec2i depthToRGB(cv::Point3f point) {
@@ -178,6 +269,7 @@ namespace icp {
 	PointCloud::PointCloud() {
 		center = cv::Point3f(0,0,0);
 		points = point_list_t();
+		keypoints = point_list_t();
 	}
 
 	void PointCloud::center_points() {
@@ -192,11 +284,22 @@ namespace icp {
 			p.z -= center.z;
 			it++;
 		}
+
+		it = keypoints.begin();
+		end = keypoints.end();
+
+		while (it != end) {
+			cv::Point3f p = (*it).point;
+			p.x -= center.x;
+			p.y -= center.y;
+			p.z -= center.z;
+			it++;
+		}
 	}
 
 	void PointCloud::rotate(cv::Mat& rotationMatrix) {
+		// Rotate point cloud
 		cv::Mat M = centered_matrix().t();
-		// std::cout << rotationMatrix.size() << M.size() << std::endl;
 		cv::Mat RM = rotationMatrix * M;
 		cv::Mat RMT = RM.t();
 		
@@ -204,6 +307,17 @@ namespace icp {
 			points[i].point.x = RMT.at<float>(i, 0);
 			points[i].point.y = RMT.at<float>(i, 1);
 			points[i].point.z = RMT.at<float>(i, 2);
+		}
+
+		// Rotate Keypoints
+		M = centered_keypoint_matrix().t();
+		RM = rotationMatrix * M;
+		RMT = RM.t();
+
+		for (int i = 0; i < keypoints.size(); i++) {
+			keypoints[i].point.x = RMT.at<float>(i, 0);
+			keypoints[i].point.y = RMT.at<float>(i, 1);
+			keypoints[i].point.z = RMT.at<float>(i, 2);
 		}
 	}
 
@@ -213,11 +327,15 @@ namespace icp {
 			points[i].point += offset;
 		}
 
+		for (int i = 0; i < keypoints.size(); i++) {
+			keypoints[i].point += offset;
+		}
+
 		center += offset;
 	}
 
 	cv::Mat PointCloud::centered_matrix() {
-		cv::Mat M(points.size(), 3, CV_32FC1);
+		cv::Mat M((int) points.size(), 3, CV_32FC1);
 
 		for (int i = 0; i < points.size(); i++) {
 			M.at<float>(i, 0) = points[i].point.x;
@@ -228,8 +346,20 @@ namespace icp {
 		return M;
 	}
 
+	cv::Mat PointCloud::centered_keypoint_matrix() {
+		cv::Mat M((int) keypoints.size(), 3, CV_32FC1);
+
+		for (int i = 0; i < keypoints.size(); i++) {
+			M.at<float>(i, 0) = keypoints[i].point.x;
+			M.at<float>(i, 1) = keypoints[i].point.y;
+			M.at<float>(i, 2) = keypoints[i].point.z;
+		}
+
+		return M;
+	}
+
 	cv::Mat PointCloud::matrix() {
-		cv::Mat M(points.size(), 3, CV_32FC1);
+		cv::Mat M((int) points.size(), 3, CV_32FC1);
 
 		for (int i = 0; i < points.size(); i++) {
 			M.at<float>(i, 0) = points[i].point.x + center.x;

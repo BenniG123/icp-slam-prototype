@@ -8,7 +8,7 @@
 #define FY 468.61f
 #define CX 318.27f
 #define CY 243.99f
-#define SUBSAMPLE_FACTOR 60
+#define SUBSAMPLE_FACTOR 50
 
 struct color_point_t {
 	cv::Point3f point;
@@ -28,16 +28,21 @@ namespace icp {
 		public:
 	      cv::Point3f center;
 	      point_list_t points;
-	      PointCloud(cv::Mat& data, cv::Mat color);
+		  point_list_t keypoints;
+
+	      PointCloud(cv::Mat& data, cv::Mat colorMat, std::vector<cv::KeyPoint> keypoints);
+		  PointCloud(cv::Mat& data, cv::Mat colorMat);
 	      PointCloud(std::vector<cv::Point3f> data);
 	      PointCloud();
 	      void rotate(cv::Mat& transformationMatrix);
 	      void translate(cv::Point3f offset);
 	      cv::Mat matrix();
 	      cv::Mat centered_matrix();
+		  cv::Mat centered_keypoint_matrix();
 	      void center_points();
-	      void display(cv::viz::Viz3d& depthWindow, std::string name, int size);
-	      void display(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color color);
+	      void displayColorPoints(cv::viz::Viz3d& depthWindow, std::string name, int size);
+		  void displayKeyPoints(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color color);
+	      void displayAll(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color keyPointColor);
 	    private:
 		  void std_dev_filter_points();
 		  cv::Vec2i depthToRGB(cv::Point3f point);

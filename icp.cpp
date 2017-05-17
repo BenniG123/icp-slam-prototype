@@ -24,7 +24,7 @@ namespace icp {
 	cv::Point3f lastTranslation;
 	map::Map map;
 
-	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat color, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
+	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat color, std::vector<cv::KeyPoint> keypoints, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) {
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
 		associations_t associations;
 		associations_t::iterator it1, end1;
@@ -34,8 +34,8 @@ namespace icp {
 
 		cv::Point3f offset;
 
-		PointCloud dataCloud(data, color);
-		PointCloud previousCloud(previous, color);
+		PointCloud dataCloud(data, color, keypoints);
+		PointCloud previousCloud(previous, color, keypoints);
 
 		// cv::Mat m = makeRotationMatrix(20, 0, 0);
 		// dataCloud.rotate(m);
@@ -56,7 +56,6 @@ namespace icp {
 			previousCloud.translate(cameraPosition);
 
 			// map.mapCloud.translate(cameraPosition);
-
 			map.update(previousCloud, MAX_CONFIDENCE, depthWindow);
 		}
 		// else {
@@ -85,7 +84,8 @@ namespace icp {
 		// previousCloud.rotate(rotation);
 
 		// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
-		findMappedNearestNeighborAssociations(dataCloud, errors, associations);
+		// findMappedNearestNeighborAssociations(dataCloud, errors, associations);
+		findGlobalKeyPointAssociations(dataCloud, errors, associations);
 
 		int i = 0;
 
@@ -168,8 +168,9 @@ namespace icp {
 			logDeltaTime(LOG_ROTATE);
 
 			// Find nearest neighber associations
-			// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
-			findMappedNearestNeighborAssociations(dataCloud, errors, associations);
+			// findGlobalNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
+			// findMappedNearestNeighborAssociations(dataCloud, errors, associations);
+			findGlobalKeyPointAssociations(dataCloud, errors, associations);
 
 			i++;
 		}
@@ -187,9 +188,9 @@ namespace icp {
 		// map.update(dataCloud, DELTA_CONFIDENCE, depthWindow);
 		map.update(associations, DELTA_CONFIDENCE);
 
-		// showAssocations(associations, errors, depthWindow);
-		dataCloud.display(depthWindow, "Data", 3);
-		map.mapCloud.display(depthWindow, "Map", 3);
+		showAssocations(associations, errors, depthWindow);
+		dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
+		// map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::red());
 		// map.drawCertaintyMap(depthWindow);
 
 		std::cout << std::endl << map.mapCloud.points.size() << std::endl;
@@ -394,7 +395,58 @@ namespace icp {
 		}
 	}
 
-	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, associations_t& associations) {
+	void findGlobalKeyPointAssociations(PointCloud& data, std::vector<float>& errors, associations_t& associations) {
+		// Iterate through keypoints
+		if (map.mapCloud.keypoints.size() == 0)
+			return;
+
+		point_list_t::iterator it, end;
+		it = data.keypoints.begin();
+		end = data.keypoints.end();
+
+		errors.clear();
+		associations.clear();
+
+		while (it != end) {
+			color_point_t nearestNeighbor;
+			float distance = getNearestKeyPoint(*it, nearestNeighbor, map.mapCloud);
+			if (distance < MAX_NN_KEYPOINT_DISTANCE) {
+				associations.push_back(std::make_pair(*it, nearestNeighbor));
+				errors.push_back(distance);
+			}
+
+			it++;
+		}
+
+		logDeltaTime(LOG_NEAREST_NEIGHBOR, (int)associations.size());
+
+	}
+
+	float getNearestKeyPoint(color_point_t point, color_point_t& nearest, PointCloud& cloud)
+	{
+		// Iterate through image
+		point_list_t::iterator it, end; //, near;
+		it = cloud.keypoints.begin();
+		end = cloud.keypoints.end();
+
+		nearest = *it;
+		float shortestDistance = distance(point, nearest);
+		it++;
+
+		while (it != end) {
+			float d = distance(point, *it);
+			if (d < shortestDistance) {
+				shortestDistance = d;
+				nearest = *it;
+			}
+
+			it++;
+		}
+
+		return shortestDistance;
+	}
+
+	void findGlobalNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, associations_t& associations) {
 		// Iterate through pointcloud
 		point_list_t::iterator it, end;
 		it = data.points.begin();
@@ -414,7 +466,7 @@ namespace icp {
 			it++;
 		}
 
-		logDeltaTime(LOG_NEAREST_NEIGHBOR, associations.size());
+		logDeltaTime(LOG_NEAREST_NEIGHBOR, (int) associations.size());
 
 	}
 
@@ -466,9 +518,9 @@ namespace icp {
 
 		float xyz = pow(x, 2) + pow(y, 2) + pow(z, 2);
 
-		float red = a.color[0] - b.color[0];
-		float green = a.color[1] - b.color[1];
-		float blue = a.color[2] - b.color[2];
+		float red = (float) a.color[0] - b.color[0];
+		float green = (float) a.color[1] - b.color[1];
+		float blue = (float) a.color[2] - b.color[2];
 
 		float rgb = pow(red, 2) + pow(blue, 2) + pow(green, 2);
 
@@ -487,7 +539,7 @@ namespace icp {
 
 		// std::cout << "MSE: " << error_sum << std::endl;
 
-		logDeltaTime(LOG_MSE, errors.size());
+		logDeltaTime(LOG_MSE, (int) errors.size());
 
 		return error_sum;
 	}

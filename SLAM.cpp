@@ -125,6 +125,8 @@ int main( int argc, const char** argv )
 	cv::Mat colorFiltered;
 	cv::Mat previous;
 	cv::Mat normals;
+	cv::Mat rgbKeyPoints;
+	cv::Mat grayscale;
 
 	cv::Vec3f initialPosition;
 
@@ -225,7 +227,7 @@ int main( int argc, const char** argv )
 			    // Filter all points > x * 5000 m away - 25000
 			    filterDepthImage(filtered, rgbImage, MAX_16_CHANNEL_DISTANCE);
 
-			    /*
+				/*
     			normals = cv::Mat(filtered.size(), CV_32FC3);
 
 			    // Get Image Normals
@@ -235,16 +237,16 @@ int main( int argc, const char** argv )
 			    cv::Mat drawableDepth;
 
 			    normals.convertTo(normalFeatures, CV_8UC3);
-
-			    // filtered.convertTo(drawableDepth, CV_8UC1);
-
-			    filtered.convertTo(drawableDepth, cv::COLOR_GRAY2RGB);
-
-			    std::vector<cv::KeyPoint> keypoints;
-
-			    cv::FAST(normalFeatures, keypoints, 5, true, cv::FastFeatureDetector::TYPE_5_8);
-			    cv::drawKeypoints(drawableDepth, keypoints, drawableDepth, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+				// filtered.convertTo(drawableDepth, cv::COLOR_GRAY2RGB);
+				// filtered.convertTo(drawableDepth, CV_8UC1);
 				*/
+
+				cv::cvtColor(rgbImage, grayscale, CV_BGR2GRAY);
+				// cv::blur(grayscale, grayscale, cv::Size(3,3));
+
+				std::vector<cv::KeyPoint> keypoints;
+				cv::FAST(grayscale, keypoints, 100, true, cv::FastFeatureDetector::TYPE_9_16);
+				cv::drawKeypoints(rgbImage, keypoints, rgbKeyPoints, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
 			    logDeltaTime( LOG_FILTER_IMAGE );
 
@@ -264,7 +266,7 @@ int main( int argc, const char** argv )
 				// }
 
 				if (previous.size().area() > 0) {
-					cv::Mat transformation = icp::getTransformation(filtered, previous, rgbImage, rotation, 16, 0.0001f, depthWindow);
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rgbImage, keypoints, rotation, 16, 0.0001f, depthWindow);
 					// cv::Mat transformation(4,4,CV_32FC1);
 					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
@@ -321,7 +323,7 @@ int main( int argc, const char** argv )
 				// cv::imshow("Normals", normals);
 				// cv::resize(rgbImage, rgbImage, cv::Size(960,540));
 				// cv::imshow("RGB", rgbImage);
-				// cv::imshow("Features", drawableDepth);
+				cv::imshow("rgbKeyPoints", rgbKeyPoints);
 			    // cv::imshow( "Sobel", sobelFilter );
 			    // cv::imshow( "Original", image );
 			    // cv::imshow( "Color", colorDepth );
