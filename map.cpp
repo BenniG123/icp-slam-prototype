@@ -126,18 +126,17 @@ namespace map {
 		}
 
 		float c = float(CELL_PHYSICAL_HEIGHT);
-		// cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(3,3,3));
 
-		for (int i = 0; i < keyPointAssociations.size(); i++) {
+		for (int i = 0; i < dataCloud.keypoints.size(); i++) {
 
-			color_point_t c_point = keyPointAssociations[i].first;
+			color_point_t c_point = dataCloud.keypoints[i];
 
 			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
 
 			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
 
 			// Update certainty
-			if (*certainty >(255 - delta_confidence)) {
+			if (*certainty >= (MAX_CONFIDENCE - delta_confidence)) {
 				*certainty = 255;
 				// Populate lookup table if we are certain about this point
 				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
@@ -149,74 +148,35 @@ namespace map {
 				*certainty += delta_confidence;
 			}
 
-			
-			/*if (errors[i] > MAX_KEYPOINT_ADD_DISTANCE) {
-				mapCloud.keypoints.push_back(c_point);
-			}
-
-			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
-
-			// Update certainty
-			if (*certainty > (255 - delta_confidence)) {
-				*certainty = 255;
-				// Populate lookup table if we are certain about this point
-				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
-					pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = (*it).first;
-					mapCloud.keypoints.push_back((*it).first);
-				}
-			}
-			else {
-				*certainty += delta_confidence;
-			}
-			*/
-			
 		}
 
-		for (int i = 0; i < dataCloud.keypoints.size(); i++) {
+		// cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(3,3,3));
 
-			color_point_t c_point = dataCloud.keypoints[i];
+		/* for (int i = 0; i < keyPointAssociations.size(); i++) {
 
-			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
+		color_point_t c_point = keyPointAssociations[i].first;
 
-			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
-				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = c_point;
-				mapCloud.keypoints.push_back(c_point);
-			}
+		cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
 
+		unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
+
+		// Update certainty
+		if (*certainty >= (MAX_CONFIDENCE - delta_confidence)) {
+		*certainty = 255;
+		// Populate lookup table if we are certain about this point
+		if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+		pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = c_point;
+		mapCloud.keypoints.push_back(c_point);
 		}
-
-
-		/*
-		associations_t::iterator it, begin, end;
-		begin, it = keyPointAssociations.begin();
-		end = keyPointAssociations.end();
-		*/
-
-
-		/* while (it != end) {
-			color_point_t c_point = (*it).first;
-			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
-			// rayTrace(voxelPoint, cameraVoxelPoint);
-
-			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
-
-			// Update certainty
-			if (*certainty > (255 - delta_confidence)) {
-				*certainty = 255;
-				// Populate lookup table if we are certain about this point
-				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
-					pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = (*it).first;
-					mapCloud.points.push_back((*it).first);
-				}
-			}
-			else {
-				*certainty += delta_confidence;
-			}
-
-			// std::cout << (*it).first << std::endl;
+		}
+		else {
+		*certainty += delta_confidence;
+		}
 
 		}
 		*/
+
+		// TODO - Update Cloud Points
 	}
 
 	// Find the smallest positive t such that s + t * ds is an integer

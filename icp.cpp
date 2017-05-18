@@ -38,7 +38,7 @@ namespace icp {
 		PointCloud dataCloud(data, color, keypoints);
 		PointCloud previousCloud(previous, color, keypoints);
 
-		// depthWindow.removeAllWidgets();
+		depthWindow.removeAllWidgets();
 
 		// cv::Mat m = makeRotationMatrix(20, 0, 0);
 		// dataCloud.rotate(m);
@@ -76,7 +76,9 @@ namespace icp {
 		tempDataCloud.center = dataCloud.center;
 		tempMapCloud.center = previousCloud.center;
 
+		// Stress test
 		// cv::Mat a = makeRotationMatrix(rand() % 5, rand() % 5, rand() % 5);
+		// dataCloud.rotate(a);
 
 		// Optimization - let's assume the camera will generally preserve its momementum between
 		// frames
@@ -88,48 +90,69 @@ namespace icp {
 		// previousCloud.rotate(rotation);
 
 		// TODO - Replace this with RANSAC
+		findGlobalKeyPointAssociations(dataCloud, errors, associations);
+
 		std::vector<cv::Point3f> first, second;
 		std::vector<uchar> inliers;
 		cv::Mat aff(3, 4, CV_64F);
 
-		point_list_t::iterator it, end;
-		it = dataCloud.keypoints.begin();
-		end = dataCloud.keypoints.end();
+		associations_t::iterator it, end;
+		it = associations.begin();
+		end = associations.end();
 
 		while (it != end) {
-			first.push_back((*it).point);
-			it++;
-		}
-
-		it = map.mapCloud.keypoints.begin();
-		end = map.mapCloud.keypoints.end();
-
-		while (it != end) {
-			second.push_back((*it).point);
+			first.push_back((*it).first.point);
+			second.push_back((*it).second.point);
 			it++;
 		}
 
 		if (first.size() > 0 && second.size() > 0) {
-			if (first.size() > second.size()) {
-				first.resize(second.size());
-			}
-			else if (second.size() > first.size()) {
-				second.resize(first.size());
+			int ret = cv::estimateAffine3D(first, second, aff, inliers);
+			if (ret != 1) {
+				std::cout << ret << std::endl;
 			}
 
-			int ret = cv::estimateAffine3D(first, second, aff, inliers);
-			std::cout << aff << std::endl;
+			std::vector<uchar>::iterator it_inliers, end_inliers;
+			it_inliers = inliers.begin();
+			end_inliers = inliers.end();
+
+			it = associations.begin();
+			end = associations.end();
+
+			// Remove outliers from associations
+			while (it_inliers != end_inliers) {
+				if (*it_inliers == 0) {
+					associations.erase(it);
+					inliers.erase(it_inliers);
+
+					it_inliers = inliers.begin();
+					end_inliers = inliers.end();
+
+					it = associations.begin();
+					end = associations.end();
+				}
+				else {
+					it++;
+					it_inliers++;
+				}
+
+			}
 		}
+
 
 		// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 		// findMappedNearestNeighborAssociations(dataCloud, errors, associations);
-		findGlobalKeyPointAssociations(dataCloud, errors, associations);
 
 		int i = 0;
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 			// std::cout << i << std::endl;
+			/* dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
+			map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::green());
+			showAssocations(associations, errors, depthWindow);
+			depthWindow.spinOnce(0, true);
+			*/
 
 			if (associations.size() < 3) {
 				// dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
@@ -240,7 +263,7 @@ namespace icp {
 		// map.update(dataCloud, DELTA_CONFIDENCE, depthWindow);
 		map.update(associations, errors, dataCloud, DELTA_CONFIDENCE);
 
-		showAssocations(associations, errors, depthWindow);
+		
 		dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
 		// dataCloud.displayKeyPoints(depthWindow, "Data", 3, cv::viz::Color::red());
 		// map.mapCloud.displayKeyPoints(depthWindow, "Map", 3, cv::viz::Color::green());
@@ -250,7 +273,7 @@ namespace icp {
 		std::cout << std::endl << map.mapCloud.points.size() << std::endl;
 
 		// Update Certainties and display
-		depthWindow.spinOnce(1, true);
+		depthWindow.spinOnce(0, true);
 
 		return rigidTransformation;
 	}
@@ -595,9 +618,10 @@ namespace icp {
 			error_sum += errors[i];
 		}
 
-		error_sum /= errors.size();
-		error_sum = pow(error_sum, 2);
-
+		if (errors.size() > 0) {
+			error_sum /= errors.size();
+			error_sum = pow(error_sum, 2);
+		}
 		// std::cout << "MSE: " << error_sum << std::endl;
 
 		logDeltaTime(LOG_MSE, (int) errors.size());

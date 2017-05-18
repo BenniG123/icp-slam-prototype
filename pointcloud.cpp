@@ -69,6 +69,16 @@ namespace icp {
 				continue;
 			}
 
+
+			// TODO - check adjacent points and select closest, non-Zero distance
+			cv::Point2i minZ = coordinates;
+
+			for (int x = -1; x < 2; x++) {
+				for (int y = -1; y < 2; y++) {
+					// data.at<uint16_t>(coordinates.y, coordinates.x));
+				}
+			}
+
 			float p_z = ((float)data.at<uint16_t>(coordinates.y, coordinates.x)) / 5000.0f;
 			float p_x = (coordinates.x - CX) * p_z / FX;
 			float p_y = (coordinates.y - CX) * p_z / FX;
@@ -185,7 +195,7 @@ namespace icp {
 
 	// Display without colorMap
 	void PointCloud::displayAll(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color keyPointColor) {
-		displayColorPoints(depthWindow, name + "_points", size);
+		displayColorPoints(depthWindow, name, size);
 		displayKeyPoints(depthWindow, name + "_keyPoints", size, keyPointColor);
 	}
 
