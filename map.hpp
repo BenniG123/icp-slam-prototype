@@ -6,11 +6,11 @@
 #include "pointcloud.hpp"
 #include "icp.hpp"
 
-#define MAP_HEIGHT 300
+#define MAP_HEIGHT 150
 #define PHYSICAL_HEIGHT 10.0f
-#define DELTA_CONFIDENCE 45
+#define DELTA_CONFIDENCE 5
 #define MIN_CONFIDENCE 100
-#define MAX_CONFIDENCE 180
+#define MAX_CONFIDENCE 255
 #define MAX_POINT_ADD_DISTANCE 0.05f
 #define MAX_KEYPOINT_ADD_DISTANCE 0.1f
 

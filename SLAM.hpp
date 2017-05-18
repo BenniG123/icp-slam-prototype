@@ -12,7 +12,7 @@
 #define LOG_RETRIEVE_TRANSFORM 7
 #define LOG_MSE 8
 
-#define MAX_16_CHANNEL_DISTANCE 20000
+#define MAX_16_CHANNEL_DISTANCE 25000
 #define MIN_16_CHANNEL_DISTANCE 3000
 
 #include "quaternion.hpp"

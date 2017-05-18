@@ -134,11 +134,22 @@ namespace map {
 
 			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
 
-			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
-				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = c_point;
-				mapCloud.keypoints.push_back(c_point);
+			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
+
+			// Update certainty
+			if (*certainty >(255 - delta_confidence)) {
+				*certainty = 255;
+				// Populate lookup table if we are certain about this point
+				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+					pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = c_point;
+					mapCloud.keypoints.push_back(c_point);
+				}
+			}
+			else {
+				*certainty += delta_confidence;
 			}
 
+			
 			/*if (errors[i] > MAX_KEYPOINT_ADD_DISTANCE) {
 				mapCloud.keypoints.push_back(c_point);
 			}

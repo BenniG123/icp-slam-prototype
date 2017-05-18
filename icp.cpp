@@ -1,6 +1,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/viz/vizcore.hpp"
+#include "opencv2/calib3d/calib3d.hpp"
 #include "map.hpp"
 #include "SLAM.hpp"
 #include "icp.hpp"
@@ -86,6 +87,40 @@ namespace icp {
 		// lastTranslation = cv::Point3f(0,0,0);
 		// previousCloud.rotate(rotation);
 
+		// TODO - Replace this with RANSAC
+		std::vector<cv::Point3f> first, second;
+		std::vector<uchar> inliers;
+		cv::Mat aff(3, 4, CV_64F);
+
+		point_list_t::iterator it, end;
+		it = dataCloud.keypoints.begin();
+		end = dataCloud.keypoints.end();
+
+		while (it != end) {
+			first.push_back((*it).point);
+			it++;
+		}
+
+		it = map.mapCloud.keypoints.begin();
+		end = map.mapCloud.keypoints.end();
+
+		while (it != end) {
+			second.push_back((*it).point);
+			it++;
+		}
+
+		if (first.size() > 0 && second.size() > 0) {
+			if (first.size() > second.size()) {
+				first.resize(second.size());
+			}
+			else if (second.size() > first.size()) {
+				second.resize(first.size());
+			}
+
+			int ret = cv::estimateAffine3D(first, second, aff, inliers);
+			std::cout << aff << std::endl;
+		}
+
 		// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 		// findMappedNearestNeighborAssociations(dataCloud, errors, associations);
 		findGlobalKeyPointAssociations(dataCloud, errors, associations);
@@ -96,7 +131,7 @@ namespace icp {
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 			// std::cout << i << std::endl;
 
-			if (associations.size() == 18) {
+			if (associations.size() < 3) {
 				// dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
 				// map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::green());
 
@@ -107,6 +142,13 @@ namespace icp {
 				// depthWindow.spinOnce(0, true);
 
 				// std::cout << "Assocations: " << associations.size() << std::endl;
+				R = makeRotationMatrix(0, 0, 0);
+				i = maxIterations;
+
+				offset = calculateOffset(associations);
+				dataCloud.translate(-offset);
+				cameraPosition -= offset;
+				break;
 			}
 
 			logDeltaTime(LOG_UI);
@@ -263,9 +305,11 @@ namespace icp {
 			it1++;
 		}
 
-		offset.x /= offset_count;
-		offset.y /= offset_count;
-		offset.z /= offset_count;
+		if (offset_count > 0) {
+			offset.x /= offset_count;
+			offset.y /= offset_count;
+			offset.z /= offset_count;
+		}
 
 		return offset;
 	}
