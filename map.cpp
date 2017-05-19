@@ -119,7 +119,7 @@ namespace map {
 	}
 
 	// Update Map with KeyPoints and Cloud data
-	void Map::update(associations_t keyPointAssociations, std::vector<float> errors, icp::PointCloud& dataCloud, int delta_confidence) {
+	void Map::update(associations_t keyPointAssociations, std::vector<float> errors, point_list_t nonAssociations, int delta_confidence) {
 
 		if (keyPointAssociations.size() == 0) {
 			return;
@@ -127,9 +127,9 @@ namespace map {
 
 		float c = float(CELL_PHYSICAL_HEIGHT);
 
-		for (int i = 0; i < dataCloud.keypoints.size(); i++) {
+		for (int i = 0; i < nonAssociations.size(); i++) {
 
-			color_point_t c_point = dataCloud.keypoints[i];
+			color_point_t c_point = nonAssociations[i];
 
 			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
 

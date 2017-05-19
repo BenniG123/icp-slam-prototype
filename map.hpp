@@ -6,7 +6,7 @@
 #include "pointcloud.hpp"
 #include "icp.hpp"
 
-#define MAP_HEIGHT 150
+#define MAP_HEIGHT 100
 #define PHYSICAL_HEIGHT 10.0f
 #define DELTA_CONFIDENCE 90
 #define MIN_CONFIDENCE 100
@@ -27,6 +27,7 @@ namespace map {
 			Map();
 			void update(icp::PointCloud data, int delta_confidence, cv::viz::Viz3d& depthWindow);
 			void update(associations_t associations, int delta_confidencec);
+			void update(associations_t keyPointAssociations, std::vector<float> errors, point_list_t nonAssociations, int delta_confidence);
 			void update(associations_t keyPointAssociations, std::vector<float> errors, icp::PointCloud & dataCloud, int delta_confidence);
 			void rayTrace(cv::Point3i point, cv::Point3i origin, cv::viz::Viz3d& depthWindow);
 			void drawCertaintyMap(cv::viz::Viz3d& depthWindow);

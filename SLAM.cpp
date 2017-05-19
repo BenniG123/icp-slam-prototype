@@ -253,7 +253,7 @@ int main( int argc, const char** argv )
 				// cv::drawKeypoints(keyPointsImage, keypoints, keyPointsImage, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
 				cv::cvtColor(rgbImage, grayscale, CV_BGR2GRAY);
-				cv::FAST(grayscale, keypoints, 100, true, cv::FastFeatureDetector::TYPE_9_16);
+				cv::FAST(grayscale, keypoints, 60, true, cv::FastFeatureDetector::TYPE_7_12);
 				cv::drawKeypoints(rgbImage, keypoints, keyPointsImage, cv::Scalar(0, 0, 255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
 			    logDeltaTime( LOG_FILTER_IMAGE );

@@ -34,7 +34,7 @@ namespace icp {
 	float distance(color_point_t a, color_point_t b);
 
 	void findGlobalNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, associations_t& associations);
-	void findGlobalKeyPointAssociations(PointCloud& data, std::vector<float>& errors, associations_t& associations);
+	void findGlobalKeyPointAssociations(PointCloud& data, std::vector<float>& errors, associations_t& associations, point_list_t& nonAssociations);
 	void findMappedNearestNeighborAssociations(PointCloud& data, std::vector<float>& errors, associations_t& associations);
 
 	void processVoxel(color_point_t point, color_point_t &nearest, float& shortestDistance, int x, int y, int z);

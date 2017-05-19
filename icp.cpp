@@ -20,7 +20,7 @@ namespace icp {
 	*/
 
 	cv::Mat cameraRotation(3, 3, CV_32FC1);
-	cv::Mat lastRotation(3, 3, CV_32FC1);
+	cv::Mat lastRotation; // (3, 3, CV_32FC1);
 	cv::Point3f cameraPosition;
 	cv::Point3f lastTranslation;
 	map::Map map;
@@ -31,7 +31,7 @@ namespace icp {
 		associations_t::iterator it1, end1;
 
 		std::vector<float> errors;
-		cv::Mat R;
+		cv::Mat R = makeRotationMatrix(0,0,0);
 
 		cv::Point3f offset;
 
@@ -61,6 +61,9 @@ namespace icp {
 			// map.mapCloud.translate(cameraPosition);
 			map.update(previousCloud, MAX_CONFIDENCE, depthWindow);
 			map.mapCloud.keypoints = previousCloud.keypoints;
+
+			lastRotation = makeRotationMatrix(0,0,0);
+			lastTranslation = cv::Point3f(0,0,0);
 		}
 		// else {
 		dataCloud.rotate(cameraRotation);
@@ -90,9 +93,10 @@ namespace icp {
 		// previousCloud.rotate(rotation);
 
 		// TODO - Replace this with RANSAC
-		findGlobalKeyPointAssociations(dataCloud, errors, associations);
+		point_list_t nonAssociations;
+		findGlobalKeyPointAssociations(dataCloud, errors, associations, nonAssociations);
 
-		std::vector<cv::Point3f> first, second;
+		/* std::vector<cv::Point3f> first, second;
 		std::vector<uchar> inliers;
 		cv::Mat aff(3, 4, CV_64F);
 
@@ -139,6 +143,8 @@ namespace icp {
 			}
 		}
 
+		*/
+
 
 		// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 		// findMappedNearestNeighborAssociations(dataCloud, errors, associations);
@@ -154,7 +160,7 @@ namespace icp {
 			depthWindow.spinOnce(0, true);
 			*/
 
-			if (associations.size() < 3) {
+			if (associations.size() < 8) {
 				// dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
 				// map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::green());
 
@@ -165,12 +171,13 @@ namespace icp {
 				// depthWindow.spinOnce(0, true);
 
 				// std::cout << "Assocations: " << associations.size() << std::endl;
-				R = makeRotationMatrix(0, 0, 0);
 				i = maxIterations;
 
-				offset = calculateOffset(associations);
-				dataCloud.translate(-offset);
-				cameraPosition -= offset;
+				R = lastRotation;
+				offset = -lastTranslation;
+
+				dataCloud.rotate(lastRotation);
+				dataCloud.translate(lastTranslation);
 				break;
 			}
 
@@ -245,13 +252,13 @@ namespace icp {
 			// Find nearest neighber associations
 			// findGlobalNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 			// findMappedNearestNeighborAssociations(dataCloud, errors, associations);
-			findGlobalKeyPointAssociations(dataCloud, errors, associations);
+			findGlobalKeyPointAssociations(dataCloud, errors, associations, nonAssociations);
 
 			i++;
 		}
 
-		// lastTranslation = -offset;
-		// lastRotation = R;
+		lastTranslation = -offset;
+		lastRotation = R;
 
 		// Log MSE
 		std::cout << meanSquareError(errors);
@@ -261,8 +268,7 @@ namespace icp {
 		rigidTransformation.at<float>(2, 3) = offset.z;
 
 		// map.update(dataCloud, DELTA_CONFIDENCE, depthWindow);
-		map.update(associations, errors, dataCloud, DELTA_CONFIDENCE);
-
+		map.update(associations, errors, nonAssociations, DELTA_CONFIDENCE);
 		
 		dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
 		// dataCloud.displayKeyPoints(depthWindow, "Data", 3, cv::viz::Color::red());
@@ -479,7 +485,7 @@ namespace icp {
 		}
 	}
 
-	void findGlobalKeyPointAssociations(PointCloud& data, std::vector<float>& errors, associations_t& associations) {
+	void findGlobalKeyPointAssociations(PointCloud& data, std::vector<float>& errors, associations_t& associations, point_list_t& nonAssociations) {
 		// Iterate through keypoints
 		if (map.mapCloud.keypoints.size() == 0)
 			return;
@@ -498,12 +504,14 @@ namespace icp {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}
+			else {
+				nonAssociations.push_back(*it);
+			}
 
 			it++;
 		}
 
 		logDeltaTime(LOG_NEAREST_NEIGHBOR, (int)associations.size());
-
 	}
 
 	float getNearestKeyPoint(color_point_t point, color_point_t& nearest, PointCloud& cloud)
