@@ -7,10 +7,10 @@
 #define DISTANCE_WEIGHT 1.0f - COLOR_WEIGHT
 #define MAX_NN_COLOR_DISTANCE 0.75f
 
-#define MAX_NN_KEYPOINT_DISTANCE 0.2f
+#define MAX_NN_KEYPOINT_DISTANCE 0.1f
 #define MIN_NN_COLOR_DISTANCE 0.2f
 
-#define MIN_ASSOCIATION_DRAW_DISTANCE 0.0f
+#define MIN_ASSOCIATION_DRAW_DISTANCE 0.05f
 // The longest point association distance that can be factored into translation
 #define MAX_TRANSLATION_NN_DISTANCE 0.3f
 #define MAX_TRANSLATION_DISTANCE 3.5f

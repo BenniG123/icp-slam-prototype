@@ -60,7 +60,8 @@ namespace icp {
 
 			// map.mapCloud.translate(cameraPosition);
 			map.update(previousCloud, MAX_CONFIDENCE, depthWindow);
-			map.mapCloud.keypoints = previousCloud.keypoints;
+			map.mapCloud.points = previousCloud.points;
+			// map.mapCloud.keypoints = previousCloud.keypoints;
 
 			lastRotation = makeRotationMatrix(0,0,0);
 			lastTranslation = cv::Point3f(0,0,0);
@@ -96,11 +97,11 @@ namespace icp {
 		point_list_t nonAssociations;
 		findGlobalKeyPointAssociations(dataCloud, errors, associations, nonAssociations);
 
-		/* std::vector<cv::Point3f> first, second;
+		std::vector<cv::Point3f> first, second;
 		std::vector<uchar> inliers;
 		cv::Mat aff(3, 4, CV_64F);
 
-		associations_t::iterator it, end;
+		/* associations_t::iterator it, end;
 		it = associations.begin();
 		end = associations.end();
 
@@ -142,7 +143,6 @@ namespace icp {
 
 			}
 		}
-
 		*/
 
 
@@ -154,13 +154,13 @@ namespace icp {
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 			// std::cout << i << std::endl;
-			/* dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
-			map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::green());
+			/* dataCloud.displayKeyPoints(depthWindow, "Data", 3, cv::viz::Color::red());
+			map.mapCloud.displayKeyPoints(depthWindow, "Map", 3, cv::viz::Color::green());
 			showAssocations(associations, errors, depthWindow);
 			depthWindow.spinOnce(0, true);
 			*/
 
-			if (associations.size() < 8) {
+			if (associations.size() < 3) {
 				// dataCloud.displayAll(depthWindow, "Data", 3, cv::viz::Color::red());
 				// map.mapCloud.displayAll(depthWindow, "Map", 3, cv::viz::Color::green());
 

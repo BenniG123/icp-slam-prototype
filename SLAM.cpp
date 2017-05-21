@@ -569,8 +569,8 @@ void filterDepthImage(cv::Mat &image, cv::Mat &rgbImage, int maxDistance, int mi
 		cv::Size(5, 5),
 		cv::Point(3, 3));
 
- 	// cv::dilate( image, image, element);
- 	// cv::erode( image, image, element);
+ 	cv::dilate( image, image, element);
+ 	cv::erode( image, image, element);
 	
   	// Using Canny's output as a mask, we display our result
 	/* cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,

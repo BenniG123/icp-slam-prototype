@@ -8,7 +8,7 @@
 #define FY 468.61f
 #define CX 318.27f
 #define CY 243.99f
-#define SUBSAMPLE_FACTOR 50
+#define SUBSAMPLE_FACTOR 40
 
 struct color_point_t {
 	cv::Point3f point;

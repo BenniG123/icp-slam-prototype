@@ -166,6 +166,10 @@ namespace icp {
 
 	// Display PointCloud with colorMap in Viz Window
 	void PointCloud::displayColorPoints(cv::viz::Viz3d& depthWindow, std::string name, int size) {
+
+		if (points.size() == 0)
+			return;
+
 	    cv::Mat pointCloudMat((int) points.size(), 1, CV_32FC3);
 	    cv::Mat colorMap((int) points.size(), 1, CV_8UC3);
 

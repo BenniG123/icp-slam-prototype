@@ -150,6 +150,32 @@ namespace map {
 
 		}
 
+		
+		/*
+		for (int i = 0; i < mapCloud.keypoints.size(); i++) {
+
+			color_point_t c_point = mapCloud.keypoints[i];
+
+			cv::Point3i voxelPoint = getVoxelCoordinates(c_point.point);
+
+			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
+
+			// Update certainty
+			if (*certainty > 0) {
+				*certainty -= DELTA_CONFIDENCE / 4;
+				if (*certainty < MIN_CONFIDENCE) {
+					// Remove Point
+					if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] != empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+						pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = empty;
+						mapCloud.keypoints.erase(mapCloud.keypoints.begin() + i);
+					}
+				}
+
+			}
+
+		}
+		*/
+
 		// cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(3,3,3));
 
 		/* for (int i = 0; i < keyPointAssociations.size(); i++) {
@@ -193,8 +219,8 @@ namespace map {
 	// Update Map with new scan
 	void Map::update(icp::PointCloud data, int delta_confidence, cv::viz::Viz3d& depthWindow) {
 		point_list_t::iterator it, end;
-		it = data.points.begin();
-		end = data.points.end();
+		it = data.keypoints.begin();
+		end = data.keypoints.end();
 
 		float c = float(CELL_PHYSICAL_HEIGHT);
 		cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f( 5 * CELL_PHYSICAL_HEIGHT, 5 * CELL_PHYSICAL_HEIGHT, 5 * CELL_PHYSICAL_HEIGHT));
@@ -229,7 +255,7 @@ namespace map {
 			// Populate lookup table if we are certain about this point
 			if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty && *certainty >= MAX_CONFIDENCE) { // pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty &&
 				pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
-				mapCloud.points.push_back(*it);
+				mapCloud.keypoints.push_back(*it);
 			}
 			/* else if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] != empty) {
 				// mapCloud.points.erase();
