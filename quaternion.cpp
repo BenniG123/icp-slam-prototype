@@ -90,6 +90,28 @@ Quaternion::Quaternion(float wi, float xi, float yi, float zi)
   y = yi;
   z = zi;
 }
+
+cv::Mat Quaternion::toRotationMatrix() {
+	double xx = x * x, xy = x* y, xz = x * z, xw = x* w;
+	double yy = y * y, yz = y * z, yw = y * w;
+	double zz = z * z, zw = z * w;
+
+	cv::Mat rotationMatrix(3,3, CV_32FC1);
+
+	rotationMatrix.at<float>(0, 0) = (1 - 2 * yy - 2 * zz);
+	rotationMatrix.at<float>(0, 1) = (2 * xy - 2 * zw);
+	rotationMatrix.at<float>(0, 2) = (2 * xz + 2 * yw);
+
+	rotationMatrix.at<float>(1, 0) = (2 * xy + 2 * zw);
+	rotationMatrix.at<float>(1, 1) = (1 - 2 * xx - 2 * zz);
+	rotationMatrix.at<float>(1, 2) = (2 * yz - 2 * xw);
+
+	rotationMatrix.at<float>(2, 0) = (2 * xz - 2 * yw);
+	rotationMatrix.at<float>(2, 1) = (2 * yz + 2 * xw);
+	rotationMatrix.at<float>(2, 2) = (1 - 2 * xx - 2 * yy);
+
+	return rotationMatrix;
+}
  
 
 //Quaternion

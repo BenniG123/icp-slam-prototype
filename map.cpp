@@ -32,38 +32,36 @@ namespace map {
 		end = data.points.end();
 
 		while (it != end) {
-			rayTrace(*it, position);
+			// rayTrace(*it, position);
 			it++;
 		}
 	}
 
 	// Algorithm from "A Fast Voxel Traversal Algorithm for Ray Tracing"
-	void rayTrace(cv::Point3f point, cv::Point3f origin) {
+	void rayTrace(cv::Point3i point, cv::Point3i origin, cv::viz::Viz3d& depthWindow) {
 		// Point Voxel Coordinates
 		int x, y, z;
 
-		x = point.x / CELL_PHYSICAL_HEIGHT;
-		y = point.y / CELL_PHYSICAL_HEIGHT;
-		z = point.z / CELL_PHYSICAL_HEIGHT;
-
-		world[x][y][z] += DELTA_CONFIDENCE;
-		if (world[x][y][z] > 255) {
-			world[x][y][z] = 255;
-		}
+		x = point.x;
+		y = point.y;
+		z = point.z;
 
 		// Origin Voxel Coordinates
 		int ox, oy, oz;
 
-		ox = origin.x / CELL_PHYSICAL_HEIGHT;
-		oy = origin.y / CELL_PHYSICAL_HEIGHT;
-		oz = origin.z / CELL_PHYSICAL_HEIGHT;
+		ox = origin.x;
+		oy = origin.y;
+		oz = origin.z;
+
+		cv::viz::WSphere originWidget(cv::Vec3d(ox, oy, oz), 0.1, 10, cv::viz::Color::yellow());
+		depthWindow.showWidget("origin", originWidget);
 
 		// Slope of voxel travel
 		float mx, my, mz;
 
-		mx = origin.x - point.x;
-		my = origin.y - point.y;
-		mz = origin.z - point.z;
+		mx = (float)x - ox;
+		my = (float)y - oy;
+		mz = (float)z - oz;
 
 		// Normalize slope
 		float magnitude = sqrt(pow(mx, 2) + pow(my, 2) + pow(mz, 2));
@@ -74,61 +72,90 @@ namespace map {
 		// Direction of voxel stepping
 		int stepX, stepY, stepZ;
 
-		if (x < ox) {
+		if (ox < x) {
 			stepX = 1;
-		} else if (x == ox) {
+		}
+		else if (x == ox) {
 			stepX = 0;
-		} else {
+		}
+		else {
 			stepX = -1;
 		}
 
-		if (y < oy) {
+		if (oy < y) {
 			stepY = 1;
-		} else if (y == oy) {
+		}
+		else if (y == oy) {
 			stepY = 0;
-		} else {
+		}
+		else {
 			stepY = -1;
 		}
 
-		if (z < oz) {
+		if (oz < z) {
 			stepZ = 1;
-		} else if (z == oz) {
+		}
+		else if (z == oz) {
 			stepZ = 0;
-		} else {
+		}
+		else {
 			stepZ = -1;
 		}
 
 		// How far along the ray must we move for the horizontal component
 		// of such a movement to equal the width of a voxel
-		float tDeltaX, tDeltaY, tDeltaZ;
+		float tDeltaX, tDeltaY, tDeltaZ = 0;
 
 		if (mx != 0)
-			tDeltaX = 1 / mx;
+			tDeltaX = stepX / mx;
 
 		if (my != 0)
-			tDeltaY = 1 / my;
+			tDeltaY = stepY / my;
 
 		if (mz != 0)
-			tDeltaZ = 1 / mz;
+			tDeltaZ = stepZ / mz;
 
 		// How far can we travel along the ray and stay in the first voxel row
 		float tMaxX, tMaxY, tMaxZ;
+		tMaxX = 1 / mx;
+		tMaxY = 1 / my;
+		tMaxZ = 1 / mz;
+
+		// std::cout << "tMaxX: " << tMaxX << std::endl;
+		// std::cout << "tMaxY: " << tMaxY << std::endl;
+		// std::cout << "tMaxZ: " << tMaxZ << std::endl;
+
+		// tMaxX = bound(ox, mx);
+		// tMaxY = bound(oy, my);
+		// tMaxZ = bound(oz, mz);
 
 		// TODO - This is wrong
 		// The inter voxel distance between point and voxel edge
-		float interVoxelX = point.x / CELL_PHYSICAL_HEIGHT - ((float) x);
+		/* float interVoxelX = point.x / CELL_PHYSICAL_HEIGHT - ((float) x);
+		float interVoxelY = point.y / CELL_PHYSICAL_HEIGHT - ((float) y);
+		float interVoxelZ = point.z / CELL_PHYSICAL_HEIGHT - ((float) z);
+
 		float interVoxelT = (1 - interVoxelX) / mx;
 
-		tMaxX = tDeltaX - point.x / CELL_PHYSICAL_HEIGHT - ((float) x);
-		tMaxY = tDeltaY - point.y / CELL_PHYSICAL_HEIGHT - ((float) y);
-		tMaxZ = tDeltaZ - point.z / CELL_PHYSICAL_HEIGHT - ((float) z);
+		tMaxX = ( tDeltaX - point.x ) / CELL_PHYSICAL_HEIGHT - ((float) x);
+		tMaxY = ( tDeltaY - point.y ) / CELL_PHYSICAL_HEIGHT - ((float) y);
+		tMaxZ = ( tDeltaZ - point.z ) / CELL_PHYSICAL_HEIGHT - ((float) z);
+		*/
+
+		int dx = x;
+		int dy = y;
+		int dz = z;
+
+		x = ox;
+		y = oy;
+		z = oz;
 
 		do {
 			if (tMaxX < tMaxY) {
 				if (tMaxX < tMaxZ) {
 					x += stepX;
 					if (x < 0 || x > MAP_HEIGHT) {
-						std::cout << "Point out of bounds: " << cv::Point3i(x,y,z) << std::endl;
+						std::cout << "X: Point out of bounds: " << cv::Point3i(x, y, z) << std::endl;
 						break;
 					}
 					tMaxX += tDeltaX;
@@ -136,7 +163,7 @@ namespace map {
 				else {
 					z += stepZ;
 					if (z < 0 || z > MAP_HEIGHT) {
-						std::cout << "Point out of bounds: " << cv::Point3i(x,y,z) << std::endl;
+						std::cout << "Z1: Point out of bounds: " << cv::Point3i(x, y, z) << std::endl;
 						break;
 					}
 					tMaxZ += tDeltaZ;
@@ -146,7 +173,7 @@ namespace map {
 				if (tMaxY < tMaxZ) {
 					y += stepY;
 					if (y < 0 || y > MAP_HEIGHT) {
-						std::cout << "Point out of bounds: " << cv::Point3i(x,y,z) << std::endl;
+						std::cout << "Y: Point out of bounds: " << cv::Point3i(x, y, z) << std::endl;
 						break;
 					}
 					tMaxY += tDeltaY;
@@ -154,7 +181,7 @@ namespace map {
 				else {
 					z += stepZ;
 					if (z < 0 || z > MAP_HEIGHT) {
-						std::cout << "Point out of bounds: " << cv::Point3i(x,y,z) << std::endl;
+						std::cout << "Z2: Point out of bounds: " << cv::Point3i(x, y, z) << std::endl;
 						break;
 					}
 					tMaxZ += tDeltaZ;
@@ -169,9 +196,17 @@ namespace map {
 				}
 			}
 
-		} while (x != ox && y != oy && z != oz);
+			// cv::viz::WCube cubeWidget(cv::Vec3d(x, y, z), cv::Vec3d(x+1, y+1, z+1), 
+			//	true, cv::viz::Color(cv::Scalar(255, 127, world[x][y][z])));
 
+			// depthWindow.showWidget( "rayTrace"  + std::to_string(x + y * MAP_HEIGHT + z * MAP_HEIGHT * MAP_HEIGHT), cubeWidget);
+
+		} while (x != dx || y != dy || z != dz);
+
+		// depthWindow.spinOnce(1);
+		// depthWindow.removeAllWidgets();
 	}
+
 
 	void getPoints(cv::Mat& depthMap, cv::Point3i& position, cv::Mat& rotation) {
 		// Foreach space between camera and raycast, increase value.

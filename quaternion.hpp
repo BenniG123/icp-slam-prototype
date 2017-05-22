@@ -41,6 +41,8 @@ class Quaternion
   // -parametes : w, x, y, z elements of the quaternion
   // -creates a new quaternion based on the elements passed in
   Quaternion(float wi, float xi, float yi, float zi);
+
+  cv::Mat toRotationMatrix();
   
   //Quaternion
   // -constructor

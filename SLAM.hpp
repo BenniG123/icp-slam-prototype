@@ -30,6 +30,8 @@ void logDeltaTime(int logKey, int quantity = 0);
 
 std::string getNextImageFileName(std::ifstream& list_file, std::string path, double& timestamp);
 
+cv::Point3f getInitialPose(Quaternion& rotation);
+
 void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name);
 
 void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name);
@@ -46,7 +48,7 @@ int curvature(cv::Mat roi);
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin);
 
-cv::Vec3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file, Quaternion& rotation);
+cv::Point3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file, Quaternion& rotation);
 
 void getNormalMap(cv::Mat& image, cv::Mat& normals);
 

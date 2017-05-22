@@ -14,7 +14,7 @@
 namespace map {
 	void init();
 	void updateMap(icp::PointCloud data, cv::Point3f position, cv::Mat rotation);
-	void rayTrace(cv::Point3f point, cv::Point3f position);
+	void rayTrace(cv::Point3i point, cv::Point3i origin, cv::viz::Viz3d& depthWindow);
 }
 
 #endif

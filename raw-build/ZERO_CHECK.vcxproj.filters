@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\4daa0859ae1c67088385dd408cbf34e2\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{68DE0927-E963-301F-B49B-9539E7824442}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

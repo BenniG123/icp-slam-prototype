@@ -46,9 +46,9 @@ namespace icp {
 			// P3D.z = depth(x_d,y_d)
 			float x = (float) (p_index % width);
 			float y = (float) (p_index / width);
-			float p_z = ((float) (*it)) / 5000;
-			float p_x = (x - 250.32) * p_z / 363.58;
-			float p_y = (y - 212.55) * p_z / 363.53;
+			float p_z = ((float) (*it)) / 5000.0f;
+			float p_x = (x - 250.32f) * p_z / 363.58f;
+			float p_y = (y - 212.55f) * p_z / 363.53f;
 
 			// std::cout << p_x << " " << p_y << " " << p_z << std::endl;
 
@@ -85,7 +85,7 @@ namespace icp {
 		center.z /= index;
 
 		center_points();
-		std_dev_filter_points();
+		// std_dev_filter_points();
 	}
 
 	void PointCloud::std_dev_filter_points() {
@@ -160,7 +160,10 @@ namespace icp {
 		it = points.begin();
 		end = points.end();
 
-		std::cout << center << std::endl;
+		// if (points.size() == 0)
+		//	return;
+
+		// std::cout << center << std::endl;
 
 		while (it != end) {
 			cv::Point3f p = *it;
@@ -194,7 +197,7 @@ namespace icp {
 	}
 
 	cv::Mat PointCloud::centered_matrix() {
-		cv::Mat M(points.size(), 3, CV_32FC1);
+		cv::Mat M((int) points.size(), 3, CV_32FC1);
 
 		for (int i = 0; i < points.size(); i++) {
 			M.at<float>(i, 0) = points[i].x;
@@ -206,7 +209,7 @@ namespace icp {
 	}
 
 	cv::Mat PointCloud::matrix() {
-		cv::Mat M(points.size(), 3, CV_32FC1);
+		cv::Mat M((int) points.size(), 3, CV_32FC1);
 
 		for (int i = 0; i < points.size(); i++) {
 			M.at<float>(i, 0) = points[i].x + center.x;

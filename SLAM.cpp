@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <vector>
 #include <iterator>
-#include <boost/circular_buffer.hpp>
 #include <ctime>
 #include <ratio>
 #include <chrono>
@@ -50,18 +49,20 @@ w*/
 
 
 std::chrono::high_resolution_clock::time_point start, t2;
+Quaternion initialRotation;
+cv::Point3f initialPosition;
 logEntry myLog[10];
 
-int main( int argc, const char** argv )
+int main(int argc, const char** argv)
 {
 	std::string path;
 
 	// Abbreviation for program options
 	/* namespace po = boost::program_options;
-	po::options_description desc("Options"); 
+	po::options_description desc("Options");
 	desc.add_options()
-    	("help", "produce help message")
-    	("compression", po::value<int>(), "set compression level");
+		("help", "produce help message")
+		("compression", po::value<int>(), "set compression level");
 	*/
 
 	bool paused = false;
@@ -87,7 +88,7 @@ int main( int argc, const char** argv )
 		path.append("/");
 	}
 
-	/* 
+	/*
 	cv::namedWindow( "Original" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 
 	cv::namedWindow( "Color" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
@@ -103,14 +104,14 @@ int main( int argc, const char** argv )
 	cv::moveWindow( "Sobel" , 500 , 700 );
 	*/
 
-	cv::namedWindow( "Filtered" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow( "Filtered" , 0 , 700 );
+	// cv::namedWindow("Filtered", cv::WINDOW_AUTOSIZE); // Create a window for display.
+	// cv::moveWindow("Filtered", 0, 700);
 	// cv::namedWindow( "Normals" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	// cv::moveWindow( "Normals" , 550 , 700 );
 	// cv::namedWindow( "RGB" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	// cv::moveWindow( "RGB" , 1100 , 700 );
-	cv::namedWindow( "Features" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
-	cv::moveWindow( "Features" , 900 , 0 );
+	// cv::namedWindow("Features", cv::WINDOW_AUTOSIZE); // Create a window for display.
+	// cv::moveWindow("Features", 900, 0);
 
 
 	cv::viz::Viz3d depthWindow("Depth Frame");
@@ -124,18 +125,14 @@ int main( int argc, const char** argv )
 	cv::Mat previous;
 	cv::Mat normals;
 
-	cv::Vec3f initialPosition;
-
 	// Camera Calibration Matrix
-	float data[3][3] = {{363.58,0,250.32}, {0,363.53,212.55}, {0,0,1}}; 
+	float data[3][3] = { {363.58f,0.0f,250.32f}, {0.0f,363.53f,212.55f}, {0.0f,0.0f,1.0f} };
 
 	// Correct depth frame
 	cv::Mat cameraMatrix(3, 3, CV_32FC1, &data);
 	cv::Mat distortionMatrix;
 	cv::Mat translationPlot(500, 500, CV_8UC(3));
-	cv::Mat rotation = icp::makeRotationMatrix(0,0,0);
-
-	boost::circular_buffer<cv::Mat> transformationBuffer{33};
+	cv::Mat rotation = icp::makeRotationMatrix(0, 0, 0);
 
 	std::string line;
 	std::string depth_list_file_name(path);
@@ -153,7 +150,6 @@ int main( int argc, const char** argv )
 	std::ifstream ground_truth_file(ground_truth_file_name.c_str());
 
 	// Euler rotation and transformation variables for groundtruth and latest scan
-	Quaternion initialRotation;
 	Quaternion previousRotation;
 	Quaternion currentRotation;
 	Quaternion deltaRotation;
@@ -188,97 +184,76 @@ int main( int argc, const char** argv )
 				std::string depth_frame_file_name = getNextImageFileName(depth_list_file, path, timestamp);
 				std::string rgb_frame_file_name = getNextImageFileName(rgb_list_file, path, timestamp);
 
-			    // Read next depth frame
-			    image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_ANYDEPTH);   // Read the file
+				// Read next depth frame
+				image = cv::imread(depth_frame_file_name, CV_LOAD_IMAGE_ANYDEPTH);   // Read the file
 
-			    // Read the next color frame
-			    rgbImage = cv::imread(rgb_frame_file_name, CV_LOAD_IMAGE_GRAYSCALE);
-			    // cv::resize(rgbImage, rgbImage, cv::Size(960,540));
+				// Read the next color frame
+				// rgbImage = cv::imread(rgb_frame_file_name, CV_LOAD_IMAGE_GRAYSCALE);
+				// cv::resize(rgbImage, rgbImage, cv::Size(960,540));
 
-			    // std::vector<cv::KeyPoint> keypoints;
-			    // cv::FAST(rgbImage, keypoints, 40, true, cv::FastFeatureDetector::TYPE_9_16);
-			    // cv::drawKeypoints(rgbImage, keypoints, keypointsImage, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+				// std::vector<cv::KeyPoint> keypoints;
+				// cv::FAST(rgbImage, keypoints, 40, true, cv::FastFeatureDetector::TYPE_9_16);
+				// cv::drawKeypoints(rgbImage, keypoints, keypointsImage, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
-			    // CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
-			    // image.convertTo(image, CV_16U);
+				// CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
+				// image.convertTo(image, CV_16U);
 
-			    if(! image.data ) // Check for invalid input
-			    {
-			        std::cout <<  "Could not open or find the image" << std::endl;
-			        cv::waitKey(1);
-			        continue;
-			    }
+				if (!image.data) // Check for invalid input
+				{
+					std::cout << "Could not open or find the image" << std::endl;
+					cv::waitKey(1);
+					continue;
+				}
 
-			    logDeltaTime(LOG_LOAD_IMAGE);
+				logDeltaTime(LOG_LOAD_IMAGE);
 
-			    double min;
+				double min;
 				double max;
 
-			    cv::Mat undistortImage = image.clone();
-			    cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
-			    image = undistortImage;
+				cv::Mat undistortImage = image.clone();
+				cv::undistort(image, undistortImage, cameraMatrix, distortionMatrix);
+				image = undistortImage;
 
-			    filtered = image.clone();
+				filtered = image.clone();
 
-			    // Filter all points > x * 5000 m away - 25000
-			    filterDepthImage(filtered, 25000);
+				// Filter all points > x * 5000 m away - 25000
+				filterDepthImage(filtered, 25000);
 
-    			// normals = cv::Mat(filtered.size(), CV_32FC3);
-
-			    // Get Image Normals
-			    // getNormalMap(filtered, normals);
-
-			    logDeltaTime( LOG_FILTER_IMAGE );
-
-				// std::vector<cv::Rect> rois = calculateROIs(sobelFilter, cv::Size2i(20, 20), 10, 40);
-
-				// Draw rois
-				// for (int i = 0; i < rois.size(); i++) {
-				// 	cv::rectangle(colorDepth, rois[i], cv::Scalar(0,0,255), 3);
-				// }
+				logDeltaTime(LOG_FILTER_IMAGE);
 
 				if (previous.size().area() > 0) {
-					// std::cout << std::setprecision (15) << timestamp << ",";
-					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 16, 0.0001, depthWindow);
-					cv::Mat icpRotation = transformation(cv::Rect(0,0,3,3));
-					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
-					
-					// icpRotation = icpRotation * icp::makeRotationMatrix(0, 0, 180);
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 16, 0.0001f, depthWindow); // 
+					cv::Mat icpRotation = transformation(cv::Rect(0, 0, 3, 3));
+					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation) - initialPosition;
 
-					deltaRotation = currentRotation * initialRotation.inverse();
-					rotation = rotation * icpRotation;
+					// icpRotation = icpRotation * icp::makeRotationMatrix(0, 0, 180);
+					deltaRotation = (initialRotation.inverse() * currentRotation).inverse();
+					// rotation = rotation * icpRotation;
 
 					float rx, ry, rz;
-					// transformationMatToEulerianAngle(rotation, rx, ry, rz);
-					rotationQ = Quaternion(rotation); // * rotationQ.inverse();
-    				toEulerianAngle(rotationQ, rx, ry, rz);
+					rotationQ = Quaternion(icpRotation);
+					toEulerianAngle(rotationQ, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz;
-    				toEulerianAngle(deltaRotation, rx, ry, rz);
+					toEulerianAngle(deltaRotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
 
-					showText(depthWindow, "Ground Truth", cv::Point(10,30), "Ground Truth Text");
-					showTransfom(depthWindow, deltaRotation, cv::Point(10,10), "Ground Truth");
-					showText(depthWindow, "ICP", cv::Point(10,80), "ICP Text");
-					showTransfom(depthWindow, rotation, cv::Point(10,60), "ICP");
+					showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
+					showTransfom(depthWindow, deltaRotation, cv::Point(10, 10), "Ground Truth");
+					showText(depthWindow, "ICP", cv::Point(10, 80), "ICP Text");
+					showTransfom(depthWindow, icpRotation, cv::Point(10, 60), "ICP");
 
-					depthWindow.spinOnce(33, true);
+					// Show camera position
+					// cv::viz::WCone gtPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12, cv::viz::Color::red());
+					// gtPosition.updatePose(cv::Affine3f(deltaRotation.toRotationMatrix(), cv::Point3f(currentPosition)));
+					// depthWindow.showWidget("Ground Truth Position", gtPosition);
+
+					depthWindow.spinOnce(1, true);
 
 					logDeltaTime(LOG_RETRIEVE_TRANSFORM);
 
-					// if (transformation.at<float>(2,2) > 0) {
 					previous = filtered.clone();
 					previousRotation = currentRotation;
-					// }
 
-					// cv::subtract(groundTruth, initialPosition, groundTruth);
-					// std::cout << "Ground Truth:" << std::endl << groundTruth << std::endl;
-					// std::cout << "Transformation:" << std::endl << transformation << std::endl;
-
-					// int i = 0;
-					/* for (cv::Mat mat : transformationBuffer) {
-						cv:circle(translationPlot, cv::Point(((int) (mat.at<float>(0,0) * 125) + 250), (int) (250 - mat.at<float>(0,2) * 125)), mat.at<float>(0,1) * 5 + 5, cv::Scalar(255, i * 5, i * 5), -1);
-						i++;
-					} */
 				}
 				else {
 					previous = filtered.clone();
@@ -287,6 +262,9 @@ int main( int argc, const char** argv )
 					initialPosition = getNextGroundTruth(timestamp, ground_truth_file, initialRotation);
 
 					currentRotation = initialRotation;
+
+					rotation = icp::makeRotationMatrix(0, 0, 0);
+
 					// Print out column names
 					std::cout << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
 				}
@@ -296,45 +274,47 @@ int main( int argc, const char** argv )
 				cv::Mat adjMap;
 
 				// expand your range to 0..255. Similar to histEq();
-				filtered.convertTo(adjMap, CV_8UC1, 255 / (max-min), -min); 
+				filtered.convertTo(adjMap, CV_8UC1, 255 / (max - min), -min);
 				cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
 
-			    cv::imshow( "Filtered", colorDepth );
+				cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
 				// cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", keypointsImage);
-			    // cv::imshow( "Sobel", sobelFilter );
-			    // cv::imshow( "Original", image );
-			    // cv::imshow( "Color", colorDepth );
-			    // cv::imshow( "Color Filtered", colorFiltered );
-			    // cv::imshow( "Translation", translationPlot );
+				// cv::imshow( "Sobel", sobelFilter );
+				// cv::imshow( "Original", image );
+				// cv::imshow( "Color", colorDepth );
+				// cv::imshow( "Color Filtered", colorFiltered );
+				// cv::imshow( "Translation", translationPlot );
 
 
-			    // depthWindow.spinOnce(33, true);
+				// depthWindow.spinOnce(33, true);
 
-		    	if (paused) {
+				if (paused) {
 					cv::waitKey(0);
 					paused = false;
 				}
-			    // cv::imshow( "Compare Images", 100 * (undistortImage - image) );
+				// cv::imshow( "Compare Images", 100 * (undistortImage - image) );
 
-			    // TODO - The whole SLAM thing
+				// TODO - The whole SLAM thing
 
-			    cv::waitKey(1);
+				cv::waitKey(1);
 
-			    logDeltaTime(LOG_UI);
+				logDeltaTime(LOG_UI);
 			}
 
 			ground_truth_file.close();
 
-		} else {
+		}
+		else {
 			errorMessage();
 		}
 
 		depth_list_file.close();
 		rgb_list_file.close();
 
-	} else {
+	}
+	else {
 		errorMessage();
 	}
 
@@ -344,11 +324,17 @@ int main( int argc, const char** argv )
 std::string getNextImageFileName(std::ifstream& list_file, std::string path, double& timestamp) {
 
 	std::string line;
-	getline (list_file, line);
+	getline(list_file, line);
+
+	if (line.size() == 0) {
+		std::cout << "End of file" << std::endl;
+		cv::waitKey(0);
+		exit(0);
+	}
 
 	// Skip comments
 	while (line[0] == '#') {
-		getline (list_file, line);
+		getline(list_file, line);
 	}
 
 	// Get Filename
@@ -366,40 +352,46 @@ std::string getNextImageFileName(std::ifstream& list_file, std::string path, dou
 	timestamp = std::stod(timestamp_string);
 
 	std::getline(ss, file, ' ');
-	std::replace( file.begin(), file.end(), '\\', '/');
+	std::replace(file.begin(), file.end(), '\\', '/');
 
 	// Remove whitespace
-    for (int i = 0; i < file.size(); i++) {
-    	if (file[i] == ' ' || file[i] == '\n' || file[i] == '\r') {
-    		file.erase(i, 1);
-    	}
-    }
+	for (int i = 0; i < file.size(); i++) {
+		if (file[i] == ' ' || file[i] == '\n' || file[i] == '\r') {
+			file.erase(i, 1);
+		}
+	}
 
-    frame_file_name.append(file.c_str());
-    return frame_file_name;
+	frame_file_name.append(file.c_str());
+	return frame_file_name;
+}
+
+cv::Point3f getInitialPose(Quaternion & rotation)
+{
+	rotation = initialRotation;
+	return initialPosition;
 }
 
 void getNormalMap(cv::Mat& image, cv::Mat& normals) {
 	cv::Mat image32FC1;
 	image.convertTo(image32FC1, CV_32FC1);
 
-	for(int x = 1; x < image32FC1.rows; x++)
+	for (int x = 1; x < image32FC1.rows; x++)
 	{
-	    for(int y = 1; y < image32FC1.cols; y++)
-	    {
+		for (int y = 1; y < image32FC1.cols; y++)
+		{
 
-	        float dzdx = (image32FC1.at<float>(x+1, y) - image32FC1.at<float>(x-1, y)) / 2.0;
-	        float dzdy = (image32FC1.at<float>(x, y+1) - image32FC1.at<float>(x, y-1)) / 2.0;
+			float dzdx = (image32FC1.at<float>(x + 1, y) - image32FC1.at<float>(x - 1, y)) / 2.0f;
+			float dzdy = (image32FC1.at<float>(x, y + 1) - image32FC1.at<float>(x, y - 1)) / 2.0f;
 
-	        cv::Vec3f d(-dzdx, -dzdy, 1.0f);
-	        cv::Vec3f n = cv::normalize(d);
+			cv::Vec3f d(-dzdx, -dzdy, 1.0f);
+			cv::Vec3f n = cv::normalize(d);
 
-	        normals.at<cv::Vec3f>(x, y) = n;
-	    }
+			normals.at<cv::Vec3f>(x, y) = n;
+		}
 	}
 }
 
-cv::Vec3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file, Quaternion& rotation) {
+cv::Point3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file, Quaternion& rotation) {
 	// Sum up the transformation and rotational components of ground truth until
 	// Ground Truth timestamp would exceed depth frame timestamp
 
@@ -409,79 +401,79 @@ cv::Vec3f getNextGroundTruth(double timestamp, std::ifstream& ground_truth_file,
 
 	double ground_truth_timestamp;
 
-    // Get the first line
-	getline (ground_truth_file, line);
+	// Get the first line
+	getline(ground_truth_file, line);
 
 	// Skip comments
 	while (line[0] == '#') {
-		getline (ground_truth_file, line);
+		getline(ground_truth_file, line);
 	}
 
 	ss.str(line);
 	std::getline(ss, temp, ' ');
 	ground_truth_timestamp = std::stod(temp);
 
-    while (ground_truth_timestamp < timestamp) {
-    	// Do something with the measurements
+	while (ground_truth_timestamp < timestamp) {
+		// Do something with the measurements
 
 		// Get next measurement
-		getline (ground_truth_file, line);
+		getline(ground_truth_file, line);
 		ss.str(line);
 		std::getline(ss, temp, ' ');
 		ground_truth_timestamp = std::stod(temp);
-    }
+	}
 
-    // Get translation vectors
-    std::getline(ss, temp, ' ');
-    float tx = std::stof(temp);
-    std::getline(ss, temp, ' ');
-    float ty = std::stof(temp);
-    std::getline(ss, temp, ' ');
-    float tz = std::stof(temp);
+	// Get translation vectors
+	std::getline(ss, temp, ' ');
+	float tx = std::stof(temp);
+	std::getline(ss, temp, ' ');
+	float ty = std::stof(temp);
+	std::getline(ss, temp, ' ');
+	float tz = std::stof(temp);
 
-    float qx;
-    float qy;
-    float qz;
-    float qw;
+	float qx;
+	float qy;
+	float qz;
+	float qw;
 
-    // Get quaternions
-    std::getline(ss, temp, ' ');
-    qx = std::stof(temp);
-    std::getline(ss, temp, ' ');
-    qy = std::stof(temp);
-    std::getline(ss, temp, ' ');
-    qz = std::stof(temp);
-    std::getline(ss, temp, ' ');
-    qw = std::stof(temp);
+	// Get quaternions
+	std::getline(ss, temp, ' ');
+	qx = std::stof(temp);
+	std::getline(ss, temp, ' ');
+	qy = std::stof(temp);
+	std::getline(ss, temp, ' ');
+	qz = std::stof(temp);
+	std::getline(ss, temp, ' ');
+	qw = std::stof(temp);
 
-    rotation = Quaternion(qw, qx, qy, qz);
-    cv::Vec3f position(tx, ty, tz);
-    return position;
+	rotation = Quaternion(qw, qx, qy, qz);
+	cv::Point3f position(tx, ty, tz);
+	return position;
 }
 
 
 void logDeltaTime(int logKey, int quantity) {
 	std::chrono::high_resolution_clock::time_point t = std::chrono::high_resolution_clock::now();
-    auto int_us = std::chrono::duration_cast<std::chrono::microseconds>(t - t2);
+	auto int_us = std::chrono::duration_cast<std::chrono::microseconds>(t - t2);
 
-    t2 = t;
-    myLog[logKey].time += int_us.count();
-    myLog[logKey].count++;
-    myLog[logKey].quantity = quantity;
+	t2 = t;
+	myLog[logKey].time += int_us.count();
+	myLog[logKey].count++;
+	myLog[logKey].quantity = quantity;
 
-    // std::cout << myLog[logKey].name << " " << int_us.count() << std::endl;
+	// std::cout << myLog[logKey].name << " " << int_us.count() << std::endl;
 
 
-    /* 
-    if (verbose) {
+	/*
+	if (verbose) {
 		std::cout << log[logKey].name << " " << int_us.count() << std::endl;
-    }
-    */
+	}
+	*/
 }
 
 void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name) {
 	cv::viz::WText textWidget(text, pos);
-	depthWindow.showWidget( name , textWidget);
+	depthWindow.showWidget(name, textWidget);
 }
 
 void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name) {
@@ -532,11 +524,21 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		it++;
 	}
 
+	// Using Canny's output as a mask, we display our result
+	cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT,
+		cv::Size(3, 3),
+		cv::Point(2, 2));
+
+	cv::erode(image, image, element);
+	cv::dilate(image, image, element);
+
+
+
 	/*
-  	// Using Canny's output as a mask, we display our result
+	// Using Canny's output as a mask, we display our result
 	cv::Mat element = cv::getStructuringElement( cv::MORPH_RECT,
-	                               cv::Size( 7, 7 ),
-	                               cv::Point( 4, 4 ) );
+								   cv::Size( 7, 7 ),
+								   cv::Point( 4, 4 ) );
 	cv::Mat image8u;
 	cv::Mat detected_edges;
 	cv::Mat maskedImage;
@@ -545,21 +547,21 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 	image.convertTo(image8u, CV_8U);
 
 	// Canny detector for edges
-  	cv::Canny( image8u, detected_edges, 1.0, 5.0, 5 );
+	cv::Canny( image8u, detected_edges, 1.0, 5.0, 5 );
 
-  	// Subtract edges  from the image
+	// Subtract edges  from the image
 	cv::dilate( detected_edges, detected_edges, element);
 	detected_edges.convertTo(detected_edges_16u, CV_16U);
 	cv::bitwise_not(detected_edges, detected_edges);
- 	image.copyTo(maskedImage, detected_edges);
- 	image = maskedImage;
+	image.copyTo(maskedImage, detected_edges);
+	image = maskedImage;
 
- 	cv::dilate( image, image, element);
- 	cv::erode( image, image, element);
- 	*/
+	cv::dilate( image, image, element);
+	cv::erode( image, image, element);
+	*/
 
- 	/*
- 	it = image.begin<uint16_t>();
+	/*
+	it = image.begin<uint16_t>();
 	end = image.end<uint16_t>();
 
 	it++;
@@ -581,7 +583,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		it2++;
 	}
 	*/
- 	// cv::dilate( image, image, element);
+	// cv::dilate( image, image, element);
 }
 
 void toEulerianAngle(Quaternion q, float& x, float& y, float& z)
@@ -589,36 +591,36 @@ void toEulerianAngle(Quaternion q, float& x, float& y, float& z)
 	float ysqr = q.y * q.y;
 
 	// roll (x-axis rotation)
-	float t0 = 2.0 * (q.w * q.x + q.y * q.z);
-	float t1 = 1.0 - 2.0 * (q.x * q.x + ysqr);
-	x = (float) std::atan2(t0, t1);
+	float t0 = 2.0f * (q.w * q.x + q.y * q.z);
+	float t1 = 1.0f - 2.0f * (q.x * q.x + ysqr);
+	x = (float)std::atan2(t0, t1);
 
 	// pitch (y-axis rotation)
-	float t2 = +2.0 * (q.w * q.y - q.z * q.x);
-	t2 = t2 > 1.0 ? 1.0 : t2;
-	t2 = t2 < -1.0 ? -1.0 : t2;
-	y = (float) std::asin(t2);
+	float t2 = +2.0f * (q.w * q.y - q.z * q.x);
+	t2 = t2 > 1.0f ? 1.0f : t2;
+	t2 = t2 < -1.0f ? -1.0f : t2;
+	y = (float)std::asin(t2);
 
 	// yaw (z-axis rotation)
-	float t3 = +2.0 * (q.w * q.z + q.x * q.y);
-	float t4 = +1.0 - 2.0 * (ysqr + q.z * q.z);  
-	z = (float) std::atan2(t3, t4);
+	float t3 = +2.0f * (q.w * q.z + q.x * q.y);
+	float t4 = +1.0f - 2.0f * (ysqr + q.z * q.z);
+	z = (float)std::atan2(t3, t4);
 
-	x = x * 180 / PI;
-	y = y * 180 / PI;
-	z = z * 180 / PI;
+	x = x * 180.0f / PI;
+	y = y * 180.0f / PI;
+	z = z * 180.0f / PI;
 }
 
 void transformationMatToEulerianAngle(cv::Mat t, float& x, float& y, float& z) {
-    float c2 = sqrt(pow(t.at<float>(0,0), 2) + pow(t.at<float>(0,1), 2));
+	float c2 = sqrt(pow(t.at<float>(0, 0), 2) + pow(t.at<float>(0, 1), 2));
 
-	x = std::atan2(t.at<float>(1,2), t.at<float>(2,2));
-    y = std::atan2(-t.at<float>(0,2), c2);
-    z = std::atan2(t.at<float>(0,1),t.at<float>(0,0));
+	x = std::atan2(t.at<float>(1, 2), t.at<float>(2, 2));
+	y = std::atan2(-t.at<float>(0, 2), c2);
+	z = std::atan2(t.at<float>(0, 1), t.at<float>(0, 0));
 
-    x = x * 180 / PI;
-	y = y * 180 / PI;
-	z = z * 180 / PI;
+	x = x * 180.0f / PI;
+	y = y * 180.0f / PI;
+	z = z * 180.0f / PI;
 }
 
 std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numROIs, int margin = 0) {
@@ -652,7 +654,7 @@ std::vector<cv::Rect> calculateROIs(cv::Mat image, cv::Size2i roiSIZE, int numRO
 				std::vector<int>::iterator min_element = std::min_element(curvature_list.begin(), curvature_list.end());
 
 				if (*min_element < c) {
-					int index = std::distance(curvature_list.begin(), min_element);
+					int index = (int)std::distance(curvature_list.begin(), min_element);
 					roi_list.erase(roi_list.begin() + index);
 					curvature_list.erase(curvature_list.begin() + index);
 
@@ -683,29 +685,5 @@ int curvature(cv::Mat roi) {
 
 
 	// Step 2 - Estimate Curvature
-	return cv::sum(roi)[0];
-
-
-	/* int minDistance = roi.at<cv::Vec3b>(0, 0)[0];
-	int maxDistance = roi.at<cv::Vec3b>(0, 0)[0];
-
-	cv::Size matSize = roi.size();
-
-	for ( int x = 0; x < matSize.width; x++) {
-		for (int y = 0; y < matSize.height; y++) {
-			// std:: cout << x << ", " << y << std::endl;
-			// if (roi.at<cv::Vec3b>(y, x)[0] == 0) {
-			//  	return -1;
-			// } else
-			if (roi.at<cv::Vec3b>(y, x)[0] > maxDistance) {
-				maxDistance = roi.at<cv::Vec3b>(y, x)[0];
-			} else if (roi.at<cv::Vec3b>(y, x)[0] < minDistance) {
-				minDistance = roi.at<cv::Vec3b>(y, x)[0];
-			}
-		}
-	}
-
-	// std::cout << maxDistance - minDistance << std::endl;
-
-	return maxDistance - minDistance; */
+	return (int)cv::sum(roi)[0];
 }
