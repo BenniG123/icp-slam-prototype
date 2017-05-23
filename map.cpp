@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/viz/vizcore.hpp"
+// #include "opencv2/viz/vizcore.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
 #include "map.hpp"
@@ -38,7 +38,7 @@ namespace map {
 	}
 
 	// Algorithm from "A Fast Voxel Traversal Algorithm for Ray Tracing"
-	void rayTrace(cv::Point3i point, cv::Point3i origin, cv::viz::Viz3d& depthWindow) {
+	/* void rayTrace(cv::Point3i point, cv::Point3i origin, cv::viz::Viz3d& depthWindow) {
 		// Point Voxel Coordinates
 		int x, y, z;
 
@@ -140,7 +140,7 @@ namespace map {
 		tMaxX = ( tDeltaX - point.x ) / CELL_PHYSICAL_HEIGHT - ((float) x);
 		tMaxY = ( tDeltaY - point.y ) / CELL_PHYSICAL_HEIGHT - ((float) y);
 		tMaxZ = ( tDeltaZ - point.z ) / CELL_PHYSICAL_HEIGHT - ((float) z);
-		*/
+
 
 		int dx = x;
 		int dy = y;
@@ -206,6 +206,7 @@ namespace map {
 		// depthWindow.spinOnce(1);
 		// depthWindow.removeAllWidgets();
 	}
+	*/
 
 
 	void getPoints(cv::Mat& depthMap, cv::Point3i& position, cv::Mat& rotation) {

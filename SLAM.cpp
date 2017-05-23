@@ -114,7 +114,7 @@ int main(int argc, const char** argv)
 	// cv::moveWindow("Features", 900, 0);
 
 
-	cv::viz::Viz3d depthWindow("Depth Frame");
+	// cv::viz::Viz3d depthWindow("Depth Frame");
 
 	cv::Mat image;
 	cv::Mat rgbImage;
@@ -482,7 +482,7 @@ void logDeltaTime(int logKey, int quantity) {
 	*/
 }
 
-void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name) {
+/* void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name) {
 	cv::viz::WText textWidget(text, pos);
 	depthWindow.showWidget(name, textWidget);
 }
@@ -512,6 +512,7 @@ void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std:
 	std::string s(ss.str());
 	showText(depthWindow, s, pos, name);
 }
+*/
 
 void errorMessage() {
 	std::cout << "Usage: ./SLAM.exe <path to raw dataset>" << std::endl;

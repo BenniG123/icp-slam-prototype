@@ -197,7 +197,7 @@ namespace icp {
 		return offset;
 	}
 
-	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name, int size) {
+	/* void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name, int size) {
 		// double min;
 		// double max;
 
@@ -214,6 +214,7 @@ namespace icp {
 		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, size);
 		depthWindow.showWidget( name , cloudWidget);
 	}
+	*/
 
 	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>>& associations) {
 		// Iterate through image
