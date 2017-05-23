@@ -1,6 +1,6 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/viz/vizcore.hpp"
+// #include "opencv2/viz/vizcore.hpp"
 #include "icp.hpp"
 #include "pointcloud.hpp"
 #include <iostream>

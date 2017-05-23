@@ -18,7 +18,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/features2d/features2d.hpp"
-#include "opencv2/viz/vizcore.hpp"
+// #include "opencv2/viz/vizcore.hpp"
 
 /*
 	depth/ir intrinsic parameters on the Kinect V2:
@@ -222,7 +222,7 @@ int main(int argc, const char** argv)
 				logDeltaTime(LOG_FILTER_IMAGE);
 
 				if (previous.size().area() > 0) {
-					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 16, 0.0001f, depthWindow); // 
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 16, 0.0001f); // depthWindow
 					cv::Mat icpRotation = transformation(cv::Rect(0, 0, 3, 3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation) - initialPosition;
 
@@ -237,19 +237,20 @@ int main(int argc, const char** argv)
 					toEulerianAngle(deltaRotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
 
-					showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
+					/* showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
 					showTransfom(depthWindow, deltaRotation, cv::Point(10, 10), "Ground Truth");
 					showText(depthWindow, "ICP", cv::Point(10, 80), "ICP Text");
 					showTransfom(depthWindow, icpRotation, cv::Point(10, 60), "ICP");
+					*/
 
 					// Show camera position
 					// cv::viz::WCone gtPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12, cv::viz::Color::red());
 					// gtPosition.updatePose(cv::Affine3f(deltaRotation.toRotationMatrix(), cv::Point3f(currentPosition)));
 					// depthWindow.showWidget("Ground Truth Position", gtPosition);
 
-					depthWindow.spinOnce(1, true);
+					// depthWindow.spinOnce(1, true);
 
-					logDeltaTime(LOG_RETRIEVE_TRANSFORM);
+					logDeltaTime(LOG_UI);
 
 					previous = filtered.clone();
 					previousRotation = currentRotation;
@@ -270,14 +271,14 @@ int main(int argc, const char** argv)
 				}
 
 				// cv::bitwise_not(filtered, filtered);
-				cv::minMaxIdx(filtered, &min, &max);
-				cv::Mat adjMap;
+				// cv::minMaxIdx(filtered, &min, &max);
+				// cv::Mat adjMap;
 
 				// expand your range to 0..255. Similar to histEq();
-				filtered.convertTo(adjMap, CV_8UC1, 255 / (max - min), -min);
-				cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+				// filtered.convertTo(adjMap, CV_8UC1, 255 / (max - min), -min);
+				// cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
 
-				cv::imshow( "Filtered", colorDepth );
+				// cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
 				// cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", keypointsImage);
@@ -298,7 +299,7 @@ int main(int argc, const char** argv)
 
 				// TODO - The whole SLAM thing
 
-				cv::waitKey(1);
+				// cv::waitKey(1);
 
 				logDeltaTime(LOG_UI);
 			}
@@ -328,6 +329,16 @@ std::string getNextImageFileName(std::ifstream& list_file, std::string path, dou
 
 	if (line.size() == 0) {
 		std::cout << "End of file" << std::endl;
+		std::cout << "Nearest Neighbor " << myLog[LOG_NEAREST_NEIGHBOR].time << std::endl;
+		std::cout << "UI " << myLog[LOG_UI].time << std::endl;
+		std::cout << "Load Image " << myLog[LOG_LOAD_IMAGE].time << std::endl;
+		std::cout << "Filter Image " << myLog[LOG_FILTER_IMAGE].time << std::endl;
+		std::cout << "Generate Point Cloud " << myLog[LOG_GEN_POINT_CLOUD].time << std::endl;
+		std::cout << "Reconstruct Point Clouds " << myLog[LOG_RECONSTRUCT_POINT_CLOUDS].time << std::endl;
+		std::cout << "SVD " << myLog[LOG_SVD].time << std::endl;
+		std::cout << "Rotate " << myLog[LOG_ROTATE].time << std::endl;
+		std::cout << "Retrieve Transform " << myLog[LOG_RETRIEVE_TRANSFORM].time << std::endl;
+		std::cout << "MSE " << myLog[LOG_MSE].time << std::endl;
 		cv::waitKey(0);
 		exit(0);
 	}

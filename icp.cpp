@@ -1,6 +1,6 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/viz/vizcore.hpp"
+// #include "opencv2/viz/vizcore.hpp"
 #include "SLAM.hpp"
 #include "icp.hpp"
 #include <iostream>
@@ -22,7 +22,7 @@ namespace icp {
 	cv::Mat cameraRotation(3, 3, CV_32FC1);
 	cv::Point3f cameraPosition;
 
-	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) { // , cv::viz::Viz3d& depthWindow
+	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold) { // , cv::viz::Viz3d& depthWindow
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
 		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
 		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
@@ -143,14 +143,14 @@ namespace icp {
 
 		cameraRotation.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 
-		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
-		showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
+		// showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
+		// showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
 
 		// Show camera position
-		cv::viz::WCone calculatedPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12);
-		calculatedPosition.applyTransform(cv::Affine3f(cameraRotation, cv::Vec3f(cameraPosition)));
+		// cv::viz::WCone calculatedPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12);
+		// calculatedPosition.applyTransform(cv::Affine3f(cameraRotation, cv::Vec3f(cameraPosition)));
 
-		depthWindow.showWidget("Camera Position", calculatedPosition);
+		// depthWindow.showWidget("Camera Position", calculatedPosition);
 
 		it1 = associations.begin();
 		end1 = associations.end();
@@ -226,7 +226,7 @@ namespace icp {
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = getNearestPoint(*it, nearestNeighbor, previous);
-			if (distance < 0.25f) {
+			if (distance < 0.35f) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}
