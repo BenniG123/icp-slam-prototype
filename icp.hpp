@@ -14,7 +14,7 @@ namespace icp {
 	cv::Point3f calculateOffset(std::vector< std::pair <cv::Point3f, cv::Point3f> > associations);
 	float distance(cv::Point3f a, cv::Point3f b);
 	// void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name, int size);
-	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>>& associations);
+	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f> >& associations);
 }
 
 #endif

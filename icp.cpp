@@ -24,8 +24,8 @@ namespace icp {
 
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold) { // , cv::viz::Viz3d& depthWindow
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
-		std::vector<std::pair<cv::Point3f, cv::Point3f>> associations;
-		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
+		std::vector< std::pair<cv::Point3f, cv::Point3f> > associations;
+		std::vector< std::pair<cv::Point3f, cv::Point3f> >::iterator it1, end1;
 
 		std::vector<float> errors;
 		cv::Mat R;
@@ -169,8 +169,8 @@ namespace icp {
 		return rigidTransformation;
 	}
 
-	cv::Point3f calculateOffset(std::vector<std::pair<cv::Point3f, cv::Point3f>> associations) {
-		std::vector<std::pair<cv::Point3f, cv::Point3f>>::iterator it1, end1;
+	cv::Point3f calculateOffset(std::vector<std::pair<cv::Point3f, cv::Point3f> > associations) {
+		std::vector<std::pair<cv::Point3f, cv::Point3f> >::iterator it1, end1;
 		cv::Point3f offset(0,0,0);
 
 		it1 = associations.begin();
@@ -216,7 +216,7 @@ namespace icp {
 	}
 	*/
 
-	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>>& associations) {
+	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f> >& associations) {
 		// Iterate through image
 		std::vector<cv::Point3f>::iterator it, end;
 		it = data.points.begin();
