@@ -25,7 +25,7 @@ namespace icp {
 	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) { // 
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
 		std::vector< std::pair<cv::Point3f, cv::Point3f> > associations;
-		std::vector< std::pair<cv::Point3f, cv::Point3f> >::iterator it1, end1;
+		std::vector< std::pair<cv::Point3f, cv::Point3f> >::iterator it1, begin, end1;
 
 		std::vector<float> errors;
 		cv::Mat R;
@@ -40,7 +40,7 @@ namespace icp {
 			float rx, ry, rz;
 
 			cameraRotation = makeRotationMatrix(0,0,0);
-			cameraPosition = cv::Point3f(0, 0, 0);
+			cameraPosition = cv::Point3f(5, 5, 5);
 
 			previousCloud.rotate(cameraRotation);
 			previousCloud.translate(cameraPosition);
@@ -138,8 +138,7 @@ namespace icp {
 
 		rigidTransformation.at<float>(0,3) = offset.x;
 		rigidTransformation.at<float>(1,3) = offset.y;
-		// TODO - zScale this to m
-		rigidTransformation.at<float>(2,3) = offset.z; // / 5;
+		rigidTransformation.at<float>(2,3) = offset.z;
 
 		cameraRotation.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 
@@ -153,6 +152,7 @@ namespace icp {
 		depthWindow.showWidget("Camera Position", calculatedPosition);
 
 		it1 = associations.begin();
+		begin = associations.begin();
 		end1 = associations.end();
 
 		while (it1 != end1) {
@@ -160,7 +160,7 @@ namespace icp {
 			cv::Point3f b = (*it1).second;
 
 			// Add points to map if they are close enough
-			if (errors[it1 - associations.begin()] > .15f) { // (distance(a, b) > .15f) {
+			if (errors[it1 - begin] > .15f) { // (distance(a, b) > .15f) {
 				map.points.push_back(a);
 			}
 			it1++;
@@ -226,7 +226,7 @@ namespace icp {
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = sqrt(getNearestPoint(*it, nearestNeighbor, previous));
-			if (distance < 0.35f) {
+			if (distance < 0.2f) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}
@@ -275,7 +275,7 @@ namespace icp {
 		float z = a.z - b.z;
 		// std::cout << a << ", " << b << std::endl;
 		// cv::waitKey(0);
-		return pow(x, 2) + pow(y, 2) + pow(z, 2);
+		return x*x + y*y + z*z; // pow(x, 2) + pow(y, 2) + pow(z, 2);
 	}
 
 	float meanSquareError(std::vector<float> errors) {

@@ -104,8 +104,8 @@ int main(int argc, const char** argv)
 	cv::moveWindow( "Sobel" , 500 , 700 );
 	*/
 
-	// cv::namedWindow("Filtered", cv::WINDOW_AUTOSIZE); // Create a window for display.
-	// cv::moveWindow("Filtered", 0, 700);
+	cv::namedWindow("Filtered", cv::WINDOW_AUTOSIZE); // Create a window for display.
+	cv::moveWindow("Filtered", 0, 700);
 	// cv::namedWindow( "Normals" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	// cv::moveWindow( "Normals" , 550 , 700 );
 	// cv::namedWindow( "RGB" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
@@ -271,14 +271,14 @@ int main(int argc, const char** argv)
 				}
 
 				// cv::bitwise_not(filtered, filtered);
-				// cv::minMaxIdx(filtered, &min, &max);
-				// cv::Mat adjMap;
+				cv::minMaxIdx(filtered, &min, &max);
+				cv::Mat adjMap;
 
 				// expand your range to 0..255. Similar to histEq();
-				// filtered.convertTo(adjMap, CV_8UC1, 255 / (max - min), -min);
-				// cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+				filtered.convertTo(adjMap, CV_8UC1, 255 / (max - min), -min);
+				cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
 
-				// cv::imshow( "Filtered", colorDepth );
+				cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
 				// cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", keypointsImage);
