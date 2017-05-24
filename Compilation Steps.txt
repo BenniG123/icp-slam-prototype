@@ -1,0 +1,45 @@
+To build for Zedboard
+1. VPN to Iowa State Network
+2. Log on to zedboard
+3. SCP the files from git over to zedboard
+3. Run cmake . in the directory
+4. Run make
+
+# 2. SSH to xilinx-6.ece.iastate.edu
+# 3. Run 'source setup.sh'
+# 4. Run makefile 'make soc'
+
+To log into Zedboard
+If you have proper IP address - (10.24.102.10)
+1. SSH into Zedboard
+	username: zed
+	password: z3Db0rD! <- put this on your clipboard
+
+If you don't have the IP Address
+1. SSH into xilinx-6.
+2. You may need sudo
+picocom -b 115200 /dev/ttyACM0
+3. ifconfig should get you the new IP address
+
+To push code onto the zedboard
+scp -r icp-slam-prototype/ zed@10.24.102.10:/home/zed/icp-SLAM/
+
+Quick Math for HLS
+
+35 Clock cycles @ 10 ns
+
+Number of distance comparisons per frame
+512 * 424 / 80 points per point cloud = 2,714
+Number of distance comparisons per frame = 2,714 ^ 2 * 16 = 117852736
+
+HLS Notes
+
+With sqrtf and pow
+35 cycles
+
+without sqrtf, with pow
+23 cycles
+
+without sqrtf, multiplication only
+19 cycles
+"Fails" Precision test

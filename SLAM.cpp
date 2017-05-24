@@ -18,7 +18,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/features2d/features2d.hpp"
-// #include "opencv2/viz/vizcore.hpp"
+#include "opencv2/viz/vizcore.hpp"
 
 /*
 	depth/ir intrinsic parameters on the Kinect V2:
@@ -114,7 +114,7 @@ int main(int argc, const char** argv)
 	// cv::moveWindow("Features", 900, 0);
 
 
-	// cv::viz::Viz3d depthWindow("Depth Frame");
+	cv::viz::Viz3d depthWindow("Depth Frame");
 
 	cv::Mat image;
 	cv::Mat rgbImage;
@@ -222,12 +222,12 @@ int main(int argc, const char** argv)
 				logDeltaTime(LOG_FILTER_IMAGE);
 
 				if (previous.size().area() > 0) {
-					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 16, 0.0001f); // depthWindow
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 16, 0.0001f, depthWindow); // 
 					cv::Mat icpRotation = transformation(cv::Rect(0, 0, 3, 3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation) - initialPosition;
 
 					// icpRotation = icpRotation * icp::makeRotationMatrix(0, 0, 180);
-					deltaRotation = (initialRotation.inverse() * currentRotation).inverse();
+					deltaRotation = (initialRotation.inverse() * currentRotation);
 					// rotation = rotation * icpRotation;
 
 					float rx, ry, rz;
@@ -237,18 +237,18 @@ int main(int argc, const char** argv)
 					toEulerianAngle(deltaRotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
 
-					/* showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
+					showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
 					showTransfom(depthWindow, deltaRotation, cv::Point(10, 10), "Ground Truth");
 					showText(depthWindow, "ICP", cv::Point(10, 80), "ICP Text");
 					showTransfom(depthWindow, icpRotation, cv::Point(10, 60), "ICP");
-					*/
+					
 
 					// Show camera position
-					// cv::viz::WCone gtPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12, cv::viz::Color::red());
-					// gtPosition.updatePose(cv::Affine3f(deltaRotation.toRotationMatrix(), cv::Point3f(currentPosition)));
-					// depthWindow.showWidget("Ground Truth Position", gtPosition);
+					cv::viz::WCone gtPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12, cv::viz::Color::red());
+					gtPosition.updatePose(cv::Affine3f(deltaRotation.toRotationMatrix(), cv::Point3f(currentPosition)));
+					depthWindow.showWidget("Ground Truth Position", gtPosition);
 
-					// depthWindow.spinOnce(1, true);
+					depthWindow.spinOnce(1, true);
 
 					logDeltaTime(LOG_UI);
 
@@ -482,7 +482,7 @@ void logDeltaTime(int logKey, int quantity) {
 	*/
 }
 
-/* void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name) {
+void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name) {
 	cv::viz::WText textWidget(text, pos);
 	depthWindow.showWidget(name, textWidget);
 }
@@ -512,7 +512,6 @@ void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std:
 	std::string s(ss.str());
 	showText(depthWindow, s, pos, name);
 }
-*/
 
 void errorMessage() {
 	std::cout << "Usage: ./SLAM.exe <path to raw dataset>" << std::endl;

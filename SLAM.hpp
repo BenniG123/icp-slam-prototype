@@ -13,7 +13,7 @@
 #define LOG_MSE 8
 
 #include "quaternion.hpp"
-// #include "opencv2/viz/vizcore.hpp"
+#include "opencv2/viz/vizcore.hpp"
 
 struct logEntry {
   long long time;
@@ -32,11 +32,11 @@ std::string getNextImageFileName(std::ifstream& list_file, std::string path, dou
 
 cv::Point3f getInitialPose(Quaternion& rotation);
 
-// void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name);
+void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name);
 
-// void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name);
+void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name);
 
-// void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std::string name);
+void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std::string name);
 
 void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z);
 
