@@ -1,6 +1,6 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
-// #include "opencv2/viz/vizcore.hpp"
+#include "opencv2/viz/vizcore.hpp"
 #include "icp.hpp"
 #include "pointcloud.hpp"
 #include <iostream>
@@ -64,20 +64,6 @@ namespace icp {
 			index++;
 			it++; // += SUBSAMPLE_FACTOR;
 		}
-
-		/*
-		std::vector<cv::Point3f>::iterator itp, endp;
-		itp = points.begin();
-		endp = points.end();
-
-		while ( itp != endp ) {
-			if (rand() % 8) {
-				points.erase(itp);
-			}
-			itp++;
-		}
-		*/
-		
 
 		// Average Center
 		center.x /= index;
@@ -148,6 +134,26 @@ namespace icp {
 
 		center_points();
 	}
+
+	/*
+	// Display PointCloud with colorMap in Viz Window
+	void PointCloud::display(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color color) {
+
+		if (points.size() == 0)
+			return;
+
+		cv::Mat pointCloudMat((int)points.size(), 1, CV_32FC3);
+
+		for (int i = 0; i < points.size(); i++) {
+			pointCloudMat.at<cv::Vec3f>(i, 0) = points[i];
+		}
+
+		cv::viz::WCloud cloudWidget(pointCloudMat, color);
+		cloudWidget.setRenderingProperty(cv::viz::POINT_SIZE, size);
+		depthWindow.showWidget(name, cloudWidget);
+	}
+	*/
+
 
 	// Initialize an empty point cloud
 	PointCloud::PointCloud() {

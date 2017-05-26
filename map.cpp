@@ -9,42 +9,165 @@
 #include "pointcloud.hpp"
 
 namespace map {
-	// 6x6x6 meter space with 2 cm block
-	unsigned char world[MAP_HEIGHT][MAP_HEIGHT][MAP_HEIGHT]; // = {{{100}}};
-	icp::PointCloud mapCloud;
-	
-	void init() {
+	// MAP_HEIGHT x MAP_HEIGHT x MAP_HEIGHT meter space with 2 cm block
+
+	Map::Map() {
+		mapCloud = icp::PointCloud();
+
+		empty = cv::Point3f(-100,-100,-100);
+
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
 				for (int k = 0; k < MAP_HEIGHT; k++) {
-					world[i][j][k] = 0;
+					world[i][j][k] = 0; //MAX_CONFIDENCE - DELTA_CONFIDENCE;
+					pointLookupTable[i][j][k] = empty;
 				}
 			}
 		}
 	}
 
-	void updateMap(icp::PointCloud data, cv::Point3f position, cv::Mat rotation) {
-		data.rotate(rotation);
-		data.translate(position);
+	/*
+	void Map::drawCertaintyMap(cv::viz::Viz3d& depthWindow) {
+		for (int i = 0; i < MAP_HEIGHT; i++) {
+			for (int j = 0; j < MAP_HEIGHT; j++) {
+				for (int k = 0; k < MAP_HEIGHT; k++) {
+					if (world[i][j][k] > 0) {
+						cv::viz::WCube cubeWidget(cv::Vec3d(i * CELL_PHYSICAL_HEIGHT,
+							j * CELL_PHYSICAL_HEIGHT, k * CELL_PHYSICAL_HEIGHT),
+							cv::Vec3d((i + 1) * CELL_PHYSICAL_HEIGHT, (j + 1) * CELL_PHYSICAL_HEIGHT,
+							(k + 1) * CELL_PHYSICAL_HEIGHT),
+							true, cv::viz::Color(cv::Scalar(255, 127, world[i][j][k])));
 
-		std::vector<cv::Point3f>::iterator it, end;
-		it = data.points.begin();
-		end = data.points.end();
+						depthWindow.showWidget("Certainty" + std::to_string(i + j * MAP_HEIGHT + k * MAP_HEIGHT * MAP_HEIGHT)
+							, cubeWidget);
+					}
+				}
+			}
+		}
+	}
+	*/
+
+	// Get Voxel Coordinates from a worldspace point
+	cv::Point3i Map::getVoxelCoordinates(cv::Point3f point) {
+		cv::Point3i p;
+
+		float c = float(CELL_PHYSICAL_HEIGHT);
+
+		p.x = int(point.x / c);
+		p.y = int(point.y / c);
+		p.z = int(point.z / c);
+
+		// Check for out of bounds
+		if (p.x < 0) {
+			p.x = 0;
+		}
+		if (p.x >= MAP_HEIGHT) {
+			p.x = MAP_HEIGHT - 1;
+		}
+		if (p.y < 0) {
+			p.y = 0;
+		}
+		if (p.y >= MAP_HEIGHT) {
+			p.y = MAP_HEIGHT - 1;
+		}
+		if (p.z < 0) {
+			p.z = 0;
+		}
+		if (p.z >= MAP_HEIGHT) {
+			p.z = MAP_HEIGHT - 1;
+		}
+
+		return p;
+	}
+
+	// Update Map with new scan
+	void Map::update(std::vector< std::pair<cv::Point3f, cv::Point3f> > associations, std::vector<float> errors, int delta_confidence) {
+		std::vector< std::pair<cv::Point3f, cv::Point3f> >::iterator it, begin, end;
+		it = associations.begin();
+		begin = associations.begin();
+		end = associations.end();
+
+		float c = float(CELL_PHYSICAL_HEIGHT);
+		// cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(3,3,3));
 
 		while (it != end) {
-			// rayTrace(*it, position);
+			cv::Point3f point = (*it).first;
+			cv::Point3i voxelPoint = getVoxelCoordinates(point);
+
+			if (errors[it - begin] > .15f) { // (distance(a, b) > .15f) {
+				mapCloud.points.push_back(point);
+			}
+			// rayTrace(voxelPoint, cameraVoxelPoint);
+
+			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
+
+			// Update certainty
+			if (*certainty > (255 - delta_confidence)) {
+				*certainty = 255;
+				// Populate lookup table if we are certain about this point
+				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+					pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = (*it).first;
+					// mapCloud.points.push_back((*it).first);
+				}
+			}
+			else {
+				*certainty += delta_confidence;
+			}
+
 			it++;
 		}
 	}
 
+	// Update Map with new scan
+	void Map::update(icp::PointCloud newCloud, int delta_confidence) {
+		std::vector<cv::Point3f>::iterator it, begin, end;
+		it = newCloud.points.begin();
+		begin = newCloud.points.begin();
+		end = newCloud.points.end();
+
+		float c = float(CELL_PHYSICAL_HEIGHT);
+		// cv::Point3i cameraVoxelPoint = getVoxelCoordinates(cv::Point3f(3,3,3));
+
+		while (it != end) {
+			cv::Point3f point = *it;
+			cv::Point3i voxelPoint = getVoxelCoordinates(point);
+
+			mapCloud.points.push_back(point);
+
+			unsigned char* certainty = &world[voxelPoint.x][voxelPoint.y][voxelPoint.z];
+
+			// Update certainty
+			if (*certainty > (255 - delta_confidence)) {
+				*certainty = 255;
+				// Populate lookup table if we are certain about this point
+				if (pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] == empty) { // && icp::distance((*it).first.point, (*it).second.point) > MAX_POINT_DISTANCE) {
+					pointLookupTable[voxelPoint.x][voxelPoint.y][voxelPoint.z] = *it;
+					mapCloud.points.push_back(*it);
+				}
+			}
+			else {
+				*certainty += delta_confidence;
+			}
+
+			it++;
+		}
+	}
+
+	/*
 	// Algorithm from "A Fast Voxel Traversal Algorithm for Ray Tracing"
-	/* void rayTrace(cv::Point3i point, cv::Point3i origin, cv::viz::Viz3d& depthWindow) {
+	void Map::rayTrace(cv::Point3i point, cv::Point3i origin, cv::viz::Viz3d& depthWindow) {
 		// Point Voxel Coordinates
 		int x, y, z;
 
 		x = point.x;
 		y = point.y;
 		z = point.z;
+
+		// depthWindow.removeWidget("destination");
+		// depthWindow.removeWidget("origin");
+
+		// cv::viz::WSphere destionationWidget(cv::Vec3d(x * CELL_PHYSICAL_HEIGHT, y * CELL_PHYSICAL_HEIGHT, z * CELL_PHYSICAL_HEIGHT), 0.5, 10, cv::viz::Color::green());
+		// depthWindow.showWidget( "destination", destionationWidget);
 
 		// Origin Voxel Coordinates
 		int ox, oy, oz;
@@ -131,7 +254,7 @@ namespace map {
 
 		// TODO - This is wrong
 		// The inter voxel distance between point and voxel edge
-		/* float interVoxelX = point.x / CELL_PHYSICAL_HEIGHT - ((float) x);
+		float interVoxelX = point.x / CELL_PHYSICAL_HEIGHT - ((float) x);
 		float interVoxelY = point.y / CELL_PHYSICAL_HEIGHT - ((float) y);
 		float interVoxelZ = point.z / CELL_PHYSICAL_HEIGHT - ((float) z);
 
@@ -208,10 +331,9 @@ namespace map {
 	}
 	*/
 
-
-	void getPoints(cv::Mat& depthMap, cv::Point3i& position, cv::Mat& rotation) {
-		// Foreach space between camera and raycast, increase value.
-
-		// Foreach space behind raycast, decrease value.
+	bool Map::isOccupied(cv::Point3f p) {
+		cv::Point3i v = getVoxelCoordinates(p);
+		return world[v.x][v.y][v.z] >= MAX_CONFIDENCE;
 	}
+
 }

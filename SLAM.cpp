@@ -18,7 +18,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/features2d/features2d.hpp"
-#include "opencv2/viz/vizcore.hpp"
+// #include "opencv2/viz/vizcore.hpp"
 
 /*
 	depth/ir intrinsic parameters on the Kinect V2:
@@ -104,8 +104,8 @@ int main(int argc, const char** argv)
 	cv::moveWindow( "Sobel" , 500 , 700 );
 	*/
 
-	cv::namedWindow("Filtered", cv::WINDOW_AUTOSIZE); // Create a window for display.
-	cv::moveWindow("Filtered", 0, 700);
+	// cv::namedWindow("Filtered", cv::WINDOW_AUTOSIZE); // Create a window for display.
+	// cv::moveWindow("Filtered", 0, 700);
 	// cv::namedWindow( "Normals" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	// cv::moveWindow( "Normals" , 550 , 700 );
 	// cv::namedWindow( "RGB" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
@@ -114,7 +114,7 @@ int main(int argc, const char** argv)
 	// cv::moveWindow("Features", 900, 0);
 
 
-	cv::viz::Viz3d depthWindow("Depth Frame");
+	// cv::viz::Viz3d depthWindow("Depth Frame");
 
 	cv::Mat image;
 	cv::Mat rgbImage;
@@ -222,12 +222,12 @@ int main(int argc, const char** argv)
 				logDeltaTime(LOG_FILTER_IMAGE);
 
 				if (previous.size().area() > 0) {
-					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 16, 0.0001f, depthWindow); // 
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 12, 0.0001f); // depthWindow
 					cv::Mat icpRotation = transformation(cv::Rect(0, 0, 3, 3));
 					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation) - initialPosition;
 
 					// icpRotation = icpRotation * icp::makeRotationMatrix(0, 0, 180);
-					deltaRotation = (initialRotation.inverse() * currentRotation);
+					deltaRotation = (initialRotation.inverse() * currentRotation).inverse();
 					// rotation = rotation * icpRotation;
 
 					float rx, ry, rz;
@@ -237,18 +237,18 @@ int main(int argc, const char** argv)
 					toEulerianAngle(deltaRotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
 
-					showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
+					/* showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
 					showTransfom(depthWindow, deltaRotation, cv::Point(10, 10), "Ground Truth");
 					showText(depthWindow, "ICP", cv::Point(10, 80), "ICP Text");
 					showTransfom(depthWindow, icpRotation, cv::Point(10, 60), "ICP");
 					
-
 					// Show camera position
-					cv::viz::WCone gtPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12, cv::viz::Color::red());
-					gtPosition.updatePose(cv::Affine3f(deltaRotation.toRotationMatrix(), cv::Point3f(currentPosition)));
+					cv::viz::WCone gtPosition(0.1, cv::Point3f(initialPosition), cv::Point3f(initialPosition) + cv::Point3f(0, 0, 0.2), 16, cv::viz::Color::red());
+					gtPosition.updatePose(cv::Affine3f(deltaRotation.toRotationMatrix())); // , cv::Point3f(currentPosition)
 					depthWindow.showWidget("Ground Truth Position", gtPosition);
 
 					depthWindow.spinOnce(1, true);
+					*/
 
 					logDeltaTime(LOG_UI);
 
@@ -271,14 +271,14 @@ int main(int argc, const char** argv)
 				}
 
 				// cv::bitwise_not(filtered, filtered);
-				cv::minMaxIdx(filtered, &min, &max);
-				cv::Mat adjMap;
+				// cv::minMaxIdx(filtered, &min, &max);
+				// cv::Mat adjMap;
 
 				// expand your range to 0..255. Similar to histEq();
-				filtered.convertTo(adjMap, CV_8UC1, 255 / (max - min), -min);
-				cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+				// filtered.convertTo(adjMap, CV_8UC1, 255 / (max - min), -min);
+				// cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
 
-				cv::imshow( "Filtered", colorDepth );
+				// cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
 				// cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", keypointsImage);
@@ -329,16 +329,16 @@ std::string getNextImageFileName(std::ifstream& list_file, std::string path, dou
 
 	if (line.size() == 0) {
 		std::cout << "End of file" << std::endl;
-		std::cout << "Nearest Neighbor " << myLog[LOG_NEAREST_NEIGHBOR].time << std::endl;
-		std::cout << "UI " << myLog[LOG_UI].time << std::endl;
-		std::cout << "Load Image " << myLog[LOG_LOAD_IMAGE].time << std::endl;
-		std::cout << "Filter Image " << myLog[LOG_FILTER_IMAGE].time << std::endl;
-		std::cout << "Generate Point Cloud " << myLog[LOG_GEN_POINT_CLOUD].time << std::endl;
-		std::cout << "Reconstruct Point Clouds " << myLog[LOG_RECONSTRUCT_POINT_CLOUDS].time << std::endl;
-		std::cout << "SVD " << myLog[LOG_SVD].time << std::endl;
-		std::cout << "Rotate " << myLog[LOG_ROTATE].time << std::endl;
-		std::cout << "Retrieve Transform " << myLog[LOG_RETRIEVE_TRANSFORM].time << std::endl;
-		std::cout << "MSE " << myLog[LOG_MSE].time << std::endl;
+		std::cout << "Nearest Neighbor " << myLog[LOG_NEAREST_NEIGHBOR].time << " " << myLog[LOG_NEAREST_NEIGHBOR].count << " " << myLog[LOG_NEAREST_NEIGHBOR].quantity << std::endl;
+		std::cout << "UI " << myLog[LOG_UI].time << " " << myLog[LOG_UI].count << " " << myLog[LOG_UI].quantity << std::endl;
+		std::cout << "Load Image " << myLog[LOG_LOAD_IMAGE].time << " " << myLog[LOG_LOAD_IMAGE].count << " " << myLog[LOG_LOAD_IMAGE].quantity << std::endl;
+		std::cout << "Filter Image " << myLog[LOG_FILTER_IMAGE].time << " " << myLog[LOG_FILTER_IMAGE].count << " " << myLog[LOG_FILTER_IMAGE].quantity << std::endl;
+		std::cout << "Generate Point Cloud " << myLog[LOG_GEN_POINT_CLOUD].time << " " << myLog[LOG_GEN_POINT_CLOUD].count << " " << myLog[LOG_GEN_POINT_CLOUD].quantity << std::endl;
+		std::cout << "Reconstruct Point Clouds " << myLog[LOG_RECONSTRUCT_POINT_CLOUDS].time << " " << myLog[LOG_RECONSTRUCT_POINT_CLOUDS].count << " " << myLog[LOG_RECONSTRUCT_POINT_CLOUDS].quantity << std::endl;
+		std::cout << "SVD " << myLog[LOG_SVD].time << " " << myLog[LOG_SVD].count << " " << myLog[LOG_SVD].quantity << std::endl;
+		std::cout << "Rotate " << myLog[LOG_ROTATE].time << " " << myLog[LOG_ROTATE].count << " " << myLog[LOG_ROTATE].quantity << std::endl;
+		std::cout << "Retrieve Transform " << myLog[LOG_RETRIEVE_TRANSFORM].time << " " << myLog[LOG_RETRIEVE_TRANSFORM].count << " " << myLog[LOG_RETRIEVE_TRANSFORM].quantity << std::endl;
+		std::cout << "MSE " << myLog[LOG_MSE].time << " " << myLog[LOG_MSE].count << " " << myLog[LOG_MSE].quantity << std::endl;
 		cv::waitKey(0);
 		exit(0);
 	}
@@ -542,8 +542,6 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 
 	cv::erode(image, image, element);
 	cv::dilate(image, image, element);
-
-
 
 	/*
 	// Using Canny's output as a mask, we display our result

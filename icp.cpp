@@ -1,8 +1,9 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/viz/vizcore.hpp"
+// #include "opencv2/viz/vizcore.hpp"
 #include "SLAM.hpp"
 #include "icp.hpp"
+#include "map.hpp"
 #include <iostream>
 #include <stdio.h>
 
@@ -17,12 +18,12 @@ namespace icp {
 			Transform M
 	*/
 
-	PointCloud map;
+	map::Map map;
 
 	cv::Mat cameraRotation(3, 3, CV_32FC1);
 	cv::Point3f cameraPosition;
 
-	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) { // 
+	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold) { // cv::viz::Viz3d& depthWindow
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
 		std::vector< std::pair<cv::Point3f, cv::Point3f> > associations;
 		std::vector< std::pair<cv::Point3f, cv::Point3f> >::iterator it1, begin, end1;
@@ -35,20 +36,21 @@ namespace icp {
 		PointCloud dataCloud(data);
 		PointCloud previousCloud(previous);
 
-		if (map.points.size() == 0) {
+		if (map.mapCloud.points.size() == 0) {
 			Quaternion q;
 			float rx, ry, rz;
 
 			cameraRotation = makeRotationMatrix(0,0,0);
-			cameraPosition = cv::Point3f(5, 5, 5);
+			cameraPosition = cv::Point3f(0, 0, 0);
 
 			previousCloud.rotate(cameraRotation);
 			previousCloud.translate(cameraPosition);
 
-			map = PointCloud(previous);
+			map.mapCloud = previousCloud;
+			map.update(previousCloud, MAX_CONFIDENCE);
 
-			map.rotate(cameraRotation);
-			map.translate(cameraPosition);
+			// map.mapCloud.rotate(cameraRotation);
+			// map.mapCloud.translate(cameraPosition);
 		}
 
 		dataCloud.rotate(cameraRotation);
@@ -60,14 +62,14 @@ namespace icp {
 		PointCloud tempPreviousCloud = PointCloud();
 
 		tempDataCloud.center = dataCloud.center;
-		tempPreviousCloud.center = map.center;
+		tempPreviousCloud.center = map.mapCloud.center;
 
 		// cv::Mat a = makeRotationMatrix(rand() % 5, rand() % 5, rand() % 5);
 		// dataCloud.rotate(a);
 		// dataCloud.translate(cv::Point3f(rand() % 2 / 5, rand() % 2 / 5, rand() % 2 / 5));
 		// previousCloud.rotate(rotation);
 
-		findNearestNeighborAssociations(dataCloud, map, errors, associations);
+		findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 		
 		int i = 0;
 
@@ -128,10 +130,13 @@ namespace icp {
 			logDeltaTime( LOG_ROTATE );
 
 			// Find nearest neighber associations
-			findNearestNeighborAssociations(dataCloud, map, errors, associations);
+			findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 
 			i++;
 		}
+
+		map.update(associations, errors, DELTA_CONFIDENCE);
+		// map.drawCertaintyMap(depthWindow);
 
 		// Log MSE
 		std::cout << meanSquareError(errors);
@@ -142,29 +147,15 @@ namespace icp {
 
 		cameraRotation.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 
-		showPointCloud(dataCloud, depthWindow, cv::viz::Color().green(), "Data", 3);
-		showPointCloud(map, depthWindow, cv::viz::Color().yellow(), "Previous", 3);
+		// dataCloud.display(depthWindow, "Data", 3, cv::viz::Color().green());
+		// map.mapCloud.display(depthWindow, "Map", 3, cv::viz::Color().yellow());
 
 		// Show camera position
-		cv::viz::WCone calculatedPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12);
-		calculatedPosition.applyTransform(cv::Affine3f(cameraRotation, cv::Vec3f(cameraPosition)));
+		// cv::viz::WCone calculatedPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12);
+		// calculatedPosition.applyTransform(cv::Affine3f(cameraRotation, cv::Vec3f(cameraPosition)));
 
-		depthWindow.showWidget("Camera Position", calculatedPosition);
+		// depthWindow.showWidget("Camera Position", calculatedPosition);
 
-		it1 = associations.begin();
-		begin = associations.begin();
-		end1 = associations.end();
-
-		while (it1 != end1) {
-			cv::Point3f a = (*it1).first;
-			cv::Point3f b = (*it1).second;
-
-			// Add points to map if they are close enough
-			if (errors[it1 - begin] > .15f) { // (distance(a, b) > .15f) {
-				map.points.push_back(a);
-			}
-			it1++;
-		}
 
 		return rigidTransformation;
 	}
@@ -197,24 +188,6 @@ namespace icp {
 		return offset;
 	}
 
-	void showPointCloud(PointCloud p, cv::viz::Viz3d& depthWindow, cv::viz::Color color, std::string name, int size) {
-		// double min;
-		// double max;
-
-		cv::Mat adjMap;
-		cv::Mat colorMap;
-
-	    cv::Mat pointCloudMat((int) p.points.size(), 1, CV_32FC3);
-
-	    for (int i = 0; i < p.points.size(); i++) {
-	    	pointCloudMat.at<cv::Vec3f>(i,0) = p.points[i];
-	    }
-
-		cv::viz::WCloud cloudWidget(pointCloudMat, color);
-		cloudWidget.setRenderingProperty( cv::viz::POINT_SIZE, size);
-		depthWindow.showWidget( name , cloudWidget);
-	}
-
 	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f> >& associations) {
 		// Iterate through image
 		std::vector<cv::Point3f>::iterator it, end;
@@ -226,7 +199,7 @@ namespace icp {
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = sqrt(getNearestPoint(*it, nearestNeighbor, previous));
-			if (distance < 0.2f) {
+			if (distance < 0.35f) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}
@@ -234,7 +207,7 @@ namespace icp {
 			it++;
 		}
 
-		logDeltaTime( LOG_NEAREST_NEIGHBOR, (int) associations.size());
+		logDeltaTime( LOG_NEAREST_NEIGHBOR, (int) data.points.size() * previous.points.size());
 
 	}
 
