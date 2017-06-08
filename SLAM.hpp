@@ -12,6 +12,9 @@
 #define LOG_RETRIEVE_TRANSFORM 7
 #define LOG_MSE 8
 
+#define MAX_FILTER_DISTANCE 25000
+#define NUM_ICP_ITERATIONS 16
+
 #include "quaternion.hpp"
 #include "opencv2/viz/vizcore.hpp"
 
@@ -34,9 +37,9 @@ cv::Point3f getInitialPose(Quaternion& rotation);
 
 void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std::string name);
 
-void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name);
+void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name, std::ofstream &logfile);
 
-void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std::string name);
+void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std::string name, std::ofstream &logfile);
 
 void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z);
 

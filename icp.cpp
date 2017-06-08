@@ -23,7 +23,7 @@ namespace icp {
 	cv::Mat cameraRotation(3, 3, CV_32FC1);
 	cv::Point3f cameraPosition;
 
-	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold) { // cv::viz::Viz3d& depthWindow
+	cv::Mat getTransformation(cv::Mat& data, cv::Mat& previous, cv::Mat& rotation, int maxIterations, float threshold, cv::viz::Viz3d& depthWindow) { // 
 		cv::Mat rigidTransformation(4, 4, CV_32FC1);
 		std::vector< std::pair<cv::Point3f, cv::Point3f> > associations;
 		std::vector< std::pair<cv::Point3f, cv::Point3f> >::iterator it1, begin, end1;
@@ -48,9 +48,6 @@ namespace icp {
 
 			map.mapCloud = previousCloud;
 			map.update(previousCloud, MAX_CONFIDENCE);
-
-			// map.mapCloud.rotate(cameraRotation);
-			// map.mapCloud.translate(cameraPosition);
 		}
 
 		dataCloud.rotate(cameraRotation);
@@ -64,10 +61,12 @@ namespace icp {
 		tempDataCloud.center = dataCloud.center;
 		tempPreviousCloud.center = map.mapCloud.center;
 
-		// cv::Mat a = makeRotationMatrix(rand() % 5, rand() % 5, rand() % 5);
-		// dataCloud.rotate(a);
-		// dataCloud.translate(cv::Point3f(rand() % 2 / 5, rand() % 2 / 5, rand() % 2 / 5));
-		// previousCloud.rotate(rotation);
+		/*
+		cv::Mat a = makeRotationMatrix(rand() % 4, rand() % 4, rand() % 4); // rand() % 
+		dataCloud.rotate(a);
+		dataCloud.translate(cv::Point3f(rand() % 2 / 5, rand() % 2 / 5, rand() % 2 / 5));
+		previousCloud.rotate(rotation);
+		*/
 
 		findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 		
@@ -75,6 +74,23 @@ namespace icp {
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
+			// std::cout << meanSquareError(errors) << " " << i << std::endl;
+			/*
+			depthWindow.removeAllWidgets();
+
+			dataCloud.display(depthWindow, "Data", 3, cv::viz::Color().green());
+			map.mapCloud.display(depthWindow, "Map", 3, cv::viz::Color().yellow());
+
+			depthWindow.spinOnce(0);
+			cv::waitKey(0);
+
+			dataCloud.display(depthWindow, "Data", 3, cv::viz::Color().green());
+			map.mapCloud.display(depthWindow, "Map", 3, cv::viz::Color().yellow());
+			showAssocations(associations, errors, depthWindow);
+
+			depthWindow.spinOnce(0);
+			cv::waitKey(0);
+			*/
 
 			tempDataCloud.points.clear();
 			tempPreviousCloud.points.clear();
@@ -102,6 +118,7 @@ namespace icp {
 
 			logDeltaTime( LOG_RECONSTRUCT_POINT_CLOUDS );
 
+			// Construct the Covariance Matrix
 			cv::Mat M = previousMat.t() * dataMat;
 
 			// Perform SVD
@@ -137,9 +154,10 @@ namespace icp {
 
 		map.update(associations, errors, DELTA_CONFIDENCE);
 		// map.drawCertaintyMap(depthWindow);
+		// cv::waitKey();
 
 		// Log MSE
-		std::cout << meanSquareError(errors);
+		std::cout << meanSquareError(errors) << ",";
 
 		rigidTransformation.at<float>(0,3) = offset.x;
 		rigidTransformation.at<float>(1,3) = offset.y;
@@ -147,15 +165,14 @@ namespace icp {
 
 		cameraRotation.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 
-		// dataCloud.display(depthWindow, "Data", 3, cv::viz::Color().green());
-		// map.mapCloud.display(depthWindow, "Map", 3, cv::viz::Color().yellow());
+		dataCloud.display(depthWindow, "Data", 3, cv::viz::Color().green());
+		map.mapCloud.display(depthWindow, "Map", 3, cv::viz::Color().yellow());
 
 		// Show camera position
-		// cv::viz::WCone calculatedPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12);
-		// calculatedPosition.applyTransform(cv::Affine3f(cameraRotation, cv::Vec3f(cameraPosition)));
+		cv::viz::WCone calculatedPosition(0.1, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, .2), 12);
+		calculatedPosition.applyTransform(cv::Affine3f(cameraRotation, cv::Vec3f(cameraPosition)));
 
-		// depthWindow.showWidget("Camera Position", calculatedPosition);
-
+		depthWindow.showWidget("Camera Position", calculatedPosition);
 
 		return rigidTransformation;
 	}
@@ -188,6 +205,29 @@ namespace icp {
 		return offset;
 	}
 
+	// Only add points if they are greater than 1.5f away from each other
+	void showAssocations(std::vector< std::pair<cv::Point3f, cv::Point3f> > associations, std::vector<float> errors, cv::viz::Viz3d& depthWindow) {
+
+		if (associations.size() == 0)
+			return;
+
+		std::vector< std::pair<cv::Point3f, cv::Point3f> >::iterator it1, end1;
+
+		it1 = associations.begin();
+		end1 = associations.end();
+
+		int i = 0;
+
+		while (it1 != end1) {
+				cv::viz::WLine line((*it1).first, (*it1).second, cv::viz::Color().red());
+				depthWindow.showWidget("Association" + std::to_string(it1 - end1), line);
+
+			i++;
+			it1++;
+		}
+	}
+
+
 	void findNearestNeighborAssociations(PointCloud& data, PointCloud& previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f> >& associations) {
 		// Iterate through image
 		std::vector<cv::Point3f>::iterator it, end;
@@ -199,7 +239,7 @@ namespace icp {
 		while (it != end) {
 			cv::Point3f nearestNeighbor;
 			float distance = sqrt(getNearestPoint(*it, nearestNeighbor, previous));
-			if (distance < 0.35f) {
+			if (distance < NEAREST_NEIGHBOR_DISTANCE) {
 				associations.push_back(std::make_pair(*it, nearestNeighbor));
 				errors.push_back(distance);
 			}

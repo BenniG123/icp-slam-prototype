@@ -18,7 +18,7 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/features2d/features2d.hpp"
-// #include "opencv2/viz/vizcore.hpp"
+#include "opencv2/viz/vizcore.hpp"
 
 /*
 	depth/ir intrinsic parameters on the Kinect V2:
@@ -104,8 +104,8 @@ int main(int argc, const char** argv)
 	cv::moveWindow( "Sobel" , 500 , 700 );
 	*/
 
-	// cv::namedWindow("Filtered", cv::WINDOW_AUTOSIZE); // Create a window for display.
-	// cv::moveWindow("Filtered", 0, 700);
+	cv::namedWindow("Filtered", cv::WINDOW_AUTOSIZE); // Create a window for display.
+	cv::moveWindow("Filtered", 0, 700);
 	// cv::namedWindow( "Normals" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	// cv::moveWindow( "Normals" , 550 , 700 );
 	// cv::namedWindow( "RGB" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
@@ -114,7 +114,7 @@ int main(int argc, const char** argv)
 	// cv::moveWindow("Features", 900, 0);
 
 
-	// cv::viz::Viz3d depthWindow("Depth Frame");
+	cv::viz::Viz3d depthWindow("Depth Frame");
 
 	cv::Mat image;
 	cv::Mat rgbImage;
@@ -124,6 +124,7 @@ int main(int argc, const char** argv)
 	cv::Mat colorFiltered;
 	cv::Mat previous;
 	cv::Mat normals;
+	cv::Mat adjMap;
 
 	// Camera Calibration Matrix
 	float data[3][3] = { {363.58f,0.0f,250.32f}, {0.0f,363.53f,212.55f}, {0.0f,0.0f,1.0f} };
@@ -148,6 +149,7 @@ int main(int argc, const char** argv)
 	std::ifstream rgb_list_file(rgb_list_file_name.c_str());
 	std::ifstream depth_list_file(depth_list_file_name.c_str());
 	std::ifstream ground_truth_file(ground_truth_file_name.c_str());
+	std::ofstream logfile("log.txt");
 
 	// Euler rotation and transformation variables for groundtruth and latest scan
 	Quaternion previousRotation;
@@ -160,6 +162,10 @@ int main(int argc, const char** argv)
 	cv::Vec3f previousPosition;
 	cv::Vec3f currentPosition;
 	cv::Vec3f deltaPosition;
+
+	cv::Affine3f initialGroundTruthAffine;
+	cv::Affine3f currentGroundTruthAffine;
+	cv::Affine3f deltaGroundTruthAffine;
 
 	// Init profiling names
 	myLog[LOG_NEAREST_NEIGHBOR].name = "Nearest Neighbor";
@@ -176,7 +182,9 @@ int main(int argc, const char** argv)
 	start = std::chrono::high_resolution_clock::now();
 	t2 = std::chrono::high_resolution_clock::now();
 
-	if (depth_list_file.is_open() && rgb_list_file.is_open()) {
+	int frame_counter = 0;
+
+	if (depth_list_file.is_open() && rgb_list_file.is_open() && logfile.is_open()) {
 		if (ground_truth_file.is_open()) {
 			// While their is still something to parse
 			while (!depth_list_file.eof() && !rgb_list_file.eof()) {
@@ -205,6 +213,10 @@ int main(int argc, const char** argv)
 					continue;
 				}
 
+				frame_counter++;
+
+				std::cout << frame_counter << ",";
+
 				logDeltaTime(LOG_LOAD_IMAGE);
 
 				double min;
@@ -217,38 +229,52 @@ int main(int argc, const char** argv)
 				filtered = image.clone();
 
 				// Filter all points > x * 5000 m away - 25000
-				filterDepthImage(filtered, 25000);
+				filterDepthImage(filtered, MAX_FILTER_DISTANCE);
 
 				logDeltaTime(LOG_FILTER_IMAGE);
 
 				if (previous.size().area() > 0) {
-					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, 12, 0.0001f); // depthWindow
+					cv::Mat transformation = icp::getTransformation(filtered, previous, rotation, NUM_ICP_ITERATIONS, 0.0001f, depthWindow);
 					cv::Mat icpRotation = transformation(cv::Rect(0, 0, 3, 3));
-					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation) - initialPosition;
+					currentPosition = getNextGroundTruth(timestamp, ground_truth_file, currentRotation);
+					currentGroundTruthAffine = cv::Affine3f(currentRotation.toRotationMatrix(), currentPosition);
+					deltaGroundTruthAffine = initialGroundTruthAffine.inv() * currentGroundTruthAffine;
 
 					// icpRotation = icpRotation * icp::makeRotationMatrix(0, 0, 180);
 					deltaRotation = (initialRotation.inverse() * currentRotation).inverse();
 					// rotation = rotation * icpRotation;
 
 					float rx, ry, rz;
-					rotationQ = Quaternion(icpRotation);
-					toEulerianAngle(rotationQ, rx, ry, rz);
-					std::cout << "," << rx << "," << ry << "," << rz;
+					// rotationQ = Quaternion(icpRotation);
+					/* toEulerianAngle(icpRotation, rx, ry, rz);
+					std::cout << rx << "," << ry << "," << rz;
+					logfile << rx << "," << ry << "," << rz;
 					toEulerianAngle(deltaRotation, rx, ry, rz);
 					std::cout << "," << rx << "," << ry << "," << rz << std::endl;
+					logfile << "," << rx << "," << ry << "," << rz << std::endl;
+					*/
 
-					/* showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
-					showTransfom(depthWindow, deltaRotation, cv::Point(10, 10), "Ground Truth");
+					showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
+					showTransfom(depthWindow, deltaRotation, cv::Point(10, 10), "Ground Truth", logfile);
 					showText(depthWindow, "ICP", cv::Point(10, 80), "ICP Text");
-					showTransfom(depthWindow, icpRotation, cv::Point(10, 60), "ICP");
+					showTransfom(depthWindow, icpRotation, cv::Point(10, 60), "ICP", logfile);
+					logfile << std::endl;
+					std::cout << std::endl;
+
+					// TODO - FIX THIS
 					
 					// Show camera position
-					cv::viz::WCone gtPosition(0.1, cv::Point3f(initialPosition), cv::Point3f(initialPosition) + cv::Point3f(0, 0, 0.2), 16, cv::viz::Color::red());
-					gtPosition.updatePose(cv::Affine3f(deltaRotation.toRotationMatrix())); // , cv::Point3f(currentPosition)
+					cv::viz::WCone gtPosition(0.1f, cv::Point3f(0,0,0), cv::Point3f(0, 0, 0.2), 16, cv::viz::Color::red());
+					gtPosition.applyTransform(deltaGroundTruthAffine); // , cv::Point3f(currentPosition)
 					depthWindow.showWidget("Ground Truth Position", gtPosition);
 
-					depthWindow.spinOnce(1, true);
+					/*
+					cv::viz::WCone zeroPosition(0.1, cv::Point3f(currentPosition), cv::Point3f(currentPosition) + cv::Point3f(0, 0, 0.2), 16, cv::viz::Color::green());
+					gtPosition.updatePose(cv::Affine3f(deltaRotation.toRotationMatrix())); // , cv::Point3f(currentPosition)
+					depthWindow.showWidget("Zero Position", zeroPosition);
 					*/
+
+					depthWindow.spinOnce(1, true);
 
 					logDeltaTime(LOG_UI);
 
@@ -256,6 +282,7 @@ int main(int argc, const char** argv)
 					previousRotation = currentRotation;
 
 				}
+				// First Frame
 				else {
 					previous = filtered.clone();
 
@@ -263,22 +290,26 @@ int main(int argc, const char** argv)
 					initialPosition = getNextGroundTruth(timestamp, ground_truth_file, initialRotation);
 
 					currentRotation = initialRotation;
-
 					rotation = icp::makeRotationMatrix(0, 0, 0);
+					initialGroundTruthAffine = cv::Affine3f(initialRotation.toRotationMatrix(), initialPosition);
+					// rotation = icp::makeRotationMatrix(0, 0, 0);
 
 					// Print out column names
-					std::cout << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
+					// std::cout << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
+					//  logfile << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
+					std::cout << "ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
+					logfile << "ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
 				}
 
 				// cv::bitwise_not(filtered, filtered);
-				// cv::minMaxIdx(filtered, &min, &max);
-				// cv::Mat adjMap;
+				cv::minMaxIdx(filtered, &min, &max);
+
 
 				// expand your range to 0..255. Similar to histEq();
-				// filtered.convertTo(adjMap, CV_8UC1, 255 / (max - min), -min);
-				// cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
+				filtered.convertTo(adjMap, CV_8UC1, 255 / (max - min), -min);
+				cv::applyColorMap(adjMap, colorDepth, cv::COLORMAP_JET);
 
-				// cv::imshow( "Filtered", colorDepth );
+				cv::imshow( "Filtered", colorDepth );
 				// cv::imshow("Normals", normals);
 				// cv::imshow("RGB", rgbImage);
 				// cv::imshow("Features", keypointsImage);
@@ -487,7 +518,7 @@ void showText(cv::viz::Viz3d& depthWindow, std::string text, cv::Point pos, std:
 	depthWindow.showWidget(name, textWidget);
 }
 
-void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name) {
+void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::string name, std::ofstream &logfile) {
 	float rx, ry, rz;
 	transformationMatToEulerianAngle(t, rx, ry, rz);
 	std::ostringstream ss;
@@ -496,11 +527,15 @@ void showTransfom(cv::viz::Viz3d& depthWindow, cv::Mat t, cv::Point pos, std::st
 	ss << ry;
 	ss << " ";
 	ss << rz;
+
+	std::cout << rx << "," << ry << "," << rz << ",";
+	logfile << rx << "," << ry << "," << rz << ",";
+
 	std::string s(ss.str());
 	showText(depthWindow, s, pos, name);
 }
 
-void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std::string name) {
+void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std::string name, std::ofstream &logfile) {
 	float rx, ry, rz;
 	toEulerianAngle(q, rx, ry, rz);
 	std::ostringstream ss;
@@ -510,6 +545,10 @@ void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std:
 	ss << " ";
 	ss << rz;
 	std::string s(ss.str());
+
+	std::cout << rx << "," << ry << "," << rz << ",";
+	logfile << rx << "," << ry << "," << rz << ",";
+
 	showText(depthWindow, s, pos, name);
 }
 
@@ -541,7 +580,7 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 		cv::Point(2, 2));
 
 	cv::erode(image, image, element);
-	cv::dilate(image, image, element);
+	// cv::dilate(image, image, element);
 
 	/*
 	// Using Canny's output as a mask, we display our result

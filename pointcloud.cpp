@@ -33,7 +33,7 @@ namespace icp {
 			}
 
 			// Subsample
-			if (rand() % 80) {
+			if (rand() % SUBSAMPLE_FACTOR) {
 				p_index++;
 				it++;
 				continue;
@@ -135,7 +135,6 @@ namespace icp {
 		center_points();
 	}
 
-	/*
 	// Display PointCloud with colorMap in Viz Window
 	void PointCloud::display(cv::viz::Viz3d& depthWindow, std::string name, int size, cv::viz::Color color) {
 
@@ -152,8 +151,6 @@ namespace icp {
 		cloudWidget.setRenderingProperty(cv::viz::POINT_SIZE, size);
 		depthWindow.showWidget(name, cloudWidget);
 	}
-	*/
-
 
 	// Initialize an empty point cloud
 	PointCloud::PointCloud() {

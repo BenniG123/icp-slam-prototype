@@ -26,7 +26,6 @@ namespace map {
 		}
 	}
 
-	/*
 	void Map::drawCertaintyMap(cv::viz::Viz3d& depthWindow) {
 		for (int i = 0; i < MAP_HEIGHT; i++) {
 			for (int j = 0; j < MAP_HEIGHT; j++) {
@@ -45,7 +44,6 @@ namespace map {
 			}
 		}
 	}
-	*/
 
 	// Get Voxel Coordinates from a worldspace point
 	cv::Point3i Map::getVoxelCoordinates(cv::Point3f point) {
@@ -94,7 +92,7 @@ namespace map {
 			cv::Point3f point = (*it).first;
 			cv::Point3i voxelPoint = getVoxelCoordinates(point);
 
-			if (errors[it - begin] > .15f) { // (distance(a, b) > .15f) {
+			if (errors[it - begin] > MAX_POINT_DISTANCE) { // (distance(a, b) > .15f) {
 				mapCloud.points.push_back(point);
 			}
 			// rayTrace(voxelPoint, cameraVoxelPoint);

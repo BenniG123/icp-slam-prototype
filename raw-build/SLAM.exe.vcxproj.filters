@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="G:\Documents\Projects\icp-slam-prototype\icp.cpp">
@@ -44,5 +44,8 @@
     <Filter Include="Header Files">
       <UniqueIdentifier>{8FD0C53A-385D-3B17-8E60-576740175B99}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="log.txt" />
   </ItemGroup>
 </Project>
