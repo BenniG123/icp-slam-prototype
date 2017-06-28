@@ -5,6 +5,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SLAM.exe", "SLAM.exe.vcxproj", "{3DF08436-FFBE-3064-8241-6689519C1FD7}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		D1|x64 = D1|x64
 		D2|x64 = D2|x64
@@ -14,10 +17,14 @@ Global
 		Debug|x64 = Debug|x64
 		E1|x64 = E1|x64
 		E2|x64 = E2|x64
+		E3|x64 = E3|x64
+		E4|x64 = E4|x64
+		E5|x64 = E5|x64
 		H1|x64 = H1|x64
 		H2|x64 = H2|x64
 		H3|x64 = H3|x64
 		H4|x64 = H4|x64
+		H5|x64 = H5|x64
 		MinSizeRel|x64 = MinSizeRel|x64
 		Release|x64 = Release|x64
 		RelWithDebInfo|x64 = RelWithDebInfo|x64
@@ -39,6 +46,12 @@ Global
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.E1|x64.Build.0 = E1|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.E2|x64.ActiveCfg = E2|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.E2|x64.Build.0 = E2|x64
+		{3DF08436-FFBE-3064-8241-6689519C1FD7}.E3|x64.ActiveCfg = E3|x64
+		{3DF08436-FFBE-3064-8241-6689519C1FD7}.E3|x64.Build.0 = E3|x64
+		{3DF08436-FFBE-3064-8241-6689519C1FD7}.E4|x64.ActiveCfg = E4|x64
+		{3DF08436-FFBE-3064-8241-6689519C1FD7}.E4|x64.Build.0 = E4|x64
+		{3DF08436-FFBE-3064-8241-6689519C1FD7}.E5|x64.ActiveCfg = E5|x64
+		{3DF08436-FFBE-3064-8241-6689519C1FD7}.E5|x64.Build.0 = E5|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.H1|x64.ActiveCfg = H1|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.H1|x64.Build.0 = H1|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.H2|x64.ActiveCfg = H2|x64
@@ -47,6 +60,8 @@ Global
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.H3|x64.Build.0 = H3|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.H4|x64.ActiveCfg = H4|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.H4|x64.Build.0 = H4|x64
+		{3DF08436-FFBE-3064-8241-6689519C1FD7}.H5|x64.ActiveCfg = H5|x64
+		{3DF08436-FFBE-3064-8241-6689519C1FD7}.H5|x64.Build.0 = H5|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.MinSizeRel|x64.ActiveCfg = MinSizeRel|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.MinSizeRel|x64.Build.0 = MinSizeRel|x64
 		{3DF08436-FFBE-3064-8241-6689519C1FD7}.Release|x64.ActiveCfg = Release|x64
@@ -56,5 +71,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

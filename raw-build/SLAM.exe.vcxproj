@@ -33,6 +33,18 @@
       <Configuration>E2</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="E3|x64">
+      <Configuration>E3</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="E4|x64">
+      <Configuration>E4</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="E5|x64">
+      <Configuration>E5</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="H1|x64">
       <Configuration>H1</Configuration>
       <Platform>x64</Platform>
@@ -47,6 +59,10 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="H4|x64">
       <Configuration>H4</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="H5|x64">
+      <Configuration>H5</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
@@ -119,6 +135,12 @@
     <CharacterSet>MultiByte</CharacterSet>
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='H5|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='E1|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
@@ -126,6 +148,24 @@
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='E2|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='E3|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='E4|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='E5|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
@@ -193,8 +233,12 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='H2|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='H3|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='H4|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='H5|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='E1|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='E2|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='E3|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='E4|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='E5|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='D1|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='D2|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='D3|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\RelWithDebInfo\</OutDir>
@@ -205,8 +249,12 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='H2|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='H3|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='H4|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='H5|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='E1|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='E2|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='E3|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='E4|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='E5|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='D1|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='D2|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='D3|x64'">SLAM.exe.dir\RelWithDebInfo\</IntDir>
@@ -217,8 +265,12 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='H2|x64'">SLAM.exe</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='H3|x64'">SLAM.exe</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='H4|x64'">SLAM.exe</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='H5|x64'">SLAM.exe</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='E1|x64'">SLAM.exe</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='E2|x64'">SLAM.exe</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='E3|x64'">SLAM.exe</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='E4|x64'">SLAM.exe</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='E5|x64'">SLAM.exe</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='D1|x64'">SLAM.exe</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='D2|x64'">SLAM.exe</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='D3|x64'">SLAM.exe</TargetName>
@@ -229,8 +281,12 @@
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='H2|x64'">.exe</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='H3|x64'">.exe</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='H4|x64'">.exe</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='H5|x64'">.exe</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='E1|x64'">.exe</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='E2|x64'">.exe</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='E3|x64'">.exe</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='E4|x64'">.exe</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='E5|x64'">.exe</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='D1|x64'">.exe</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='D2|x64'">.exe</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='D3|x64'">.exe</TargetExt>
@@ -241,8 +297,12 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='H2|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='H3|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='H4|x64'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='H5|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='E1|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='E2|x64'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='E3|x64'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='E4|x64'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='E5|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='D1|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='D2|x64'">true</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='D3|x64'">true</LinkIncremental>
@@ -253,8 +313,12 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='H2|x64'">true</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='H3|x64'">true</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='H4|x64'">true</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='H5|x64'">true</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='E1|x64'">true</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='E2|x64'">true</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='E3|x64'">true</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='E4|x64'">true</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='E5|x64'">true</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='D1|x64'">true</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='D2|x64'">true</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='D3|x64'">true</GenerateManifest>
@@ -486,7 +550,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='H2|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;C:\boost\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -523,6 +587,7 @@
       <SubSystem>Console</SubSystem>
       <Version>
       </Version>
+      <Profile>true</Profile>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
@@ -573,6 +638,50 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='H4|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions>%(AdditionalOptions)  /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>G:/Documents/Projects/icp-slam-prototype/raw-build/RelWithDebInfo/SLAM.exe.lib</ImportLibrary>
+      <ProgramDataBaseFile>G:/Documents/Projects/icp-slam-prototype/raw-build/RelWithDebInfo/SLAM.exe.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='H5|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
@@ -704,9 +813,143 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='D1|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='E3|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions>%(AdditionalOptions)  /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>G:/Documents/Projects/icp-slam-prototype/raw-build/RelWithDebInfo/SLAM.exe.lib</ImportLibrary>
+      <ProgramDataBaseFile>G:/Documents/Projects/icp-slam-prototype/raw-build/RelWithDebInfo/SLAM.exe.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='E4|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions>%(AdditionalOptions)  /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>G:/Documents/Projects/icp-slam-prototype/raw-build/RelWithDebInfo/SLAM.exe.lib</ImportLibrary>
+      <ProgramDataBaseFile>G:/Documents/Projects/icp-slam-prototype/raw-build/RelWithDebInfo/SLAM.exe.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='E5|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;C:\boost\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <AdditionalUsingDirectories>
+      </AdditionalUsingDirectories>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions>%(AdditionalOptions)  /machine:x64</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib;C:\opencv-3.2.0\build\lib\Debug\opencv_world320d.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>G:/Documents/Projects/icp-slam-prototype/raw-build/RelWithDebInfo/SLAM.exe.lib</ImportLibrary>
+      <ProgramDataBaseFile>G:/Documents/Projects/icp-slam-prototype/raw-build/RelWithDebInfo/SLAM.exe.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version>
+      </Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='D1|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\opencv-3.2.0\build;C:\opencv-3.2.0\include;C:\opencv-3.2.0\include\opencv;C:\opencv-3.2.0\modules\core\include;C:\opencv-3.2.0\modules\flann\include;C:\opencv-3.2.0\modules\imgproc\include;C:\opencv-3.2.0\modules\ml\include;C:\opencv-3.2.0\modules\photo\include;C:\opencv-3.2.0\modules\video\include;C:\opencv-3.2.0\modules\viz\include;C:\opencv-3.2.0\modules\imgcodecs\include;C:\opencv-3.2.0\modules\shape\include;C:\opencv-3.2.0\modules\videoio\include;C:\opencv-3.2.0\modules\highgui\include;C:\opencv-3.2.0\modules\objdetect\include;C:\opencv-3.2.0\modules\superres\include;C:\opencv-3.2.0\modules\features2d\include;C:\opencv-3.2.0\modules\calib3d\include;C:\opencv-3.2.0\modules\stitching\include;C:\opencv-3.2.0\modules\videostab\include;C:\opencv-3.2.0\modules\world\include;C:\boost\boost_1_55_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -970,8 +1213,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='H2|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='H3|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='H4|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='H5|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='E1|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='E2|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='E3|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='E4|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='E5|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='D1|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='D2|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='D3|x64'">Building Custom Rule G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt</Message>
@@ -1022,6 +1269,15 @@ endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
 exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='H5|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HG:/Documents/Projects/icp-slam-prototype -BG:/Documents/Projects/icp-slam-prototype/raw-build --check-stamp-file G:/Documents/Projects/icp-slam-prototype/raw-build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='E1|x64'">setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -HG:/Documents/Projects/icp-slam-prototype -BG:/Documents/Projects/icp-slam-prototype/raw-build --check-stamp-file G:/Documents/Projects/icp-slam-prototype/raw-build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
@@ -1032,6 +1288,33 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='E2|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HG:/Documents/Projects/icp-slam-prototype -BG:/Documents/Projects/icp-slam-prototype/raw-build --check-stamp-file G:/Documents/Projects/icp-slam-prototype/raw-build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='E3|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HG:/Documents/Projects/icp-slam-prototype -BG:/Documents/Projects/icp-slam-prototype/raw-build --check-stamp-file G:/Documents/Projects/icp-slam-prototype/raw-build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='E4|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HG:/Documents/Projects/icp-slam-prototype -BG:/Documents/Projects/icp-slam-prototype/raw-build --check-stamp-file G:/Documents/Projects/icp-slam-prototype/raw-build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='E5|x64'">setlocal
 "C:\Program Files\CMake\bin\cmake.exe" -HG:/Documents/Projects/icp-slam-prototype -BG:/Documents/Projects/icp-slam-prototype/raw-build --check-stamp-file G:/Documents/Projects/icp-slam-prototype/raw-build/CMakeFiles/generate.stamp
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
@@ -1090,8 +1373,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='H2|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='H3|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='H4|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='H5|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='E1|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='E2|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='E3|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='E4|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='E5|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='D1|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='D2|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='D3|x64'">G:/Documents/Projects/icp-slam-prototype/CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInitialize.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeCXXCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\Platform\Windows-MSVC.cmake;G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\3.8.0\CMakeRCCompiler.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\CMakeCommonLanguageInclude.cmake;C:\opencv-3.2.0\build\OpenCVConfig-version.cmake;C:\opencv-3.2.0\build\OpenCVConfig.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.8\Modules\FindPackageMessage.cmake;C:\opencv-3.2.0\build\OpenCVModules.cmake;G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
@@ -1102,8 +1389,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='H2|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='H3|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='H4|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='H5|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='E1|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='E2|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='E3|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='E4|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='E5|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='D1|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='D2|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='D3|x64'">G:\Documents\Projects\icp-slam-prototype\raw-build\CMakeFiles\generate.stamp</Outputs>
@@ -1114,8 +1405,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='H2|x64'">false</LinkObjects>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='H3|x64'">false</LinkObjects>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='H4|x64'">false</LinkObjects>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='H5|x64'">false</LinkObjects>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='E1|x64'">false</LinkObjects>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='E2|x64'">false</LinkObjects>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='E3|x64'">false</LinkObjects>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='E4|x64'">false</LinkObjects>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='E5|x64'">false</LinkObjects>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='D1|x64'">false</LinkObjects>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='D2|x64'">false</LinkObjects>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='D3|x64'">false</LinkObjects>
@@ -1124,6 +1419,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Fixed.hpp" />
     <ClInclude Include="G:\Documents\Projects\icp-slam-prototype\SLAM.hpp" />
     <ClInclude Include="G:\Documents\Projects\icp-slam-prototype\icp.hpp" />
     <ClInclude Include="G:\Documents\Projects\icp-slam-prototype\quaternion.hpp" />

@@ -68,13 +68,15 @@ namespace icp {
 		previousCloud.rotate(rotation);
 		*/
 
-		findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
+		findFixedNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
+		// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 		
 		int i = 0;
 
 		// While we haven't gotten close enough yet and we haven't iterated too much
 		while (meanSquareError(errors) > threshold && i < maxIterations) {
 			// std::cout << meanSquareError(errors) << " " << i << std::endl;
+			
 			/*
 			depthWindow.removeAllWidgets();
 
@@ -83,6 +85,7 @@ namespace icp {
 
 			depthWindow.spinOnce(0);
 			cv::waitKey(0);
+			
 
 			dataCloud.display(depthWindow, "Data", 3, cv::viz::Color().green());
 			map.mapCloud.display(depthWindow, "Map", 3, cv::viz::Color().yellow());
@@ -91,7 +94,7 @@ namespace icp {
 			depthWindow.spinOnce(0);
 			cv::waitKey(0);
 			*/
-
+			
 			tempDataCloud.points.clear();
 			tempPreviousCloud.points.clear();
 
@@ -147,7 +150,8 @@ namespace icp {
 			logDeltaTime( LOG_ROTATE );
 
 			// Find nearest neighber associations
-			findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
+			findFixedNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
+			// findNearestNeighborAssociations(dataCloud, map.mapCloud, errors, associations);
 
 			i++;
 		}
@@ -159,9 +163,9 @@ namespace icp {
 		// Log MSE
 		std::cout << meanSquareError(errors) << ",";
 
-		rigidTransformation.at<float>(0,3) = offset.x;
-		rigidTransformation.at<float>(1,3) = offset.y;
-		rigidTransformation.at<float>(2,3) = offset.z;
+		rigidTransformation.at<float>(0,3) = cameraPosition.x; // offset.x
+		rigidTransformation.at<float>(1,3) = cameraPosition.y; // offset.y
+		rigidTransformation.at<float>(2,3) = cameraPosition.z; // offset.z
 
 		cameraRotation.copyTo(rigidTransformation(cv::Rect(0, 0, 3, 3)));
 
@@ -282,10 +286,71 @@ namespace icp {
 		return shortestDistance;
 	}
 
+	// Bottlenecking function - Hardware acceleration candidate
+	fixed getNearestFixedPoint(point3f_t point, point3f_t& nearest, PointCloud& cloud) {
+		// Iterate through image
+		std::vector<cv::Point3f>::iterator it, end; //, near;
+		it = cloud.points.begin();
+		end = cloud.points.end();
+
+		nearest = floatToFixed(*it);
+
+		fixed shortestDistance = fixed_distance(point, nearest);
+		it++;
+
+		while (it != end) {
+			point3f_t temp = floatToFixed(*it);
+			fixed d = fixed_distance(point, temp);
+			if (d < shortestDistance) {
+				shortestDistance = d;
+				nearest = temp;
+			}
+
+			it++;
+		}
+
+		return shortestDistance;
+	}
+
 	float distance(cv::Point3f a, cv::Point3f b) {
 		float x = a.x - b.x;
 		float y = a.y - b.y;
 		float z = a.z - b.z;
+		// std::cout << a << ", " << b << std::endl;
+		// cv::waitKey(0);
+		return x*x + y*y + z*z; // pow(x, 2) + pow(y, 2) + pow(z, 2);
+	}
+
+	void findFixedNearestNeighborAssociations(PointCloud & data, PointCloud & previous, std::vector<float>& errors, std::vector<std::pair<cv::Point3f, cv::Point3f>>& associations)
+	{
+		// Iterate through image
+		std::vector<cv::Point3f>::iterator it, end;
+		it = data.points.begin();
+		end = data.points.end();
+		errors.clear();
+		associations.clear();
+
+		while (it != end) {
+			point3f_t nearestNeighbor;
+			point3f_t temp = floatToFixed(*it);
+
+			fixed distance = getNearestFixedPoint(temp, nearestNeighbor, previous);
+			if (distance < NEAREST_NEIGHBOR_DISTANCE) {
+				cv::Point3f nn = fixedToFloat(nearestNeighbor);
+				associations.push_back(std::make_pair(*it, nn));
+				errors.push_back(sqrt(distance.to_float()));
+			}
+
+			it++;
+		}
+
+		logDeltaTime(LOG_NEAREST_NEIGHBOR, (int)data.points.size() * previous.points.size());
+	}
+
+	fixed fixed_distance(point3f_t a, point3f_t b) {
+		fixed x = a.x - b.x;
+		fixed y = a.y - b.y;
+		fixed z = a.z - b.z;
 		// std::cout << a << ", " << b << std::endl;
 		// cv::waitKey(0);
 		return x*x + y*y + z*z; // pow(x, 2) + pow(y, 2) + pow(z, 2);

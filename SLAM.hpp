@@ -17,12 +17,21 @@
 
 #include "quaternion.hpp"
 #include "opencv2/viz/vizcore.hpp"
+#include "Fixed.hpp"
 
 struct logEntry {
   long long time;
   long count;
   std::string name;
   int quantity;
+};
+
+typedef numeric::Fixed<10, 22> fixed;
+
+struct point3f_t {
+	fixed x;
+	fixed y;
+	fixed z;
 };
 
 void errorMessage();
@@ -46,6 +55,10 @@ void transformationMatToEulerianAngle(cv::Mat t, float& x, float&y, float& z);
 void toEulerianAngle(Quaternion q, float& x, float& y, float& z);
 
 void filterDepthImage(cv::Mat &image, int maxDistance);
+
+point3f_t floatToFixed(cv::Point3f p);
+
+cv::Point3f fixedToFloat(point3f_t p);
 
 int curvature(cv::Mat roi);
 

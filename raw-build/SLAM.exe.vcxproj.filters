@@ -33,6 +33,9 @@
     <ClInclude Include="G:\Documents\Projects\icp-slam-prototype\map.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\Fixed.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="G:\Documents\Projects\icp-slam-prototype\CMakeLists.txt" />

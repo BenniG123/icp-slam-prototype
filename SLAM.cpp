@@ -105,7 +105,7 @@ int main(int argc, const char** argv)
 	*/
 
 	cv::namedWindow("Filtered", cv::WINDOW_AUTOSIZE); // Create a window for display.
-	cv::moveWindow("Filtered", 0, 700);
+	cv::moveWindow("Filtered", 1000, 0);
 	// cv::namedWindow( "Normals" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
 	// cv::moveWindow( "Normals" , 550 , 700 );
 	// cv::namedWindow( "RGB" , cv::WINDOW_AUTOSIZE ); // Create a window for display.
@@ -149,6 +149,7 @@ int main(int argc, const char** argv)
 	std::ifstream rgb_list_file(rgb_list_file_name.c_str());
 	std::ifstream depth_list_file(depth_list_file_name.c_str());
 	std::ifstream ground_truth_file(ground_truth_file_name.c_str());
+
 	std::ofstream logfile("log.txt");
 
 	// Euler rotation and transformation variables for groundtruth and latest scan
@@ -197,14 +198,10 @@ int main(int argc, const char** argv)
 
 				// Read the next color frame
 				// rgbImage = cv::imread(rgb_frame_file_name, CV_LOAD_IMAGE_GRAYSCALE);
-				// cv::resize(rgbImage, rgbImage, cv::Size(960,540));
 
 				// std::vector<cv::KeyPoint> keypoints;
 				// cv::FAST(rgbImage, keypoints, 40, true, cv::FastFeatureDetector::TYPE_9_16);
 				// cv::drawKeypoints(rgbImage, keypoints, keypointsImage, cv::Scalar(0,0,255), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-
-				// CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH
-				// image.convertTo(image, CV_16U);
 
 				if (!image.data) // Check for invalid input
 				{
@@ -215,6 +212,7 @@ int main(int argc, const char** argv)
 
 				frame_counter++;
 
+				// Print timestamp
 				std::cout << frame_counter << ",";
 
 				logDeltaTime(LOG_LOAD_IMAGE);
@@ -246,6 +244,7 @@ int main(int argc, const char** argv)
 
 					float rx, ry, rz;
 					// rotationQ = Quaternion(icpRotation);
+
 					/* toEulerianAngle(icpRotation, rx, ry, rz);
 					std::cout << rx << "," << ry << "," << rz;
 					logfile << rx << "," << ry << "," << rz;
@@ -254,25 +253,40 @@ int main(int argc, const char** argv)
 					logfile << "," << rx << "," << ry << "," << rz << std::endl;
 					*/
 
-					showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
+					// Show camera position
+					/*cv::viz::WCone gtPosition(0.1f, cv::Point3f(0, 0, 0), cv::Point3f(0, 0, 0.2), 16, cv::viz::Color::red());
+					gtPosition.applyTransform(deltaGroundTruthAffine); // , cv::Point3f(currentPosition)
+					depthWindow.showWidget("Ground Truth Position", gtPosition);
+					*/
+
+					/*showText(depthWindow, "Ground Truth", cv::Point(10, 30), "Ground Truth Text");
 					showTransfom(depthWindow, deltaRotation, cv::Point(10, 10), "Ground Truth", logfile);
 					showText(depthWindow, "ICP", cv::Point(10, 80), "ICP Text");
 					showTransfom(depthWindow, icpRotation, cv::Point(10, 60), "ICP", logfile);
-					logfile << std::endl;
-					std::cout << std::endl;
-
-					// TODO - FIX THIS
-					
-					// Show camera position
-					cv::viz::WCone gtPosition(0.1f, cv::Point3f(0,0,0), cv::Point3f(0, 0, 0.2), 16, cv::viz::Color::red());
-					gtPosition.applyTransform(deltaGroundTruthAffine); // , cv::Point3f(currentPosition)
-					depthWindow.showWidget("Ground Truth Position", gtPosition);
-
-					/*
-					cv::viz::WCone zeroPosition(0.1, cv::Point3f(currentPosition), cv::Point3f(currentPosition) + cv::Point3f(0, 0, 0.2), 16, cv::viz::Color::green());
-					gtPosition.updatePose(cv::Affine3f(deltaRotation.toRotationMatrix())); // , cv::Point3f(currentPosition)
-					depthWindow.showWidget("Zero Position", zeroPosition);
 					*/
+
+					// Log translation
+					cv::Vec3f gtTranslation = deltaGroundTruthAffine.translation();
+					std::cout << transformation.at<float>(0, 3) << "," << transformation.at<float>(1, 3) << "," << transformation.at<float>(2, 3) << ",";
+					logfile << transformation.at<float>(0, 3) << "," << transformation.at<float>(1, 3) << "," << transformation.at<float>(2, 3) << ",";
+
+					std::cout << gtTranslation[0] << "," << gtTranslation[1] << "," << gtTranslation[2] << ",";
+					logfile << gtTranslation[0] << "," << gtTranslation[1] << "," << gtTranslation[2] << ",";
+
+					// Log Translation Error
+					cv::Point3f gtPoint(gtTranslation);
+					cv::Point3f icpPoint(transformation.at<float>(0, 3), transformation.at<float>(1, 3), transformation.at<float>(2, 3));
+					float squaredTranslationError = icp::distance(gtPoint, icpPoint);
+					std::cout << squaredTranslationError << ",";
+					logfile << squaredTranslationError << ",";
+
+					// Log Rotational Error
+					Quaternion icpQuaternion(icpRotation);
+					Quaternion qd = (deltaRotation.inverse() * icpQuaternion.inverse());
+					toEulerianAngle(qd, rx, ry, rz);
+					float sqMagnitude = rx*rx + ry*ry + rz*rz;
+					std::cout << sqMagnitude << std::endl;
+					logfile << sqMagnitude << std::endl;
 
 					depthWindow.spinOnce(1, true);
 
@@ -295,10 +309,8 @@ int main(int argc, const char** argv)
 					// rotation = icp::makeRotationMatrix(0, 0, 0);
 
 					// Print out column names
-					// std::cout << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
-					//  logfile << "MSE,ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
-					std::cout << "ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
-					logfile << "ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ" << std::endl;
+					std::cout << "ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ,ICP tX,ICP tY,ICP tZ,GT tX,GT tY,GT tZ,tError,rError" << std::endl;
+					logfile << "ICP rX,ICP rY,ICP rZ,GT rX,GT rY,GT rZ,ICP tX,ICP tY,ICP tZ,GT tX,GT tY,GT tZ,tError,rError" << std::endl;
 				}
 
 				// cv::bitwise_not(filtered, filtered);
@@ -549,6 +561,20 @@ void showTransfom(cv::viz::Viz3d& depthWindow, Quaternion q, cv::Point pos, std:
 	std::cout << rx << "," << ry << "," << rz << ",";
 	logfile << rx << "," << ry << "," << rz << ",";
 
+	/* std::ostringstream ss;
+	ss << q.x;
+	ss << " ";
+	ss << q.y;
+	ss << " ";
+	ss << q.z;
+	ss << " ";
+	ss << q.w;
+	std::string s(ss.str());
+
+	std::cout << s << std::endl;
+	logfile << s << std::endl;
+	*/
+
 	showText(depthWindow, s, pos, name);
 }
 
@@ -632,6 +658,24 @@ void filterDepthImage(cv::Mat &image, int maxDistance) {
 	}
 	*/
 	// cv::dilate( image, image, element);
+}
+
+point3f_t floatToFixed(cv::Point3f p)
+{
+	point3f_t temp;
+	temp.x = p.x;
+	temp.y = p.y;
+	temp.z = p.z;
+	return temp;
+}
+
+cv::Point3f fixedToFloat(point3f_t p)
+{
+	cv::Point3f temp;
+	temp.x = p.x.to_float();
+	temp.y = p.y.to_float();
+	temp.z = p.z.to_float();
+	return temp;
 }
 
 void toEulerianAngle(Quaternion q, float& x, float& y, float& z)
